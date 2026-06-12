@@ -126,6 +126,11 @@ class Plane {
     if (std.ptr != ptr) nc.ncplane_destroy(ptr);
   }
 
+  /// Destroy this plane and all its bound descendants.
+  void familyDestroy() {
+    nc.ncplane_family_destroy(ptr);
+  }
+
   /// Returns the dimensions of the current plane
   Dimensions dimyx() {
     return using<Dimensions>((Arena alloc) {

@@ -296,6 +296,18 @@ class NcFfiInline {
       _lookup<ffi.NativeFunction<ffi.Int8 Function(ffi.Pointer<ncdirect>)>>('ncdirect_canhalfblock');
   late final _ncdirect_canhalfblock = _ncdirect_canhalfblockPtr.asFunction<int Function(ffi.Pointer<ncdirect>)>();
 
+  int ncdirect_canoctant(
+    ffi.Pointer<ncdirect> nc,
+  ) {
+    return _ncdirect_canoctant(
+      nc,
+    );
+  }
+
+  late final _ncdirect_canoctantPtr =
+      _lookup<ffi.NativeFunction<ffi.Int8 Function(ffi.Pointer<ncdirect>)>>('ncdirect_canoctant');
+  late final _ncdirect_canoctant = _ncdirect_canoctantPtr.asFunction<int Function(ffi.Pointer<ncdirect>)>();
+
   int ncdirect_canopen_images(
     ffi.Pointer<ncdirect> n,
   ) {
@@ -606,6 +618,18 @@ class NcFfiInline {
   late final _notcurses_canhalfblockPtr =
       _lookup<ffi.NativeFunction<ffi.Int8 Function(ffi.Pointer<notcurses>)>>('notcurses_canhalfblock');
   late final _notcurses_canhalfblock = _notcurses_canhalfblockPtr.asFunction<int Function(ffi.Pointer<notcurses>)>();
+
+  int notcurses_canoctant(
+    ffi.Pointer<notcurses> nc,
+  ) {
+    return _notcurses_canoctant(
+      nc,
+    );
+  }
+
+  late final _notcurses_canoctantPtr =
+      _lookup<ffi.NativeFunction<ffi.Int8 Function(ffi.Pointer<notcurses>)>>('notcurses_canoctant');
+  late final _notcurses_canoctant = _notcurses_canoctantPtr.asFunction<int Function(ffi.Pointer<notcurses>)>();
 
   int notcurses_canpixel(
     ffi.Pointer<notcurses> nc,

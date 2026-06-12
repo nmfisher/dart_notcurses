@@ -152,6 +152,9 @@ abstract class Blitter {
   /// these blitters are suitable only for plots, not general media
   /// eight vertical levels    █▇▆▅▄▃▂▁
   static const int blit_8x1 = ncblitter_e.NCBLIT_8x1;
+
+  /// octants (Unicode 16) - 4 rows, 2 cols
+  static const int blit_4x2 = ncblitter_e.NCBLIT_4x2;
 }
 
 /// Alignment within a plane or terminal. Left/right-justified, or centered.

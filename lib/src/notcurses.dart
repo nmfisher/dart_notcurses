@@ -46,6 +46,7 @@ class Capabilities {
   final bool quadrants;
   final bool sextants;
   final bool braille;
+  final bool octants;
 
   const Capabilities({
     this.colors = 0,
@@ -56,6 +57,7 @@ class Capabilities {
     this.quadrants = false,
     this.sextants = false,
     this.braille = false,
+    this.octants = false,
   });
 
   @override
@@ -68,6 +70,7 @@ class Capabilities {
         quadrants: $quadrants
         sextants: $sextants
         braille: $braille
+        octants: $octants
       ''';
   }
 }
@@ -312,6 +315,7 @@ class NotCurses {
       quadrants: cpr.quadrants > 0,
       sextants: cpr.sextants > 0,
       braille: cpr.braille > 0,
+      octants: cpr.octants > 0,
     );
   }
 
@@ -370,6 +374,11 @@ class NotCurses {
   /// Can we blit pixel-accurate bitmaps?
   bool canPixel() {
     return ncInline.notcurses_canpixel(_ptr) != 0;
+  }
+
+  /// Can we reliably use Unicode 16 octants?
+  bool canOctant() {
+    return ncInline.notcurses_canoctant(_ptr) != 0;
   }
 
   /// Can we blit pixel-accurate bitmaps?

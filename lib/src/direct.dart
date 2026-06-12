@@ -281,6 +281,7 @@ class Direct {
       quadrants: cpr.quadrants > 0,
       sextants: cpr.sextants > 0,
       braille: cpr.braille > 0,
+      octants: cpr.octants > 0,
     );
   }
 
@@ -538,6 +539,11 @@ class Direct {
   /// Can we reliably use Unicode Braille?
   bool canBraile() {
     return ncInline.ncdirect_canbraille(_ptr) != 0;
+  }
+
+  /// Can we reliably use Unicode 16 octants?
+  bool canOctant() {
+    return ncInline.ncdirect_canoctant(_ptr) != 0;
   }
 
   /// Is there support for acquiring the cursor's current position? Requires the

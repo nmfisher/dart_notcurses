@@ -1124,6 +1124,18 @@ class NcFfi {
       _lookup<ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<ncplane>)>>('ncplane_destroy');
   late final _ncplane_destroy = _ncplane_destroyPtr.asFunction<int Function(ffi.Pointer<ncplane>)>();
 
+  int ncplane_family_destroy(
+    ffi.Pointer<ncplane> n,
+  ) {
+    return _ncplane_family_destroy(
+      n,
+    );
+  }
+
+  late final _ncplane_family_destroyPtr =
+      _lookup<ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<ncplane>)>>('ncplane_family_destroy');
+  late final _ncplane_family_destroy = _ncplane_family_destroyPtr.asFunction<int Function(ffi.Pointer<ncplane>)>();
+
   int ncplane_set_base_cell(
     ffi.Pointer<ncplane> n,
     ffi.Pointer<nccell> c,
@@ -5824,6 +5836,7 @@ abstract class ncblitter_e {
   static const int NCBLIT_PIXEL = 6;
   static const int NCBLIT_4x1 = 7;
   static const int NCBLIT_8x1 = 8;
+  static const int NCBLIT_4x2 = 9;
 }
 
 abstract class ncalign_e {
@@ -6069,6 +6082,9 @@ class nccapabilities extends ffi.Struct {
 
   @ffi.Uint8()
   external int braille;
+
+  @ffi.Uint8()
+  external int octants;
 }
 
 abstract class ncpixelimpl_e {

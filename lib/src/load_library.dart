@@ -26,6 +26,9 @@ class LibraryHandler {
     if (Platform.isMacOS) {
       return DynamicLibrary.open('/usr/local/opt/notcurses/lib/libnotcurses.dylib');
     }
+    if (Platform.isLinux) {
+      return DynamicLibrary.open('libnotcurses.so');
+    }
 
     throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
   }
@@ -33,6 +36,9 @@ class LibraryHandler {
   DynamicLibrary openNotcursesInline() {
     if (Platform.isMacOS) {
       return DynamicLibrary.open('/usr/local/opt/notcurses/lib/libnotcurses-ffi.dylib');
+    }
+    if (Platform.isLinux) {
+      return DynamicLibrary.open('libnotcurses-ffi.so');
     }
 
     throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
