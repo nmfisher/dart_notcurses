@@ -17,14 +17,19 @@ NcFfiInline get ncInline {
 }
 
 // TODO: this is using the default directory path where Brew install on OSX.
-// need to sopport ways to override this path.
+// need to support ways to override this path.
 // - sqlite add a method that receive the new path
 class LibraryHandler {
   LibraryHandler._();
 
+  static const _macPaths = [
+    '/opt/homebrew/opt/notcurses/lib', // Apple Silicon
+    '/usr/local/opt/notcurses/lib', // Intel
+  ];
+
   DynamicLibrary openNotcurses() {
     if (Platform.isMacOS) {
-      return DynamicLibrary.open('/usr/local/opt/notcurses/lib/libnotcurses.dylib');
+      return DynamicLibrary.open(_resolveMac('libnotcurses.dylib'));
     }
     if (Platform.isLinux) {
       return DynamicLibrary.open('libnotcurses.so');
@@ -35,12 +40,22 @@ class LibraryHandler {
 
   DynamicLibrary openNotcursesInline() {
     if (Platform.isMacOS) {
-      return DynamicLibrary.open('/usr/local/opt/notcurses/lib/libnotcurses-ffi.dylib');
+      return DynamicLibrary.open(_resolveMac('libnotcurses-ffi.dylib'));
     }
     if (Platform.isLinux) {
       return DynamicLibrary.open('libnotcurses-ffi.so');
     }
 
     throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
+  }
+
+  String _resolveMac(String libName) {
+    for (final p in _macPaths) {
+      final file = File('$p/$libName');
+      if (file.existsSync()) return file.path;
+    }
+    throw UnsupportedError(
+      'Could not find $libName in ${_macPaths.join(" or ")}',
+    );
   }
 }
