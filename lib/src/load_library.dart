@@ -20,7 +20,12 @@ DynamicLibrary _openLibrary() {
     return DynamicLibrary.open('.dart_tool/lib/libnotcurses_merged.so');
   }
   if (Platform.isMacOS) {
-    return DynamicLibrary.open('.dart_tool/lib/libnotcurses_merged.dylib');
+    // The merged library is built relative to the package root (the CWD when
+    // running via `dart run`). macOS's hardened runtime forbids dlopen of a
+    // relative path, so resolve it to absolute first.
+    return DynamicLibrary.open(
+      File('.dart_tool/lib/libnotcurses_merged.dylib').absolute.path,
+    );
   }
   throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
 }

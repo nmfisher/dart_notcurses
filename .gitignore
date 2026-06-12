@@ -5,6 +5,9 @@
 # Conventional directory for build output.
 build/
 
+# Scratch directory for building vendored native libs (e.g. notcurses source).
+native/.build/
+
 doc/api/
 
 *.bak
