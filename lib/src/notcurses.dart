@@ -154,7 +154,7 @@ class NotCurses {
   /// can be either a single number, which will define all margins equally, or
   /// there can be four numbers separated by commas.
   bool lexMargins(String margins, CursesOptions? opts) {
-    final op = margins.toNativeUtf8().cast<ffi.Int8>();
+    final op = margins.toNativeUtf8().cast<ffi.Char>();
     final ffi.Pointer<notcurses_options> optPtr = opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
     final rc = nc.notcurses_lex_margins(op, optPtr);
     allocator.free(op);
@@ -242,10 +242,10 @@ class NotCurses {
   /// library we loaded, not what we compile against.
   Version version() {
     return using<Version>((Arena alloc) {
-      final major = alloc<ffi.Int32>();
-      final minor = alloc<ffi.Int32>();
-      final patch = alloc<ffi.Int32>();
-      final tweak = alloc<ffi.Int32>();
+      final major = alloc<ffi.Int>();
+      final minor = alloc<ffi.Int>();
+      final patch = alloc<ffi.Int>();
+      final tweak = alloc<ffi.Int>();
       nc.notcurses_version_components(major, minor, patch, tweak);
       return Version(major.value, minor.value, patch.value, tweak.value);
     });
@@ -308,14 +308,14 @@ class NotCurses {
 
     return Capabilities(
       colors: cpr.colors,
-      utf8: cpr.utf8 > 0,
-      rgb: cpr.rgb > 0,
-      canChangeColors: cpr.can_change_colors > 0,
-      halfblocks: cpr.halfblocks > 0,
-      quadrants: cpr.quadrants > 0,
-      sextants: cpr.sextants > 0,
-      braille: cpr.braille > 0,
-      octants: cpr.octants > 0,
+      utf8: cpr.utf8,
+      rgb: cpr.rgb,
+      canChangeColors: cpr.can_change_colors,
+      halfblocks: cpr.halfblocks,
+      quadrants: cpr.quadrants,
+      sextants: cpr.sextants,
+      braille: cpr.braille,
+      octants: cpr.octants,
     );
   }
 
@@ -338,12 +338,12 @@ class NotCurses {
 
   /// Can we load images? This requires being built against FFmpeg/OIIO.
   bool canOpenImages() {
-    return nc.notcurses_canopen_images(_ptr) != 0;
+    return nc.notcurses_canopen_images(_ptr);
   }
 
   /// Can we load videos? This requires being built against FFmpeg.
   bool canOpenVideos() {
-    return nc.notcurses_canopen_videos(_ptr) != 0;
+    return nc.notcurses_canopen_videos(_ptr);
   }
 
   /// Is our encoding UTF-8? Requires LANG being set to a UTF8 locale.
@@ -396,7 +396,7 @@ class NotCurses {
   String ucsToUtf8(int ucs) {
     final ucsp = allocator<ffi.Uint32>();
     ucsp.value = ucs;
-    final resultbuf = allocator<ffi.Uint8>(5);
+    final resultbuf = allocator<ffi.UnsignedChar>(5);
     final buflen = ffi.sizeOf<ffi.Uint8>();
     nc.notcurses_ucs32_to_utf8(ucsp, 1, resultbuf, buflen);
     final utf8 = resultbuf.cast<Utf8>().toDartString();

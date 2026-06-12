@@ -39,7 +39,7 @@ class Reader {
   }
 
   String destroy() {
-    final contents = allocator<ffi.Pointer<ffi.Int8>>();
+    final contents = allocator<ffi.Pointer<ffi.Char>>();
     nc.ncreader_destroy(_ptr, contents);
     final rc = contents.value.cast<Utf8>().toDartString();
     allocator.free(contents);
@@ -82,7 +82,7 @@ class Reader {
   /// Destructively write the provided EGC to the current cursor location. Move
   /// the cursor as necessary, scrolling if applicable.
   bool writeEgc(String value) {
-    final ugc = value.toNativeUtf8().cast<ffi.Int8>();
+    final ugc = value.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncreader_write_egc(_ptr, ugc);
     allocator.free(ugc);
     return rc == 0;
@@ -92,7 +92,7 @@ class Reader {
   /// true, and the input ought not be processed further. Almost all inputs
   /// are relevant to an ncreader, save synthesized ones.
   bool offerInput(Key key) {
-    return nc.ncreader_offer_input(_ptr, key.ptr) != 0;
+    return nc.ncreader_offer_input(_ptr, key.ptr);
   }
 
   String contents() {

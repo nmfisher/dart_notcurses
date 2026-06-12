@@ -24,12 +24,12 @@ class PixelGeomData {
     bool maxbmapx = false,
   }) {
     using((Arena alloc) {
-      final __pxy = pxy ? alloc<ffi.Uint32>() : ffi.nullptr;
-      final __pxx = pxx ? alloc<ffi.Uint32>() : ffi.nullptr;
-      final __celldimy = celldimy ? alloc<ffi.Uint32>() : ffi.nullptr;
-      final __celldimx = celldimx ? alloc<ffi.Uint32>() : ffi.nullptr;
-      final __maxbmapy = maxbmapy ? alloc<ffi.Uint32>() : ffi.nullptr;
-      final __maxbmapx = maxbmapx ? alloc<ffi.Uint32>() : ffi.nullptr;
+      final __pxy = pxy ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
+      final __pxx = pxx ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
+      final __celldimy = celldimy ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
+      final __celldimx = celldimx ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
+      final __maxbmapy = maxbmapy ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
+      final __maxbmapx = maxbmapx ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
 
       nc.ncplane_pixel_geom(plane.ptr, __pxy, __pxx, __celldimy, __celldimx, __maxbmapy, __maxbmapx);
 

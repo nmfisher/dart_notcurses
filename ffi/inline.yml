@@ -1,19 +1,80 @@
-output: 'lib/src/ffi/notcurses_inline_g.dart'
+output: '../lib/src/ffi/notcurses_inline_g.dart'
 name: 'NcFfiInline'
 description: 'Notcurses binding for Dart'
+library-imports:
+  main: './notcurses_g.dart'
 headers:
   entry-points:
-    - './ffi/ffi.c'
+    - './ffi.c'
   include-directives:
-    - './ffi/ffi.c'
-    # - '/usr/local/opt/notcurses/include/notcurses/ffi.c'
+    - './ffi.c'
 compiler-opts:
-  - '-I/usr/local/opt/notcurses/include'
+  # macOS
+  # - '-I/usr/local/opt/notcurses/include'
+  # Linux
+  - '-I/usr/local/include'
 compiler-opts-automatic:
   macos:
     include-c-standard-library: true
-typedef-map:
-  'bool': 'Int8'
+ignore-source-errors: true
+silence-enum-warning: true
+type-map:
+  native-types:
+    'bool':
+      lib: 'ffi'
+      c-type: 'Int8'
+      dart-type: 'int'
+  structs:
+    'nccell':
+      lib: 'main'
+      c-type: 'nccell'
+      dart-type: 'nccell'
+    'nccapabilities':
+      lib: 'main'
+      c-type: 'nccapabilities'
+      dart-type: 'nccapabilities'
+    'ncdirect':
+      lib: 'main'
+      c-type: 'ncdirect'
+      dart-type: 'ncdirect'
+    'ncinput':
+      lib: 'main'
+      c-type: 'ncinput'
+      dart-type: 'ncinput'
+    'ncplane':
+      lib: 'main'
+      c-type: 'ncplane'
+      dart-type: 'ncplane'
+    'notcurses':
+      lib: 'main'
+      c-type: 'notcurses'
+      dart-type: 'notcurses'
+    'ncpalette':
+      lib: 'main'
+      c-type: 'ncpalette'
+      dart-type: 'ncpalette'
+    'ncplane_options':
+      lib: 'main'
+      c-type: 'ncplane_options'
+      dart-type: 'ncplane_options'
+    'nctabbed':
+      lib: 'main'
+      c-type: 'nctabbed'
+      dart-type: 'nctabbed'
+    'ncvisual':
+      lib: 'main'
+      c-type: 'ncvisual'
+      dart-type: 'ncvisual'
+    'ncvisual_options':
+      lib: 'main'
+      c-type: 'ncvisual_options'
+      dart-type: 'ncvisual_options'
+enums:
+  as-int:
+    include:
+      - '.*'
+  exclude:
+    - _.*
 functions:
   include:
     - nccapability.*
@@ -41,9 +102,6 @@ structs:
 unions:
   exclude:
     - _.*
-enums:
-  exclude:
-    - _.*
 macros:
   exclude:
     - _.*
@@ -60,4 +118,3 @@ preamble: |
   // ignore_for_file: unused_field
   // ignore_for_file: constant_identifier_names
   // ignore_for_file: directives_ordering
-  import './notcurses_g.dart';

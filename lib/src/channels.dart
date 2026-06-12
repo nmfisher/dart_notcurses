@@ -142,9 +142,9 @@ class Channels {
   /// Extract 24 bits of foreground RGB from 'channels', split into subchannels.
   RGB fgRGB8() {
     return using<RGB>((Arena alloc) {
-      final r = alloc<Uint32>();
-      final g = alloc<Uint32>();
-      final b = alloc<Uint32>();
+      final r = alloc<UnsignedInt>();
+      final g = alloc<UnsignedInt>();
+      final b = alloc<UnsignedInt>();
 
       ncInline.ncchannels_fg_rgb8(_value, r, g, b);
       return RGB(r.value, g.value, b.value);
@@ -154,9 +154,9 @@ class Channels {
   /// Extract 24 bits of background RGB from 'channels', split into subchannels.
   RGB bgRGB8() {
     return using<RGB>((Arena alloc) {
-      final r = alloc<Uint32>();
-      final g = alloc<Uint32>();
-      final b = alloc<Uint32>();
+      final r = alloc<UnsignedInt>();
+      final g = alloc<UnsignedInt>();
+      final b = alloc<UnsignedInt>();
       ncInline.ncchannels_bg_rgb8(_value, r, g, b);
       return RGB(r.value, g.value, b.value);
     });
@@ -314,9 +314,9 @@ class Channel {
   /// Only valid if ncchannel_rgb_p() would return true for the channel.
   RGB rgb8() {
     return using<RGB>((Arena alloc) {
-      final r = alloc<Uint32>();
-      final g = alloc<Uint32>();
-      final b = alloc<Uint32>();
+      final r = alloc<UnsignedInt>();
+      final g = alloc<UnsignedInt>();
+      final b = alloc<UnsignedInt>();
       ncInline.ncchannel_rgb8(_value, r, g, b);
       return RGB(r.value, g.value, b.value);
     });

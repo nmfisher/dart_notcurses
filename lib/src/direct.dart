@@ -55,7 +55,7 @@ class Direct {
   /// NCDIRECT_OPTION_*.
   /// Returns NULL on error, including any failure initializing terminfo.
   Direct({this.termType = '', this.flags = 0}) {
-    final ffi.Pointer<ffi.Int8> i8 = termType.isEmpty ? ffi.nullptr.cast() : termType.toNativeUtf8().cast();
+    final ffi.Pointer<ffi.Char> i8 = termType.isEmpty ? ffi.nullptr.cast() : termType.toNativeUtf8().cast();
     _ptr = nc.ncdirect_init(i8, ffi.nullptr, flags);
     if (termType.isNotEmpty) {
       allocator.free(i8);
@@ -65,7 +65,7 @@ class Direct {
   /// The same as ncdirect_init(), but without any multimedia functionality,
   /// allowing for a svelter binary. Link with notcurses-core if this is used.
   Direct.core({String termType = '', int flags = 0}) {
-    final ffi.Pointer<ffi.Int8> i8 = termType.isEmpty ? ffi.nullptr.cast() : termType.toNativeUtf8().cast();
+    final ffi.Pointer<ffi.Char> i8 = termType.isEmpty ? ffi.nullptr.cast() : termType.toNativeUtf8().cast();
     _ptr = nc.ncdirect_core_init(i8, ffi.nullptr, flags);
     if (termType.isNotEmpty) {
       allocator.free(i8);
@@ -83,7 +83,7 @@ class Direct {
   /// Read a newline-delimited chunk of text, after printing the
   /// prompt. The newline itself, if present, is included. Returns NULL on error.
   String? readline([String prompt = '']) {
-    final i8 = prompt.toNativeUtf8().cast<ffi.Int8>();
+    final i8 = prompt.toNativeUtf8().cast<ffi.Char>();
     final result = nc.ncdirect_readline(_ptr, i8);
     allocator.free(i8);
 
@@ -142,7 +142,7 @@ class Direct {
   /// ncdirect_putstr() does not explicitly flush output buffers, so it will not
   /// necessarily be immediately visible. Returns EOF on error.
   int putStr(String value, [Channels? channels]) {
-    final i8 = value.toNativeUtf8().cast<ffi.Int8>();
+    final i8 = value.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirect_putstr(_ptr, channels != null ? channels.value : 0, i8);
     allocator.free(i8);
     return rc;
@@ -156,8 +156,8 @@ class Direct {
   /// the cursor moved
   /// NcResult.value will be the total bytes of the string printed
   NcResult<int, int> putEgc(String value, [Channels? channels]) {
-    final i8 = value.toNativeUtf8().cast<ffi.Int8>();
-    final sbytes = allocator<ffi.Int32>();
+    final i8 = value.toNativeUtf8().cast<ffi.Char>();
+    final sbytes = allocator<ffi.Int>();
     final rc = nc.ncdirect_putegc(_ptr, channels != null ? channels.value : 0, i8, sbytes);
     final bytesLen = sbytes.value;
 
@@ -238,8 +238,8 @@ class Direct {
   /// terminal, and then reading from it. If the terminal doesn't reply, or
   /// doesn't reply in a way we understand, the results might be deleterious.
   Dimensions? cursorYX() {
-    final yp = allocator<ffi.Uint32>();
-    final xp = allocator<ffi.Uint32>();
+    final yp = allocator<ffi.UnsignedInt>();
+    final xp = allocator<ffi.UnsignedInt>();
     final res = nc.ncdirect_cursor_yx(_ptr, yp, xp);
     if (res < 0) {
       return null;
@@ -274,14 +274,14 @@ class Direct {
 
     return Capabilities(
       colors: cpr.colors,
-      utf8: cpr.utf8 > 0,
-      rgb: cpr.rgb > 0,
-      canChangeColors: cpr.can_change_colors > 0,
-      halfblocks: cpr.halfblocks > 0,
-      quadrants: cpr.quadrants > 0,
-      sextants: cpr.sextants > 0,
-      braille: cpr.braille > 0,
-      octants: cpr.octants > 0,
+      utf8: cpr.utf8,
+      rgb: cpr.rgb,
+      canChangeColors: cpr.can_change_colors,
+      halfblocks: cpr.halfblocks,
+      quadrants: cpr.quadrants,
+      sextants: cpr.sextants,
+      braille: cpr.braille,
+      octants: cpr.octants,
     );
   }
 
@@ -290,7 +290,7 @@ class Direct {
   /// horizontal line, |len| cannot exceed the screen width minus the cursor's
   /// offset. All lines start at the current cursor position.
   int hlineInterp(String egc, int len, Channels chan1, Channels chan2) {
-    final i8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Int8>();
+    final i8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirect_hline_interp(_ptr, i8, len, chan1.value, chan2.value);
     allocator.free(i8);
     return rc;
@@ -301,7 +301,7 @@ class Direct {
   /// For a vertical line, |len| may be as long as you'd like; the screen
   /// will scroll as necessary. All lines start at the current cursor position.
   int vlineInterp(String egc, int len, Channels chan1, Channels chan2) {
-    final i8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Int8>();
+    final i8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirect_vline_interp(_ptr, i8, len, chan1.value, chan2.value);
     allocator.free(i8);
     return rc;
@@ -312,7 +312,7 @@ class Direct {
   /// minimum box size is 2x2, and it cannot be drawn off-screen. |wchars| is an
   /// array of 6 wide characters: UL, UR, LL, LR, HL, VL.
   bool box(int ul, int ur, int ll, int lr, String wchars, int ylen, int xlen, int ctlword) {
-    final i8 = wchars.characters.elementAt(0).toNativeUtf8().cast<ffi.Int32>();
+    final i8 = wchars.characters.elementAt(0).toNativeUtf8().cast<ffi.WChar>();
     final rc = nc.ncdirect_box(_ptr, ul, ur, ll, lr, i8, ylen, xlen, ctlword) == 0;
     allocator.free(i8);
     return rc;
@@ -406,7 +406,7 @@ class Direct {
   /// the column of the cursor, and those to the right. The render/raster process
   /// can be split by using ncdirect_render_frame() and ncdirect_raster_frame().
   bool renderImage(String filename, int align, int blitter, int scale) {
-    final fname = filename[0].toNativeUtf8().cast<ffi.Int8>();
+    final fname = filename[0].toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirect_render_image(_ptr, fname, align, blitter, scale) == 0;
     allocator.free(fname);
     return rc;
@@ -420,7 +420,7 @@ class Direct {
   /// scaling; the terminal's geometry is otherwise used.
   // TODO: review this, Plane is an alias, check ncdirectv
   Plane? renderFrame(String filename, int blitter, int scale, int maxy, int maxx) {
-    final fname = filename[0].toNativeUtf8().cast<ffi.Int8>();
+    final fname = filename[0].toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirect_render_frame(_ptr, fname, blitter, scale, maxy, maxx);
     allocator.free(fname);
     if (rc == ffi.nullptr) return null;
@@ -441,7 +441,7 @@ class Direct {
   /// with ncdirectf_free();
   // TODO: review this, Visual is an alias, check ncdirectf
   Visual? visualFromFile(String filename) {
-    final fname = filename[0].toNativeUtf8().cast<ffi.Int8>();
+    final fname = filename[0].toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirectf_from_file(_ptr, fname);
     allocator.free(fname);
     if (rc == ffi.nullptr) return null;
@@ -513,7 +513,7 @@ class Direct {
 
   /// Is our encoding UTF-8? Requires LANG being set to a UTF8 locale.
   bool canUtf8() {
-    return nc.ncdirect_canutf8(_ptr) != 0;
+    return nc.ncdirect_canutf8(_ptr);
   }
 
   /// Can we blit pixel-accurate bitmaps?
@@ -549,6 +549,6 @@ class Direct {
   /// Is there support for acquiring the cursor's current position? Requires the
   /// u7 terminfo capability, and that we are connected to an actual terminal.
   bool canGetCursor() {
-    return nc.ncdirect_canget_cursor(_ptr) != 0;
+    return nc.ncdirect_canget_cursor(_ptr);
   }
 }

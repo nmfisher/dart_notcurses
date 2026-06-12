@@ -83,9 +83,9 @@ class Cell {
   /// Extract 24 bits of foreground RGB from 'cl', split into components.
   RGB fgRGB8() {
     return using<RGB>((Arena alloc) {
-      final r = alloc<ffi.Uint32>();
-      final g = alloc<ffi.Uint32>();
-      final b = alloc<ffi.Uint32>();
+      final r = alloc<ffi.UnsignedInt>();
+      final g = alloc<ffi.UnsignedInt>();
+      final b = alloc<ffi.UnsignedInt>();
 
       ncInline.nccell_fg_rgb8(_ptr, r, g, b);
       return RGB(r.value, g.value, b.value);
@@ -95,9 +95,9 @@ class Cell {
   /// Extract 24 bits of background RGB from 'cl', split into components.
   RGB bgRGB8() {
     return using<RGB>((Arena alloc) {
-      final r = alloc<ffi.Uint32>();
-      final g = alloc<ffi.Uint32>();
-      final b = alloc<ffi.Uint32>();
+      final r = alloc<ffi.UnsignedInt>();
+      final g = alloc<ffi.UnsignedInt>();
+      final b = alloc<ffi.UnsignedInt>();
 
       ncInline.nccell_bg_rgb8(_ptr, r, g, b);
       return RGB(r.value, g.value, b.value);

@@ -1,20 +1,36 @@
-output: 'lib/src/ffi/notcurses_g.dart'
+output: '../lib/src/ffi/notcurses_g.dart'
 name: 'NcFfi'
 description: 'Notcurses binding for Dart'
 headers:
   entry-points:
-    - '/usr/local/opt/notcurses/include/notcurses/notcurses.h'
-    - '/usr/local/opt/notcurses/include/notcurses/direct.h'
+    # macOS
+    # - '/usr/local/opt/notcurses/include/notcurses/notcurses.h'
+    # - '/usr/local/opt/notcurses/include/notcurses/direct.h'
+    # Linux
+    - '/usr/local/include/notcurses/notcurses.h'
+    - '/usr/local/include/notcurses/direct.h'
   include-directives:
-    - '/usr/local/opt/notcurses/include/notcurses/notcurses.h'
-    - '/usr/local/opt/notcurses/include/notcurses/direct.h'
+    # macOS
+    # - '/usr/local/opt/notcurses/include/notcurses/notcurses.h'
+    # - '/usr/local/opt/notcurses/include/notcurses/direct.h'
+    # Linux
+    - '/usr/local/include/notcurses/notcurses.h'
+    - '/usr/local/include/notcurses/direct.h'
 compiler-opts:
-    - '-I/usr/local/opt/notcurses/include'
-#   - '-I/usr/local/opt/llvm/include'
+    # macOS
+    # - '-I/usr/local/opt/notcurses/include'
+    # Linux
+    - '-I/usr/local/include'
 compiler-opts-automatic:
   macos:
     include-c-standard-library: true
-dart-bool: false
+silence-enum-warning: true
+enums:
+  as-int:
+    include:
+      - '.*'
+  exclude:
+    - _.*
 functions:
   include:
     - notcurses.*
@@ -50,75 +66,15 @@ structs:
 unions:
   exclude:
     - _.*
-enums:
-  exclude:
-    - _.*
 macros:
   exclude:
     - _.*
-#     - IPV6.*
-#     - ICMP.*
-#     - IP.*
-#     - IN.*
-#     - MCAST.*
-#     - SCM.*
-#     - SHUT.*
-#     - MSG.*
-#     - NET.*
-#     - SOMA.*
-#     - PF.*
-#     - SOCK.*
-#     - FP.*
-#     - AF.*
-#     - pseudo.*
-#     - SOL.*
-#     - CONNECT.*
-#     - KEV.*
-#     - WAKEMON.*
-#     - IOPOL.*
-#     - RLIM.*
-#     - RU.*
-#     - PRIO.*
-#     - CLD.*
-#     - TRAP.*
-#     - BUS.*
-#     - FPE.*
-#     - ILL.*
-#     - SIG_ATOM.*
-#     - SEEK.*
-#     - RENAME.*
-#     - SA.*
-#     - SI.*
-#     - SO.*
-#     - SS.*
-#     - SV.*
-#     - MAC_OS.*
 globals:
   exclude:
     - _.*
 typedefs:
   exclude:
     - _.*
-    # - _opaque.*
-    # - __darwin.*
-    # - __IPV6.*
-    # - _SS_.*
-    # - __DARWIN.*
-    # - _DARWIN.*
-    # - _XOPEN.*
-    # - _POSIX.*
-    # - __KAME.*
-    # - __S.*
-    # - __IO.*
-    # - _IO.*
-    # - _X8.*
-    # - _QUAD.*
-    # - _CTYPE.*
-    # - __WATCHOS.*
-    # - __TVOS.*
-    # - __IPHONE.*
-    # - __MAC_.*
-    # - __PTHREAD.*
 preamble: |
   // ignore_for_file: camel_case_types
   // ignore_for_file: non_constant_identifier_names

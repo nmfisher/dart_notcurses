@@ -191,7 +191,7 @@ class Visual {
   /// Open a visual at 'file', extract a codec and parameters, decode the first
   /// image to memory.
   factory Visual.fromFile(String path) {
-    final i8 = path.toNativeUtf8().cast<ffi.Int8>();
+    final i8 = path.toNativeUtf8().cast<ffi.Char>();
     final v = nc.ncvisual_from_file(i8);
     allocator.free(i8);
     return Visual._(v);
@@ -286,7 +286,7 @@ class Visual {
 
   /// Construct an ncvisual from a nul-terminated Sixel control sequence.
   factory Visual.fromSizel(String sixel, int leny, int lenx) {
-    final i8 = sixel.toNativeUtf8().cast<ffi.Int8>();
+    final i8 = sixel.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncvisual_from_sixel(i8, leny, lenx);
     allocator.free(i8);
     return Visual._(rc);

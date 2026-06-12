@@ -66,7 +66,7 @@ class Plot {
     opts.gridtype = po.gridtype;
     opts.rangex = po.rangex;
     opts.flags = po.flags;
-    opts.title = po.title.toNativeUtf8().cast<Int8>();
+    opts.title = po.title.toNativeUtf8().cast<Char>();
 
     final p = Plot._(nc.ncuplot_create(plane.ptr, optsPtr, po.miny, po.maxy));
     allocator.free(opts.title);

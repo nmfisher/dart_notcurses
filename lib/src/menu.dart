@@ -164,7 +164,7 @@ class Menu {
             _ptr,
             section.toNativeUtf8(allocator: alloc).cast(),
             item.toNativeUtf8(allocator: alloc).cast(),
-            enabled ? 1 : 0,
+            enabled,
           ) ==
           0;
     });
@@ -190,7 +190,7 @@ class Menu {
   /// shortcut, 'ni' will be filled in with the shortcut.
   NcResult<String?, Key?> mouseSelected(Key click, {bool getShortcut = false}) {
     Key? k;
-    final ffi.Pointer<ffi.Int8> rc;
+    final ffi.Pointer<ffi.Char> rc;
     if (getShortcut) {
       k = Key();
     }
@@ -218,7 +218,7 @@ class Menu {
   ///  * up or down on an unrolled menu (navigates among items)
   ///  * escape on an unrolled menu (the menu is rolled up)
   bool offerInput(Key key) {
-    return nc.ncmenu_offer_input(_ptr, key.ptr) != 0;
+    return nc.ncmenu_offer_input(_ptr, key.ptr);
   }
 
   /// Given a key, check if there is a MenuItem hot key with the same definition

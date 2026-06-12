@@ -134,8 +134,8 @@ class Plane {
   /// Returns the dimensions of the current plane
   Dimensions dimyx() {
     return using<Dimensions>((Arena alloc) {
-      final y = alloc<ffi.Uint32>();
-      final x = alloc<ffi.Uint32>();
+      final y = alloc<ffi.UnsignedInt>();
+      final x = alloc<ffi.UnsignedInt>();
       nc.ncplane_dim_yx(_ptr, y, x);
       return Dimensions(y.value, x.value);
     });
@@ -154,9 +154,9 @@ class Plane {
   /// Extract 24 bits of foreground RGB from 'n', split into components.
   RGB fgRGB8() {
     return using<RGB>((Arena alloc) {
-      final r = alloc<ffi.Uint32>();
-      final g = alloc<ffi.Uint32>();
-      final b = alloc<ffi.Uint32>();
+      final r = alloc<ffi.UnsignedInt>();
+      final g = alloc<ffi.UnsignedInt>();
+      final b = alloc<ffi.UnsignedInt>();
       ncInline.ncplane_fg_rgb8(_ptr, r, g, b);
       return RGB(r.value, g.value, b.value);
     });
@@ -175,9 +175,9 @@ class Plane {
   /// Extract 24 bits of background RGB from 'n', split into components.
   RGB bgRGB8() {
     return using<RGB>((Arena alloc) {
-      final r = alloc<ffi.Uint32>();
-      final g = alloc<ffi.Uint32>();
-      final b = alloc<ffi.Uint32>();
+      final r = alloc<ffi.UnsignedInt>();
+      final g = alloc<ffi.UnsignedInt>();
+      final b = alloc<ffi.UnsignedInt>();
       ncInline.ncplane_bg_rgb8(_ptr, r, g, b);
       return RGB(r.value, g.value, b.value);
     });
@@ -260,7 +260,7 @@ class Plane {
   /// On error, a non-positive number is returned, indicating the number of columns
   /// which were written before the error.
   int putStrYX(int y, int x, String value) {
-    final gclusters = value.toNativeUtf8().cast<ffi.Int8>();
+    final gclusters = value.toNativeUtf8().cast<ffi.Char>();
     final rc = ncInline.ncplane_putstr_yx(_ptr, y, x, gclusters);
     allocator.free(gclusters);
     return rc;
@@ -273,7 +273,7 @@ class Plane {
   /// On error, a non-positive number is returned, indicating the number of columns
   /// which were written before the error.
   int putStr(String value) {
-    final gclusters = value.toNativeUtf8().cast<ffi.Int8>();
+    final gclusters = value.toNativeUtf8().cast<ffi.Char>();
     final rc = ncInline.ncplane_putstr(_ptr, gclusters);
     allocator.free(gclusters);
     return rc;
@@ -281,7 +281,7 @@ class Plane {
 
   /// Write a series of EGCs aligned to the plane.
   int putStrAligned(int y, int align, String value) {
-    final egs = value.toNativeUtf8().cast<ffi.Int8>();
+    final egs = value.toNativeUtf8().cast<ffi.Char>();
     final rc = ncInline.ncplane_putstr_aligned(_ptr, y, align, egs);
     allocator.free(egs);
     return rc;
@@ -361,7 +361,7 @@ class Plane {
   ///
   /// A newline at any point will move the cursor to the next row.
   int putText(int y, int align, String value) {
-    final v = value.toNativeUtf8().cast<ffi.Int8>();
+    final v = value.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncplane_puttext(_ptr, y, align, v, ffi.nullptr);
     allocator.free(v);
     return rc;
@@ -373,8 +373,8 @@ class Plane {
   /// On failure, -1 is returned. The number of bytes converted from gclust is
   /// written to 'sbytes' if non-NULL.
   NcResult<int, int> putEgcYX(int y, int x, String value) {
-    final sbytes = allocator<ffi.Uint64>();
-    final charC = value.toNativeUtf8().cast<ffi.Int8>();
+    final sbytes = allocator<ffi.Size>();
+    final charC = value.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncplane_putegc_yx(_ptr, y, x, charC, sbytes);
     final res = NcResult<int, int>(rc, sbytes.value);
 
@@ -460,8 +460,8 @@ class Plane {
   /// Get the current position of the cursor within n. y and/or x may be NULL.
   Dimensions cursorYX() {
     return using<Dimensions>((Arena alloc) {
-      final y = alloc<ffi.Uint32>();
-      final x = alloc<ffi.Uint32>();
+      final y = alloc<ffi.UnsignedInt>();
+      final x = alloc<ffi.UnsignedInt>();
       nc.ncplane_cursor_yx(_ptr, y, x);
       return Dimensions(y.value, x.value);
     });
@@ -517,21 +517,21 @@ class Plane {
   /// ncplane_putstr(), but following a conversion from wchar_t to UTF-8 multibyte.
   /// FIXME do this as a loop over ncplane_putegc_yx and save the big allocation+copy
   int putWstrYX(int y, int x, String value) {
-    final gcluster = value.toNativeUtf8().cast<ffi.Int32>();
+    final gcluster = value.toNativeUtf8().cast<ffi.Int>();
     final rc = ncInline.ncplane_putwstr_yx(_ptr, y, x, gcluster);
     allocator.free(gcluster);
     return rc;
   }
 
   int putWstrAligned(int y, int align, String value) {
-    final gcluster = value.toNativeUtf8().cast<ffi.Int32>();
+    final gcluster = value.toNativeUtf8().cast<ffi.Int>();
     final rc = ncInline.ncplane_putwstr_aligned(_ptr, y, align, gcluster);
     allocator.free(gcluster);
     return rc;
   }
 
   int putWstr(String value) {
-    final gcluster = value.toNativeUtf8().cast<ffi.Int32>();
+    final gcluster = value.toNativeUtf8().cast<ffi.Int>();
     final rc = ncInline.ncplane_putwstr(_ptr, gcluster);
     allocator.free(gcluster);
     return rc;
@@ -565,8 +565,8 @@ class Plane {
   /// otherwise gets a value of 1. A surrogate followed by an invalid pairing
   /// will set 'wchars' to 2, but return -1 immediately.
   NcResult<int, int> putWcUtf32(int w, int wchars) {
-    final wptrwPtr = allocator<ffi.Int32>();
-    final wcharsPtr = allocator<ffi.Uint32>();
+    final wptrwPtr = allocator<ffi.Int>();
+    final wcharsPtr = allocator<ffi.UnsignedInt>();
     wptrwPtr.value = w;
     wcharsPtr.value = wchars;
     final rc = ncInline.ncplane_putwc_utf32(_ptr, wptrwPtr, wcharsPtr);
@@ -590,7 +590,7 @@ class Plane {
   /// controlled with ncplane_set_scrolling(). Returns true if scrolling was
   /// previously enabled, or false if it was disabled.
   bool setScrolling(bool enabled) {
-    return nc.ncplane_set_scrolling(_ptr, enabled ? 1 : 0) > 0;
+    return nc.ncplane_set_scrolling(_ptr, enabled ? 1 : 0);
   }
 
   /// Retrieves the [NotCurses] references for this plane
@@ -603,7 +603,7 @@ class Plane {
   /// affected by ncplane_erase(). 'egc' must be an extended grapheme cluster.
   /// Returns the number of bytes copied out of 'gcluster', or -1 on failure.
   int setBase(String char, int stylemask, Channels channels) {
-    final egc = char.toNativeUtf8().cast<ffi.Int8>();
+    final egc = char.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncplane_set_base(_ptr, egc, stylemask, channels.value);
     allocator.free(egc);
     return rc;
@@ -702,8 +702,8 @@ class Plane {
   /// a root plane). To get absolute coordinates, use ncplane_abs_yx().
   Dimensions yx() {
     return using<Dimensions>((Arena alloc) {
-      final y = alloc<ffi.Int32>();
-      final x = alloc<ffi.Int32>();
+      final y = alloc<ffi.Int>();
+      final x = alloc<ffi.Int>();
       nc.ncplane_yx(_ptr, y, x);
       return Dimensions(y.value, x.value);
     });
@@ -724,8 +724,8 @@ class Plane {
   /// Get the absolute coordinates of plane relative to its pile.
   Dimensions absYX() {
     return using<Dimensions>((Arena alloc) {
-      final y = alloc<ffi.Int32>();
-      final x = alloc<ffi.Int32>();
+      final y = alloc<ffi.Int>();
+      final x = alloc<ffi.Int>();
       nc.ncplane_abs_yx(_ptr, y, x);
       return Dimensions(y.value, x.value);
     });
@@ -889,8 +889,8 @@ class Plane {
   /// 'pxdimx' are non-NULL, they will be filled in with the total pixel geometry.
   Uint32List? asRGBA(int blit, int begy, int begx, int leny, int lenx) {
     return using<Uint32List?>((Arena alloc) {
-      final pxdimy = alloc<ffi.Uint32>();
-      final pxdimx = alloc<ffi.Uint32>();
+      final pxdimy = alloc<ffi.UnsignedInt>();
+      final pxdimx = alloc<ffi.UnsignedInt>();
       final rgbaSize = ffi.sizeOf<ffi.Uint32>() * lenx * pxdimx.value * leny * pxdimy.value;
       final u32 = nc.ncplane_as_rgba(_ptr, blit, begy, begx, leny, lenx, pxdimy, pxdimx);
       if (u32 == ffi.nullptr) return null;
@@ -923,8 +923,8 @@ class Plane {
   /// and 'x' may be NULL. if 'dst' is NULL, it is taken to be the standard plane.
   Dimensions translate(Plane? dst, int y, int x) {
     return using<Dimensions>((Arena alloc) {
-      final py = alloc<ffi.Int32>();
-      final px = alloc<ffi.Int32>();
+      final py = alloc<ffi.Int>();
+      final px = alloc<ffi.Int>();
       final dp = dst != null ? dst.ptr : ffi.nullptr;
       nc.ncplane_translate(_ptr, dp, py, px);
       return Dimensions(py.value, px.value);
@@ -937,9 +937,9 @@ class Plane {
   /// within 'n', these coordinates will not be within the dimensions of the plane.
   Dimensions? translateAbs(int y, int x) {
     return using<Dimensions?>((Arena alloc) {
-      final py = alloc<ffi.Int32>();
-      final px = alloc<ffi.Int32>();
-      final rc = nc.ncplane_translate_abs(_ptr, py, px) != 0;
+      final py = alloc<ffi.Int>();
+      final px = alloc<ffi.Int>();
+      final rc = nc.ncplane_translate_abs(_ptr, py, px);
       if (!rc) return null;
       return Dimensions(py.value, px.value);
     });
@@ -997,12 +997,12 @@ class Plane {
   /// dynamically controlled with ncplane_set_autogrow(). Returns true if
   /// autogrow was previously enabled, or false if it was disabled.
   bool setAutogrow(bool status) {
-    return nc.ncplane_set_autogrow(_ptr, status ? 1 : 0) != 0;
+    return nc.ncplane_set_autogrow(_ptr, status ? 1 : 0);
   }
 
   /// Returns current autogrow status
   bool getAutogrow() {
-    return nc.ncplane_autogrow_p(_ptr) != 0;
+    return nc.ncplane_autogrow_p(_ptr);
   }
 
   /// Effect |r| scroll events on the plane |n|. Returns an error if |n| is not
@@ -1041,7 +1041,7 @@ class Plane {
 
   // Change the name of 't'. Returns -1 if 'newname' is NULL, and 0 otherwise.
   bool setName(String name) {
-    final n = name.toNativeUtf8().cast<ffi.Int8>();
+    final n = name.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncplane_set_name(_ptr, n) != 0;
     allocator.free(n);
     return rc;
@@ -1208,7 +1208,7 @@ class Plane {
     int styles = 0,
     Channels? channels,
   ]) {
-    final u8 = gclusters.toNativeUtf8().cast<ffi.Int8>();
+    final u8 = gclusters.toNativeUtf8().cast<ffi.Char>();
     final rc = ncInline.nccells_load_box(
           _ptr,
           styles,
@@ -1401,7 +1401,7 @@ class Plane {
   ///  Nx1: both left and both right colors must be the same (horizontal gradient)
   int gradient(
       int y, int x, int ylen, int xlen, String egc, int styles, Channels ul, Channels ur, Channels ll, Channels lr) {
-    final u8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Int8>();
+    final u8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncplane_gradient(_ptr, y, x, ylen, xlen, u8, styles, ul.value, ur.value, ll.value, lr.value);
     allocator.free(u8);
     return rc;
@@ -1446,7 +1446,7 @@ class Plane {
   /// styling of the cell is left untouched, but any resources are released.
   NcResult<int, Cell?> loadCell(String value) {
     final c = Cell.init();
-    final u8 = value.toNativeUtf8().cast<ffi.Int8>();
+    final u8 = value.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.nccell_load(_ptr, c.ptr, u8);
     allocator.free(u8);
     if (rc < 0) {
@@ -1463,7 +1463,7 @@ class Plane {
   /// nccell_load(), plus blast the styling with 'attr' and 'channels'.
   NcResult<int, Cell?> primeCell(String value, [int stylemask = 0, Channels? channels]) {
     final c = Cell.init();
-    final u8 = value.toNativeUtf8().cast<ffi.Int8>();
+    final u8 = value.toNativeUtf8().cast<ffi.Char>();
     final rc = ncInline.nccell_prime(_ptr, c.ptr, u8, stylemask, channels == null ? 0 : channels.value);
     allocator.free(u8);
     if (rc < 0) {

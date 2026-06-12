@@ -49,7 +49,7 @@ void main() {
     });
 
     test('blit_4x2 equals NCBLIT_4x2 from FFI enum', () {
-      expect(Blitter.blit_4x2, equals(9));
+      expect(Blitter.blit_4x2, equals(5));
     });
   });
 }
