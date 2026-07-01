@@ -75,12 +75,51 @@ class Capabilities {
   }
 }
 
+// libc fdopen/fclose, looked up in-process (present in libc/libSystem). Used to
+// target a specific output file (e.g. a PTY slave) instead of /dev/tty.
+late final ffi.Pointer<FILE> Function(int fd, ffi.Pointer<ffi.Char> mode)
+    _fdopenLookup = ffi.DynamicLibrary.process().lookupFunction<
+        ffi.Pointer<FILE> Function(ffi.Int32, ffi.Pointer<ffi.Char>),
+        ffi.Pointer<FILE> Function(int, ffi.Pointer<ffi.Char>)>('fdopen');
+
+late final int Function(ffi.Pointer<FILE>) _fcloseLookup =
+    ffi.DynamicLibrary.process().lookupFunction<
+        ffi.Int32 Function(ffi.Pointer<FILE>),
+        int Function(ffi.Pointer<FILE>)>('fclose');
+
+ffi.Pointer<FILE> _fdopenFile(int fd, String mode) {
+  final modePtr = mode.toNativeUtf8().cast<ffi.Char>();
+  final p = _fdopenLookup(fd, modePtr);
+  malloc.free(modePtr);
+  return p;
+}
+
 class NotCurses {
   late final ffi.Pointer<notcurses> _ptr;
 
-  NotCurses([CursesOptions? opts]) {
-    final ffi.Pointer<notcurses_options> optPtr = opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
-    _ptr = nc.notcurses_init(optPtr, ffi.nullptr);
+  /// A FILE* we opened via fdopen (when constructed with an output fd), closed
+  /// on [stop]. Null when notcurses owns the output (/dev/tty).
+  ffi.Pointer<FILE>? _ownedFile;
+
+  NotCurses([CursesOptions? opts]) : this._(opts, null);
+
+  /// Initialize against [outFd] (fdopen'd to a FILE* and passed as
+  /// notcurses_init's output file) instead of /dev/tty. Lets a caller render
+  /// to a specific tty/file — notably a PTY slave in tests. The FILE* is
+  /// closed by [stop].
+  NotCurses.withOutputFd(int outFd, [CursesOptions? opts]) : this._(opts, outFd);
+
+  NotCurses._(CursesOptions? opts, int? outFd) {
+    final ffi.Pointer<notcurses_options> optPtr =
+        opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
+    ffi.Pointer<FILE> fp;
+    if (outFd != null) {
+      _ownedFile = _fdopenFile(outFd, 'w');
+      fp = _ownedFile!;
+    } else {
+      fp = ffi.nullptr;
+    }
+    _ptr = nc.notcurses_init(optPtr, fp);
     if (optPtr != ffi.nullptr) {
       allocator.free(optPtr);
     }
@@ -91,7 +130,8 @@ class NotCurses {
   }
 
   NotCurses.core([CursesOptions? opts]) {
-    final ffi.Pointer<notcurses_options> optPtr = opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
+    final ffi.Pointer<notcurses_options> optPtr =
+        opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
     _ptr = nc.notcurses_core_init(optPtr, ffi.nullptr);
     if (optPtr != ffi.nullptr) {
       allocator.free(optPtr);
@@ -124,9 +164,16 @@ class NotCurses {
     return ncInline.notcurses_render(_ptr) == 0;
   }
 
-  /// Destroy a Notcurses context
+  /// Destroy a Notcurses context. If this context owns its output FILE*
+  /// (constructed via [NotCurses.withOutputFd]), it is closed here.
   bool stop() {
-    return nc.notcurses_stop(_ptr) == 0;
+    final ok = nc.notcurses_stop(_ptr) == 0;
+    final f = _ownedFile;
+    if (f != null) {
+      _fcloseLookup(f);
+      _ownedFile = null;
+    }
+    return ok;
   }
 
   /// Get a reference to the standard plane (one matching our current idea of the
