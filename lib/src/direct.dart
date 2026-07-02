@@ -1,3 +1,4 @@
+// ignore_for_file: library_prefixes
 import 'dart:ffi' as ffi;
 import 'package:characters/characters.dart';
 import 'package:ffi/ffi.dart';
@@ -5,8 +6,9 @@ import 'package:ffi/ffi.dart';
 import './channels.dart';
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
+import './ffi/notcurses_g.dart' as nc;
+import './ffi/notcurses_inline_g.dart' as ncInline;
 import './key.dart';
-import './load_library.dart';
 import './notcurses.dart';
 import './pixelgeom_data.dart';
 import './plane.dart';
@@ -43,9 +45,9 @@ import './visual.dart';
 /// found with `ncdirect_cursor_yx()` (this function fails if run on a
 /// non-terminal, or if the terminal does not support this capability).
 class Direct {
-  late final String termType;
-  late final int flags;
-  late final ffi.Pointer<ncdirect> _ptr;
+  final String termType;
+  final int flags;
+  ffi.Pointer<ncdirect> _ptr = ffi.nullptr;
 
   /// Initialize a direct-mode Notcurses context on the connected terminal at 'fp'.
   /// 'fp' must be a tty. You'll usually want stdout. Direct mode supports a
@@ -64,7 +66,7 @@ class Direct {
 
   /// The same as ncdirect_init(), but without any multimedia functionality,
   /// allowing for a svelter binary. Link with notcurses-core if this is used.
-  Direct.core({String termType = '', int flags = 0}) {
+  Direct.core({this.termType = '', this.flags = 0}) {
     final ffi.Pointer<ffi.Char> i8 = termType.isEmpty ? ffi.nullptr.cast() : termType.toNativeUtf8().cast();
     _ptr = nc.ncdirect_core_init(i8, ffi.nullptr, flags);
     if (termType.isNotEmpty) {
@@ -75,9 +77,13 @@ class Direct {
   bool get notInitialized => _ptr == ffi.nullptr;
   bool get initialized => _ptr != ffi.nullptr;
 
-  /// Release 'nc' and any associated resources. 0 on success, non-0 on failure.
+  /// Release 'nc' and any associated resources. Safe to call more than once;
+  /// only the first call tears the context down.
   bool stop() {
-    return nc.ncdirect_stop(_ptr) == 0;
+    if (_ptr == ffi.nullptr) return true;
+    final ok = nc.ncdirect_stop(_ptr) == 0;
+    _ptr = ffi.nullptr;
+    return ok;
   }
 
   /// Read a newline-delimited chunk of text, after printing the
@@ -241,10 +247,7 @@ class Direct {
     final yp = allocator<ffi.UnsignedInt>();
     final xp = allocator<ffi.UnsignedInt>();
     final res = nc.ncdirect_cursor_yx(_ptr, yp, xp);
-    if (res < 0) {
-      return null;
-    }
-    final rc = Dimensions(yp.value, xp.value);
+    final rc = res < 0 ? null : Dimensions(yp.value, xp.value);
     allocator.free(yp);
     allocator.free(xp);
     return rc;
@@ -312,9 +315,17 @@ class Direct {
   /// minimum box size is 2x2, and it cannot be drawn off-screen. |wchars| is an
   /// array of 6 wide characters: UL, UR, LL, LR, HL, VL.
   bool box(int ul, int ur, int ll, int lr, String wchars, int ylen, int xlen, int ctlword) {
-    final i8 = wchars.characters.elementAt(0).toNativeUtf8().cast<ffi.WChar>();
-    final rc = nc.ncdirect_box(_ptr, ul, ur, ll, lr, i8, ylen, xlen, ctlword) == 0;
-    allocator.free(i8);
+    // The C API reads a wchar_t[6] (UL, UR, LL, LR, HL, VL), not UTF-8 bytes.
+    final runes = wchars.runes.toList();
+    if (runes.length < 6) {
+      throw ArgumentError.value(wchars, 'wchars', 'requires 6 characters: UL, UR, LL, LR, HL, VL');
+    }
+    final wbuf = allocator<ffi.WChar>(6);
+    for (var i = 0; i < 6; i++) {
+      wbuf[i] = runes[i];
+    }
+    final rc = nc.ncdirect_box(_ptr, ul, ur, ll, lr, wbuf, ylen, xlen, ctlword) == 0;
+    allocator.free(wbuf);
     return rc;
   }
 
@@ -347,11 +358,11 @@ class Direct {
     final k = Key();
     final ts = _makeTs(sec, nsec);
     final rc = nc.ncdirect_get(_ptr, ts, k.ptr);
+    if (ts != ffi.nullptr) allocator.free(ts);
     if (rc < 0) {
       k.destroy();
       return NcResult(rc, null);
     }
-    if (!_notHasTs(sec, nsec)) allocator.free(ts);
     return NcResult(rc, k);
   }
 
@@ -406,7 +417,7 @@ class Direct {
   /// the column of the cursor, and those to the right. The render/raster process
   /// can be split by using ncdirect_render_frame() and ncdirect_raster_frame().
   bool renderImage(String filename, int align, int blitter, int scale) {
-    final fname = filename[0].toNativeUtf8().cast<ffi.Char>();
+    final fname = filename.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirect_render_image(_ptr, fname, align, blitter, scale) == 0;
     allocator.free(fname);
     return rc;
@@ -420,18 +431,18 @@ class Direct {
   /// scaling; the terminal's geometry is otherwise used.
   // TODO: review this, Plane is an alias, check ncdirectv
   Plane? renderFrame(String filename, int blitter, int scale, int maxy, int maxx) {
-    final fname = filename[0].toNativeUtf8().cast<ffi.Char>();
+    final fname = filename.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirect_render_frame(_ptr, fname, blitter, scale, maxy, maxx);
     allocator.free(fname);
     if (rc == ffi.nullptr) return null;
     return Plane.fromPtr(rc);
   }
 
-  /// Takes the result of ncdirect_render_frame() and writes it to the output,
-  /// freeing it on all paths.
+  /// Takes the result of ncdirect_render_frame() and writes it to the output.
+  /// The C library frees the plane on all paths; [ncdv] is unusable afterwards.
   bool rasterFrame(Plane ncdv, int align) {
     final rc = nc.ncdirect_raster_frame(_ptr, ncdv.ptr, align) == 0;
-    ncdv.destroy();
+    ncdv.markDestroyed();
     return rc;
   }
 
@@ -441,7 +452,7 @@ class Direct {
   /// with ncdirectf_free();
   // TODO: review this, Visual is an alias, check ncdirectf
   Visual? visualFromFile(String filename) {
-    final fname = filename[0].toNativeUtf8().cast<ffi.Char>();
+    final fname = filename.toNativeUtf8().cast<ffi.Char>();
     final rc = nc.ncdirectf_from_file(_ptr, fname);
     allocator.free(fname);
     if (rc == ffi.nullptr) return null;
@@ -449,8 +460,10 @@ class Direct {
   }
 
   /// Free a ncdirectf returned from ncdirectf_from_file().
+  /// (ncdirectf_free is ncvisual_destroy; routing through [Visual.destroy]
+  /// keeps the wrapper's guard against a second free.)
   void visualFree(Visual frame) {
-    nc.ncdirectf_free(frame.ptr);
+    frame.destroy();
   }
 
   /// Same as ncdirect_render_frame(), except 'frame' must already have been
@@ -470,10 +483,10 @@ class Direct {
     final geomp = allocator<ncvgeom>();
     final rc = nc.ncdirectf_geom(_ptr, frame.ptr, optr, geomp);
     allocator.free(optr);
+    // Copy the fields out before releasing the struct.
+    final geom = rc < 0 ? null : PixelGeomData.fromPtr(geomp);
     allocator.free(geomp);
-
-    if (rc < 0) return null;
-    return PixelGeomData.fromPtr(geomp);
+    return geom;
   }
 
   // TODO: ncdirect_stream
@@ -488,27 +501,27 @@ class Direct {
 
   /// Can we directly specify RGB values per cell, or only use palettes?
   bool canTrueColor() {
-    return ncInline.ncdirect_cantruecolor(_ptr) != 0;
+    return ncInline.ncdirect_cantruecolor(_ptr);
   }
 
   /// Can we set the "hardware" palette? Requires the "ccc" terminfo capability.
   bool canChangeColor() {
-    return ncInline.ncdirect_canchangecolor(_ptr) != 0;
+    return ncInline.ncdirect_canchangecolor(_ptr);
   }
 
   /// Can we fade? Fading requires either the "rgb" or "ccc" terminfo capability.
   bool canFade() {
-    return ncInline.ncdirect_canfade(_ptr) != 0;
+    return ncInline.ncdirect_canfade(_ptr);
   }
 
   /// Can we load images? This requires being built against FFmpeg/OIIO.
   bool canOpenImages() {
-    return ncInline.ncdirect_canopen_images(_ptr) != 0;
+    return ncInline.ncdirect_canopen_images(_ptr);
   }
 
   /// Can we load videos? This requires being built against FFmpeg.
   bool canOpenVideos() {
-    return ncInline.ncdirect_canopen_videos(_ptr) != 0;
+    return ncInline.ncdirect_canopen_videos(_ptr);
   }
 
   /// Is our encoding UTF-8? Requires LANG being set to a UTF8 locale.
@@ -523,27 +536,27 @@ class Direct {
 
   /// Can we reliably use Unicode halfblocks?
   bool canHalfBlock() {
-    return ncInline.ncdirect_canhalfblock(_ptr) != 0;
+    return ncInline.ncdirect_canhalfblock(_ptr);
   }
 
   /// Can we reliably use Unicode quadrants?
   bool canQuadrant() {
-    return ncInline.ncdirect_canquadrant(_ptr) != 0;
+    return ncInline.ncdirect_canquadrant(_ptr);
   }
 
   /// Can we reliably use Unicode 13 sextants?
   bool canSextant() {
-    return ncInline.ncdirect_cansextant(_ptr) != 0;
+    return ncInline.ncdirect_cansextant(_ptr);
   }
 
   /// Can we reliably use Unicode Braille?
   bool canBraile() {
-    return ncInline.ncdirect_canbraille(_ptr) != 0;
+    return ncInline.ncdirect_canbraille(_ptr);
   }
 
   /// Can we reliably use Unicode 16 octants?
   bool canOctant() {
-    return ncInline.ncdirect_canoctant(_ptr) != 0;
+    return ncInline.ncdirect_canoctant(_ptr);
   }
 
   /// Is there support for acquiring the cursor's current position? Requires the

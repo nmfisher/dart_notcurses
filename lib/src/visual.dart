@@ -1,3 +1,4 @@
+// ignore_for_file: library_prefixes
 import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
@@ -5,7 +6,8 @@ import 'package:ffi/ffi.dart';
 
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
-import './load_library.dart';
+import './ffi/notcurses_g.dart' as nc;
+import './ffi/notcurses_inline_g.dart' as ncInline;
 import './notcurses.dart';
 import './plane.dart';
 
@@ -184,9 +186,21 @@ class VisualGeom {
 }
 
 class Visual {
-  final ffi.Pointer<ncvisual> _ptr;
+  ffi.Pointer<ncvisual> _ptr;
 
   Visual._(this._ptr);
+
+  /// The C library reads exactly rows*rowstride bytes from pixel buffers; a
+  /// shorter Dart buffer would let it read past the end of the native copy.
+  static void _checkBufferSize(String name, int length, int rows, int rowstride) {
+    if (rows < 0 || rowstride < 0) {
+      throw ArgumentError('rows ($rows) and rowstride ($rowstride) must be non-negative');
+    }
+    if (length < rows * rowstride) {
+      throw ArgumentError(
+          '$name has $length bytes but rows*rowstride requires ${rows * rowstride}');
+    }
+  }
 
   /// Open a visual at 'file', extract a codec and parameters, decode the first
   /// image to memory.
@@ -208,6 +222,7 @@ class Visual {
   /// of padding). The total size of 'rgba' is thus (rows * rowstride) bytes, of
   /// which (rows * cols * 4) bytes are actual non-padding data.
   factory Visual.fromRGBA(Uint8List rgba, int rows, int rowstride, int cols) {
+    _checkBufferSize('rgba', rgba.length, rows, rowstride);
     final pRgba = allocator<ffi.Uint8>(rgba.length);
     for (var i = 0; i < rgba.length; i++) {
       pRgba[i] = rgba[i];
@@ -220,6 +235,7 @@ class Visual {
   /// ncvisual_from_rgba(), but the pixels are 3-byte RGB. A is filled in
   /// throughout using 'alpha'.
   factory Visual.fromRgbPacked(Uint8List rgb, int rows, int rowstride, int cols, int alpha) {
+    _checkBufferSize('rgb', rgb.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(rgb.length);
     for (var i = 0; i < rgb.length; i++) {
       pRgb[i] = rgb[i];
@@ -232,6 +248,7 @@ class Visual {
   /// ncvisual_from_rgba(), but the pixels are 4-byte RGBx. A is filled in
   /// throughout using 'alpha'. rowstride must be a multiple of 4.
   factory Visual.fromRgbLoose(Uint8List rgba, int rows, int rowstride, int cols, int alpha) {
+    _checkBufferSize('rgba', rgba.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(rgba.length);
     for (var i = 0; i < rgba.length; i++) {
       pRgb[i] = rgba[i];
@@ -245,6 +262,7 @@ class Visual {
   /// byte-oriented layout, despite being bunched in 32-bit pixels; the lowest
   /// memory address ought be B, and A is reached by adding 3 to that address.
   factory Visual.fromBgra(Uint8List bgra, int rows, int rowstride, int cols) {
+    _checkBufferSize('bgra', bgra.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(bgra.length);
     for (var i = 0; i < bgra.length; i++) {
       pRgb[i] = bgra[i];
@@ -259,6 +277,10 @@ class Visual {
   /// pixels. 'palette' is an array of at least 'palsize' ncchannels.
   factory Visual.fromPalidx(
       Uint8List data, int rows, int rowstride, int cols, int palsize, int palstride, Uint32List palette) {
+    _checkBufferSize('data', data.length, rows, rowstride);
+    if (palette.length < palsize) {
+      throw ArgumentError('palette has ${palette.length} entries but palsize is $palsize');
+    }
     final pRgb = allocator<ffi.Uint8>(data.length);
     for (var i = 0; i < data.length; i++) {
       pRgb[i] = data[i];
@@ -292,8 +314,12 @@ class Visual {
     return Visual._(rc);
   }
 
+  /// Destroy the visual. Safe to call more than once; only the first call
+  /// frees the ncvisual.
   void destroy() {
+    if (_ptr == ffi.nullptr) return;
     nc.ncvisual_destroy(_ptr);
+    _ptr = ffi.nullptr;
   }
 
   bool get initialized => _ptr != ffi.nullptr;
@@ -395,12 +421,13 @@ class Visual {
   /// or the root of a new pile if 'vopts->n' is NULL (or 'vopts' itself is NULL).
   /// Blit 'ncv' to the created plane according to 'vopts'. If 'vopts->n' is
   /// non-NULL, NCVISUAL_OPTION_CHILDPLANE must be supplied.
-  Plane planeCreate(NotCurses notc, PlaneOptions opts, VisualOptions vopts) {
-    return using<Plane>((Arena alloc) {
+  Plane? planeCreate(NotCurses notc, PlaneOptions opts, VisualOptions vopts) {
+    return using<Plane?>((Arena alloc) {
       final vptr = vopts.toPtr(alloc);
       final pptr = opts.toPtr(alloc);
-      final p = Plane.fromPtr(ncInline.ncvisualplane_create(notc.ptr, pptr, _ptr, vptr));
-      return p;
+      final p = ncInline.ncvisualplane_create(notc.ptr, pptr, _ptr, vptr);
+      if (p == ffi.nullptr) return null;
+      return Plane.fromPtr(p);
     });
   }
 }

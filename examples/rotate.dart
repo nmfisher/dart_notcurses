@@ -43,7 +43,7 @@ int main(List<String> args) {
 bool handle(NotCurses nc, String fname) {
   final std = nc.stdplane();
   final dim = std.dimyx();
-  final n = std.dup(std);
+  final n = std.dup();
   final visual = Visual.fromFile(fname);
   if (visual.notInitialized) {
     return false;

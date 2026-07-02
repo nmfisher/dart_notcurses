@@ -1,26 +1,28 @@
+# Main notcurses bindings, generated from the VENDORED headers in
+# native/include (the same headers native/src/*.c compiles against) — never
+# from a system notcurses install, which could be a different version than
+# the vendored static library.
+#
+# ffi-native mode: emits top-level @Native externals bound to the code asset
+# the build hook declares (hook/build.dart, assetName: 'dart_notcurses.dart').
+# The Dart SDK resolves the asset; there is no dlopen anywhere.
+#
+# Regenerate with tool/regen_bindings.sh.
 output: '../lib/src/ffi/notcurses_g.dart'
-name: 'NcFfi'
+ffi-native:
+  asset-id: 'package:dart_notcurses/dart_notcurses.dart'
 description: 'Notcurses binding for Dart'
 headers:
   entry-points:
-    # macOS
-    # - '/usr/local/opt/notcurses/include/notcurses/notcurses.h'
-    # - '/usr/local/opt/notcurses/include/notcurses/direct.h'
-    # Linux
-    - '/usr/local/include/notcurses/notcurses.h'
-    - '/usr/local/include/notcurses/direct.h'
+    - '../native/include/notcurses/notcurses.h'
+    - '../native/include/notcurses/direct.h'
   include-directives:
-    # macOS
-    # - '/usr/local/opt/notcurses/include/notcurses/notcurses.h'
-    # - '/usr/local/opt/notcurses/include/notcurses/direct.h'
-    # Linux
-    - '/usr/local/include/notcurses/notcurses.h'
-    - '/usr/local/include/notcurses/direct.h'
+    - '../native/include/notcurses/notcurses.h'
+    - '../native/include/notcurses/direct.h'
+# NOTE: compiler-opts paths resolve from the working directory, not this
+# config file — run ffigen from the package root (tool/regen_bindings.sh).
 compiler-opts:
-    # macOS
-    # - '-I/usr/local/opt/notcurses/include'
-    # Linux
-    - '-I/usr/local/include'
+  - '-Inative/include'
 compiler-opts-automatic:
   macos:
     include-c-standard-library: true
@@ -60,6 +62,10 @@ functions:
     - nctree.*
   exclude:
     - _.*
+    # Variadic printf-style functions cannot be called correctly through
+    # dart:ffi (undefined behavior if invoked); don't bind them.
+    - 'ncplane_printf.*'
+    - 'ncplane_vprintf.*'
 structs:
   exclude:
     - _.*

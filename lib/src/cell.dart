@@ -1,3 +1,4 @@
+// ignore_for_file: library_prefixes
 import 'dart:ffi' as ffi;
 
 import 'package:ffi/ffi.dart';
@@ -5,7 +6,7 @@ import 'package:ffi/ffi.dart';
 import './channels.dart';
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
-import './load_library.dart';
+import './ffi/notcurses_inline_g.dart' as ncInline;
 import './plane.dart';
 
 class CellData {
@@ -64,18 +65,22 @@ class CellData {
 /// RGB is used if neither default terminal colors nor palette indexing are in
 /// play, and fully supports all transparency options.
 class Cell {
-  late final ffi.Pointer<nccell> _ptr;
+  ffi.Pointer<nccell> _ptr;
 
   /// Initialize a new Cell object and creates a pointer to be used
-  Cell.init() {
-    _ptr = allocator<nccell>();
+  Cell.init() : _ptr = allocator<nccell>() {
     ncInline.nccell_init(_ptr);
   }
 
-  /// Release the memory asociated with this Cell
+  /// Release the memory asociated with this Cell. Pass the [Plane] the cell
+  /// was loaded against (nccell_load/prime/duplicate) so its egcpool entry is
+  /// released too; pass null only for cells that were never loaded.
+  /// Safe to call more than once; subsequent calls are no-ops.
   void destroy(Plane? plane) {
+    if (_ptr == ffi.nullptr) return;
     if (plane != null) plane.releaseCell(this);
     allocator.free(_ptr);
+    _ptr = ffi.nullptr;
   }
 
   ffi.Pointer<nccell> get ptr => _ptr;
@@ -172,7 +177,7 @@ class Cell {
 
   /// Use the default color for the foreground.
   void setFgDefault() {
-    ncInline.nccell_set_bg_default(_ptr);
+    ncInline.nccell_set_fg_default(_ptr);
   }
 
   /// Use the default color for the background.
@@ -190,7 +195,7 @@ class Cell {
 
   /// Is the cell part of a multicolumn element?
   bool isDoubleWideP() {
-    return ncInline.nccell_double_wide_p(_ptr) != 0;
+    return ncInline.nccell_double_wide_p(_ptr);
   }
 
   /// Extract 24 bits of foreground RGB from 'cl', shifted to LSBs.
@@ -215,14 +220,14 @@ class Cell {
 
   /// Is the foreground using the "default foreground color"?
   bool fgDefaultP() {
-    return ncInline.nccell_fg_default_p(_ptr) != 0;
+    return ncInline.nccell_fg_default_p(_ptr);
   }
 
   /// Is the background using the "default background color"? The "default
   /// background color" must generally be used to take advantage of
   /// terminal-effected transparency.
   bool bgDefaultP() {
-    return ncInline.nccell_bg_default_p(_ptr) != 0;
+    return ncInline.nccell_bg_default_p(_ptr);
   }
 
   /// Set the cell's foreground palette index, set the foreground palette index
@@ -251,12 +256,12 @@ class Cell {
 
   /// is the cell using the default pallete (?)
   bool fgPalindexP() {
-    return ncInline.nccell_fg_palindex_p(_ptr) != 0;
+    return ncInline.nccell_fg_palindex_p(_ptr);
   }
 
   /// is the cell using the default pallete (?)
   bool bgPalindexP() {
-    return ncInline.nccell_bg_palindex_p(_ptr) != 0;
+    return ncInline.nccell_bg_palindex_p(_ptr);
   }
 
   @override

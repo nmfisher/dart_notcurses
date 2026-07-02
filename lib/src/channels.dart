@@ -1,10 +1,11 @@
+// ignore_for_file: library_prefixes
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 
 import './extensions/int.dart';
 import './ffi/memory.dart';
-import './load_library.dart';
+import './ffi/notcurses_inline_g.dart' as ncInline;
 
 class RGB {
   final int r, g, b;
@@ -265,7 +266,7 @@ class Channels {
     final chn = allocator<Uint64>();
     chn.value = _value;
     ncInline.ncchannels_set_channels(chn, channel);
-    _value == chn.value;
+    _value = chn.value;
     allocator.free(chn);
   }
 
@@ -302,13 +303,13 @@ class Channel {
   int get rgb => ncInline.ncchannel_rgb(_value);
 
   /// Is this channel using the "default color" rather than RGB/palette-indexed?
-  bool get isUsingDefault => ncInline.ncchannel_default_p(_value) != 0;
+  bool get isUsingDefault => ncInline.ncchannel_default_p(_value);
 
   /// Is this channel using palette-indexed color?
-  bool get isUsingPalindex => ncInline.ncchannel_palindex_p(_value) != 0;
+  bool get isUsingPalindex => ncInline.ncchannel_palindex_p(_value);
 
   /// Is this channel using RGB color?
-  bool get isUsingRGB => ncInline.ncchannel_rgb_p(_value) != 0;
+  bool get isUsingRGB => ncInline.ncchannel_rgb_p(_value);
 
   /// Extract the three 8-bit R/G/B components from a 32-bit channel.
   /// Only valid if ncchannel_rgb_p() would return true for the channel.

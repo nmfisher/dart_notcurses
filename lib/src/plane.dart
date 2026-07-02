@@ -1,3 +1,4 @@
+// ignore_for_file: library_prefixes
 import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
@@ -8,7 +9,8 @@ import './cell.dart';
 import './channels.dart';
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
-import './load_library.dart';
+import './ffi/notcurses_g.dart' as nc;
+import './ffi/notcurses_inline_g.dart' as ncInline;
 import './notcurses.dart';
 import './pixelgeom_data.dart';
 import './shared.dart';
@@ -92,7 +94,7 @@ class PlaneOptions {
 }
 
 class Plane {
-  final ffi.Pointer<ncplane> _ptr;
+  ffi.Pointer<ncplane> _ptr;
 
   Plane._(this._ptr);
 
@@ -120,15 +122,35 @@ class Plane {
   ffi.Pointer<ncplane> get ptr => _ptr;
 
   /// Destroy a plane. The Standar Plane can not be destroyed. It will be destroyed
-  /// by NotCurses when finish.
+  /// by NotCurses when finish. Safe to call more than once through this
+  /// wrapper; only the first call frees the ncplane.
   void destroy() {
+    if (_ptr == ffi.nullptr) return;
     final std = notCurses().stdplane();
-    if (std.ptr != ptr) nc.ncplane_destroy(ptr);
+    if (std.ptr != _ptr) {
+      nc.ncplane_destroy(_ptr);
+      _ptr = ffi.nullptr;
+    }
   }
 
-  /// Destroy this plane and all its bound descendants.
+  /// Destroy this plane and all its bound descendants. Safe to call more than
+  /// once through this wrapper. Note: other [Plane] wrappers pointing at
+  /// destroyed descendants must not be used afterwards.
   void familyDestroy() {
-    nc.ncplane_family_destroy(ptr);
+    if (_ptr == ffi.nullptr) return;
+    nc.ncplane_family_destroy(_ptr);
+    _ptr = ffi.nullptr;
+  }
+
+  /// True once this wrapper's ncplane has been destroyed (or consumed by a
+  /// C call, see [markDestroyed]).
+  bool get destroyed => _ptr == ffi.nullptr;
+
+  /// Mark the underlying ncplane as already freed by the C library (e.g.
+  /// consumed by ncdirect_raster_frame). Later [destroy] calls become no-ops.
+  /// Not intended for general use.
+  void markDestroyed() {
+    _ptr = ffi.nullptr;
   }
 
   /// Returns the dimensions of the current plane
@@ -449,7 +471,7 @@ class Plane {
   /// be visible). Returns -1 on error, including target position exceeding the
   /// plane's dimensions.
   bool cursorMoveRel(int y, int x) {
-    return nc.ncplane_cursor_move_yx(_ptr, y, x) == 0;
+    return nc.ncplane_cursor_move_rel(_ptr, y, x) == 0;
   }
 
   /// Move the cursor to 0, 0. Can't fail.
@@ -514,26 +536,38 @@ class Plane {
     return putCharYX(-1, -1, value);
   }
 
+  /// Convert a Dart string to a NUL-terminated wchar_t array (wchar_t is
+  /// 32-bit UTF-32 on the supported platforms). The ncplane_putwstr* APIs
+  /// expect wide characters, not UTF-8 bytes.
+  static ffi.Pointer<ffi.WChar> _toWcs(String value) {
+    final runes = value.runes.toList();
+    final buf = allocator<ffi.WChar>(runes.length + 1);
+    for (var i = 0; i < runes.length; i++) {
+      buf[i] = runes[i];
+    }
+    buf[runes.length] = 0;
+    return buf;
+  }
+
   /// ncplane_putstr(), but following a conversion from wchar_t to UTF-8 multibyte.
-  /// FIXME do this as a loop over ncplane_putegc_yx and save the big allocation+copy
   int putWstrYX(int y, int x, String value) {
-    final gcluster = value.toNativeUtf8().cast<ffi.Int>();
-    final rc = ncInline.ncplane_putwstr_yx(_ptr, y, x, gcluster);
-    allocator.free(gcluster);
+    final wcs = _toWcs(value);
+    final rc = ncInline.ncplane_putwstr_yx(_ptr, y, x, wcs);
+    allocator.free(wcs);
     return rc;
   }
 
   int putWstrAligned(int y, int align, String value) {
-    final gcluster = value.toNativeUtf8().cast<ffi.Int>();
-    final rc = ncInline.ncplane_putwstr_aligned(_ptr, y, align, gcluster);
-    allocator.free(gcluster);
+    final wcs = _toWcs(value);
+    final rc = ncInline.ncplane_putwstr_aligned(_ptr, y, align, wcs);
+    allocator.free(wcs);
     return rc;
   }
 
   int putWstr(String value) {
-    final gcluster = value.toNativeUtf8().cast<ffi.Int>();
-    final rc = ncInline.ncplane_putwstr(_ptr, gcluster);
-    allocator.free(gcluster);
+    final wcs = _toWcs(value);
+    final rc = ncInline.ncplane_putwstr(_ptr, wcs);
+    allocator.free(wcs);
     return rc;
   }
 
@@ -565,9 +599,11 @@ class Plane {
   /// otherwise gets a value of 1. A surrogate followed by an invalid pairing
   /// will set 'wchars' to 2, but return -1 immediately.
   NcResult<int, int> putWcUtf32(int w, int wchars) {
-    final wptrwPtr = allocator<ffi.Int>();
+    // Two elements: the C inline reads w[1] when w[0] is a UTF-16 high
+    // surrogate. The second slot stays 0 (invalid pairing → clean -1).
+    final wptrwPtr = allocator<ffi.WChar>(2);
     final wcharsPtr = allocator<ffi.UnsignedInt>();
-    wptrwPtr.value = w;
+    wptrwPtr[0] = w;
     wcharsPtr.value = wchars;
     final rc = ncInline.ncplane_putwc_utf32(_ptr, wptrwPtr, wcharsPtr);
     final chr = wcharsPtr.value;
@@ -812,10 +848,10 @@ class Plane {
   /// be bound to the same parent (unless 'n' is a root plane, in which case the
   /// new plane will be bound to it). Bound planes are *not* duplicated; the new
   /// plane is bound to the parent of 'n', but has no bound planes.
-  Plane dup(Plane plane) {
+  Plane dup() {
     // TODO: figure how send the 'opaque' param that is a Void* to let the user
     // store some information on the pane
-    return Plane._(nc.ncplane_dup(plane.ptr, ffi.nullptr));
+    return Plane._(nc.ncplane_dup(_ptr, ffi.nullptr));
   }
 
   /// Get the plane to which the plane 'n' is bound, if any.
@@ -891,11 +927,13 @@ class Plane {
     return using<Uint32List?>((Arena alloc) {
       final pxdimy = alloc<ffi.UnsignedInt>();
       final pxdimx = alloc<ffi.UnsignedInt>();
-      final rgbaSize = ffi.sizeOf<ffi.Uint32>() * lenx * pxdimx.value * leny * pxdimy.value;
       final u32 = nc.ncplane_as_rgba(_ptr, blit, begy, begx, leny, lenx, pxdimy, pxdimx);
       if (u32 == ffi.nullptr) return null;
 
-      final u32List = Uint32List.fromList(u32.asTypedList(rgbaSize));
+      // The buffer holds pxdimy*pxdimx 32-bit pixels (out-params are only
+      // valid after the call); asTypedList takes an element count.
+      final pixels = pxdimy.value * pxdimx.value;
+      final u32List = Uint32List.fromList(u32.asTypedList(pixels));
       allocator.free(u32);
 
       return u32List;
@@ -907,8 +945,9 @@ class Plane {
   /// plane), continuing for 'leny'x'lenx' cells. Either or both of 'leny' and
   /// 'lenx' can be specified as 0 to go through the boundary of the plane.
   /// -1 can be specified for 'begx'/'begy' to use the current cursor location.
-  String contents(int begy, int begx, int leny, int lenx) {
+  String? contents(int begy, int begx, int leny, int lenx) {
     final egc = nc.ncplane_contents(_ptr, begy, begx, leny, lenx);
+    if (egc == ffi.nullptr) return null;
     final rc = egc.cast<Utf8>().toDartString();
     allocator.free(egc);
     return rc;
@@ -984,13 +1023,13 @@ class Plane {
   /// equivalent. 'dst' is modified, but 'src' remains unchanged. Neither 'src'
   /// nor 'dst' may have sprixels. Lengths of 0 mean "everything left".
   bool mergeDown(Plane dst, int begsrcy, int begsrcx, int leny, int lenx, int dsty, int dstx) {
-    return nc.ncplane_mergedown(_ptr, dst.ptr, begsrcy, begsrcx, leny, lenx, dsty, dstx) != 0;
+    return nc.ncplane_mergedown(_ptr, dst.ptr, begsrcy, begsrcx, leny, lenx, dsty, dstx) == 0;
   }
 
   /// Merge the entirety of 'src' down onto the ncplane 'dst'. If 'src' does not
   /// intersect with 'dst', 'dst' will not be changed, but it is not an error.
   bool mergeDownSimple(Plane dst) {
-    return nc.ncplane_mergedown_simple(_ptr, dst.ptr) != 0;
+    return nc.ncplane_mergedown_simple(_ptr, dst.ptr) == 0;
   }
 
   /// By default, planes are created with autogrow disabled. Autogrow can be
@@ -1042,7 +1081,7 @@ class Plane {
   // Change the name of 't'. Returns -1 if 'newname' is NULL, and 0 otherwise.
   bool setName(String name) {
     final n = name.toNativeUtf8().cast<ffi.Char>();
-    final rc = nc.ncplane_set_name(_ptr, n) != 0;
+    final rc = nc.ncplane_set_name(_ptr, n) == 0;
     allocator.free(n);
     return rc;
   }
@@ -1220,7 +1259,7 @@ class Plane {
           horizontalLine.ptr,
           verticalLine.ptr,
           u8,
-        ) !=
+        ) ==
         0;
     allocator.free(u8);
     return rc;
@@ -1490,7 +1529,7 @@ class Plane {
   /// it would probably be better to test whether they're Unicode-equal FIXME.
   /// probably needs be fixed up for sprixels FIXME.
   bool compareCell(Cell c1, Plane n2, Cell c2) {
-    return ncInline.nccellcmp(_ptr, c1.ptr, n2.ptr, c2.ptr) != 0;
+    return ncInline.nccellcmp(_ptr, c1.ptr, n2.ptr, c2.ptr);
   }
 
   /// return a pointer to the NUL-terminated EGC referenced by 'c'. this pointer
@@ -1502,9 +1541,13 @@ class Plane {
 
   /// copy the UTF8-encoded EGC out of the nccell. the result is not tied to any
   /// ncplane, and persists across erases / destruction.
-  String strDupcell(Cell c) {
+  String? strDupcell(Cell c) {
     final i8 = ncInline.nccell_strdup(_ptr, c.ptr);
-    return i8.cast<Utf8>().toDartString();
+    if (i8 == ffi.nullptr) return null;
+    final rc = i8.cast<Utf8>().toDartString();
+    // nccell_strdup returns a strdup'd buffer owned by the caller.
+    allocator.free(i8);
+    return rc;
   }
 
   // Load a 7-bit char 'ch' into the nccell 'c'. Returns the number of bytes

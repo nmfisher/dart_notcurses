@@ -1,8 +1,9 @@
+// ignore_for_file: library_prefixes
 import 'dart:ffi' as ffi;
 
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
-import './load_library.dart';
+import './ffi/notcurses_inline_g.dart' as ncInline;
 
 const int _preterUnicodeBase = 1115000;
 int preterunicode(int w) => w + _preterUnicodeBase;
@@ -311,16 +312,20 @@ String ncKeyStr(int value) {
   return keyStrMap[value] ?? 'unknown';
 }
 
-typedef _CheckModifierCB = int Function(ffi.Pointer<ncinput>);
+typedef _CheckModifierCB = bool Function(ffi.Pointer<ncinput>);
 
 class Key {
-  late final ffi.Pointer<ncinput> ptr;
-  List<int>? _utf8;
+  ffi.Pointer<ncinput> _ptr;
 
-  Key() : ptr = allocator<ncinput>();
+  Key() : _ptr = allocator<ncinput>();
 
+  ffi.Pointer<ncinput> get ptr => _ptr;
+
+  /// Free the underlying ncinput. Safe to call more than once.
   void destroy() {
-    allocator.free(ptr);
+    if (_ptr == ffi.nullptr) return;
+    allocator.free(_ptr);
+    _ptr = ffi.nullptr;
   }
 
   int get id => ptr.ref.id;
@@ -330,10 +335,11 @@ class Key {
   int get modifiers => ptr.ref.modifiers;
   int get ypx => ptr.ref.ypx;
   int get xpx => ptr.ref.xpx;
-  List<int> get utf8List {
-    _utf8 ??= List<int>.generate(5, ((i) => ptr.ref.utf8[i]));
-    return _utf8!;
-  }
+
+  /// The UTF-8 bytes of the input, unsigned (the struct field is a signed
+  /// char, so bytes >= 0x80 must be masked). Re-read on every access — the
+  /// ncinput is refilled by the C library on each input event.
+  List<int> get utf8List => List<int>.generate(5, (i) => ptr.ref.utf8[i] & 0xff);
 
   String get keyStr {
     final k = id;
@@ -355,40 +361,40 @@ class Key {
 
   /// Is this uint32_t a synthesized event?
   bool keySynthesizedP() {
-    return ncInline.nckey_synthesized_p(id) != 0;
+    return ncInline.nckey_synthesized_p(id);
   }
 
   /// Is the event a synthesized mouse event?
   bool keyMouseP() {
-    return ncInline.nckey_mouse_p(id) != 0;
+    return ncInline.nckey_mouse_p(id);
   }
 
   /// Is this uint32_t from the Private Use Area in the BMP (Plane 0)?
   bool keyPuaP() {
-    return ncInline.nckey_pua_p(id) != 0;
+    return ncInline.nckey_pua_p(id);
   }
 
   /// Is this uint32_t a Supplementary Private Use Area-A codepoint?
   bool keySuppPuaAP() {
-    return ncInline.nckey_supppuaa_p(id) != 0;
+    return ncInline.nckey_supppuaa_p(id);
   }
 
   /// Is this uint32_t a Supplementary Private Use Area-B codepoint?
   bool keySuppPuaBP() {
-    return ncInline.nckey_supppuab_p(id) != 0;
+    return ncInline.nckey_supppuab_p(id);
   }
 
   // Was 'ni' free of modifiers?
   bool nomodP() {
-    return ncInline.ncinput_nomod_p(ptr) != 0;
+    return ncInline.ncinput_nomod_p(ptr);
   }
 
   bool equalP(Key k) {
-    return ncInline.ncinput_equal_p(ptr, k.ptr) != 0;
+    return ncInline.ncinput_equal_p(ptr, k.ptr);
   }
 
   bool _checkModifier(_CheckModifierCB cb, [int? key]) {
-    final hasMod = cb(ptr) != 0;
+    final hasMod = cb(ptr);
     if (key == null) return hasMod;
     return hasMod && ptr.ref.id == key;
   }

@@ -3,7 +3,7 @@ import 'dart:ffi' as ffi;
 import 'package:ffi/ffi.dart';
 
 import './ffi/notcurses_g.dart';
-import './load_library.dart';
+import './ffi/notcurses_g.dart' as nc;
 import './plane.dart';
 
 class PixelGeomData {

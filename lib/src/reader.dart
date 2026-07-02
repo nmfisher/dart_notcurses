@@ -5,8 +5,8 @@ import 'package:ffi/ffi.dart';
 import './channels.dart';
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
+import './ffi/notcurses_g.dart' as nc;
 import './key.dart';
-import './load_library.dart';
 import './plane.dart';
 
 class ReaderOptions {
@@ -22,26 +22,44 @@ class ReaderOptions {
 }
 
 class Reader {
-  final ffi.Pointer<ncreader> _ptr;
+  ffi.Pointer<ncreader> _ptr;
 
   Reader._(this._ptr);
 
   /// ncreaders provide freeform input in a (possibly multiline) region, supporting
   /// optional readline keybindings. takes ownership of 'n', destroying it on any
   /// error (ncreader_destroy() otherwise destroys the ncplane).
-  factory Reader.create(Plane plane, ReaderOptions opts) {
+  /// Returns null on failure — note the passed [plane] has been destroyed by
+  /// the C library in that case and must not be used further.
+  static Reader? create(Plane plane, ReaderOptions opts) {
     final op = allocator<ncreader_options>();
     op.ref
       ..tchannels = opts.channels.value
       ..tattrword = opts.attrWord
       ..flags = opts.flags;
-    return Reader._(nc.ncreader_create(plane.ptr, op));
+    final ptr = nc.ncreader_create(plane.ptr, op);
+    allocator.free(op);
+    if (ptr == ffi.nullptr) {
+      plane.markDestroyed();
+      return null;
+    }
+    return Reader._(ptr);
   }
 
+  /// Destroy the reader and return its final contents. Safe to call more
+  /// than once; subsequent calls return ''.
   String destroy() {
+    if (_ptr == ffi.nullptr) return '';
     final contents = allocator<ffi.Pointer<ffi.Char>>();
     nc.ncreader_destroy(_ptr, contents);
-    final rc = contents.value.cast<Utf8>().toDartString();
+    _ptr = ffi.nullptr;
+    var rc = '';
+    if (contents.value != ffi.nullptr) {
+      rc = contents.value.cast<Utf8>().toDartString();
+      // ncreader_destroy heap-duplicates the input into *contents; the
+      // caller owns (and must free) that buffer.
+      allocator.free(contents.value);
+    }
     allocator.free(contents);
     return rc;
   }
@@ -97,6 +115,10 @@ class Reader {
 
   String contents() {
     final egc = nc.ncreader_contents(_ptr);
-    return egc.cast<Utf8>().toDartString();
+    if (egc == ffi.nullptr) return '';
+    final rc = egc.cast<Utf8>().toDartString();
+    // ncreader_contents returns a heap-allocated copy owned by the caller.
+    allocator.free(egc);
+    return rc;
   }
 }

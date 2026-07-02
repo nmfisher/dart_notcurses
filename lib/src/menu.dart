@@ -4,10 +4,9 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 
 import './channels.dart';
-import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
+import './ffi/notcurses_g.dart' as nc;
 import './key.dart';
-import './load_library.dart';
 import './plane.dart';
 import './shared.dart';
 
@@ -60,12 +59,18 @@ class Menu {
 
   Menu(this.sections, this.options);
 
-  /// Create a new menu on the given [Plane]
-  void create(Plane plane) {
-    using((Arena alloc) {
+  /// True when the underlying ncmenu was created successfully (and not yet
+  /// destroyed). Menu operations on an uncreated/destroyed menu fail.
+  bool get initialized => _ptr != ffi.nullptr;
+
+  /// Create a new menu on the given [Plane]. Returns false if the C library
+  /// rejected the menu (the previous menu, if any, is destroyed first).
+  bool create(Plane plane) {
+    destroy();
+    return using((Arena alloc) {
       ncinput makeShortcut(String key, int? mod) {
         final itemSC = alloc<ncinput>();
-        itemSC.ref.id = key.codeUnitAt(0);
+        itemSC.ref.id = key.runes.first;
         if (mod != null) {
           itemSC.ref.modifiers = mod;
         }
@@ -87,7 +92,7 @@ class Menu {
 
             if (item.shortcutKey != null) {
               pItems[ri].shortcut = makeShortcut(item.shortcutKey!, item.shortcutModifier);
-              final ik = (item.shortcutKey!.codeUnitAt(0) << 8) |
+              final ik = (item.shortcutKey!.runes.first << 8) |
                   ((item.shortcutModifier == null) ? 0 : item.shortcutModifier!);
               _itemShorcuts[ik] = item.handle;
             }
@@ -117,7 +122,9 @@ class Menu {
       _ptr = nc.ncmenu_create(plane.ptr, opts);
       if (_ptr == ffi.nullptr) {
         stderr.writeln('error creating menu');
+        return false;
       }
+      return true;
     });
   }
 
@@ -228,11 +235,13 @@ class Menu {
     return _itemShorcuts[ik];
   }
 
-  /// Free the menu resources
+  /// Free the menu resources. Safe to call more than once; only the first
+  /// call releases the ncmenu (ncmenu_destroy frees it — it must not be
+  /// freed again on the Dart side).
   void destroy() {
     if (_ptr != ffi.nullptr) {
       nc.ncmenu_destroy(_ptr);
-      allocator.free(_ptr);
+      _ptr = ffi.nullptr;
     }
   }
 }

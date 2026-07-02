@@ -5,7 +5,7 @@ import 'package:ffi/ffi.dart';
 import './channels.dart';
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
-import './load_library.dart';
+import './ffi/notcurses_g.dart' as nc;
 import './plane.dart';
 
 class PlotOptions {
@@ -53,7 +53,7 @@ class PlotOptions {
 }
 
 class Plot {
-  final Pointer<ncuplot> _ptr;
+  Pointer<ncuplot> _ptr;
 
   Plot._(this._ptr);
 
@@ -110,10 +110,12 @@ class Plot {
     });
   }
 
-  /// Release the memory associated with this plot
+  /// Release the memory associated with this plot.
+  /// Safe to call more than once; only the first call frees the ncuplot.
   void destroy() {
     if (_ptr != nullptr) {
       nc.ncuplot_destroy(_ptr);
+      _ptr = nullptr;
     }
   }
 }

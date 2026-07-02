@@ -1,74 +1,59 @@
+# Bindings for notcurses' static-inline API surface.
+#
+# The entry point is native/src/ffi.c — the SAME file the build hook compiles.
+# That file re-declares the header inlines without `static`; combined with
+# -DNOTCURSES_FFI (which the vendored headers use to drop `static` from the
+# inline definitions) this forces external symbol emission at build time, and
+# gives ffigen the exact set of symbols the merged library exports. One file
+# is both the binding source and the symbol source, so they cannot drift.
+#
+# Struct types shared with the main bindings are mapped to notcurses_g.dart
+# via library-imports + type-map (ffigen 20.1.1's symbol-file writer crashes
+# on this codebase; revisit when fixed). The mapped set below is the complete
+# list of struct types referenced by declarations in native/src/ffi.c.
+#
+# The headers use real <stdbool.h>, so predicates bind as ffi.Bool (correct
+# _Bool ABI) — no bool→Int8 type-map, no sed post-processing.
 output: '../lib/src/ffi/notcurses_inline_g.dart'
-name: 'NcFfiInline'
-description: 'Notcurses binding for Dart'
+ffi-native:
+  asset-id: 'package:dart_notcurses/dart_notcurses.dart'
+description: 'Notcurses inline-function binding for Dart'
 library-imports:
   main: './notcurses_g.dart'
+type-map:
+  structs:
+    'nccapabilities': {lib: 'main', c-type: 'nccapabilities', dart-type: 'nccapabilities'}
+    'nccell': {lib: 'main', c-type: 'nccell', dart-type: 'nccell'}
+    'ncdirect': {lib: 'main', c-type: 'ncdirect', dart-type: 'ncdirect'}
+    'ncinput': {lib: 'main', c-type: 'ncinput', dart-type: 'ncinput'}
+    'ncpalette': {lib: 'main', c-type: 'ncpalette', dart-type: 'ncpalette'}
+    'ncplane': {lib: 'main', c-type: 'ncplane', dart-type: 'ncplane'}
+    'ncplane_options': {lib: 'main', c-type: 'ncplane_options', dart-type: 'ncplane_options'}
+    'nctabbed': {lib: 'main', c-type: 'nctabbed', dart-type: 'nctabbed'}
+    'ncvisual': {lib: 'main', c-type: 'ncvisual', dart-type: 'ncvisual'}
+    'ncvisual_options': {lib: 'main', c-type: 'ncvisual_options', dart-type: 'ncvisual_options'}
+    'notcurses': {lib: 'main', c-type: 'notcurses', dart-type: 'notcurses'}
 headers:
   entry-points:
-    - './ffi.c'
+    - '../native/src/ffi.c'
   include-directives:
-    - './ffi.c'
+    - '../native/src/ffi.c'
+# NOTE: compiler-opts paths resolve from the working directory, not this
+# config file — run ffigen from the package root (tool/regen_bindings.sh).
+#
+# -DNOTCURSES_FFI drops `static` from the header inlines (matching how the
+# shim TU is compiled). '-Dinline=' additionally erases `inline` FOR THIS
+# PARSE ONLY: ffigen refuses to bind functions it can see inline bodies for,
+# but the compiled shim exports real symbols for every declaration in ffi.c,
+# so binding them is correct.
 compiler-opts:
-  # macOS
-  # - '-I/usr/local/opt/notcurses/include'
-  # Linux
-  - '-I/usr/local/include'
+  - '-Inative/include'
+  - '-DNOTCURSES_FFI'
+  - '-Dinline='
 compiler-opts-automatic:
   macos:
     include-c-standard-library: true
-ignore-source-errors: true
 silence-enum-warning: true
-type-map:
-  native-types:
-    'bool':
-      lib: 'ffi'
-      c-type: 'Int8'
-      dart-type: 'int'
-  structs:
-    'nccell':
-      lib: 'main'
-      c-type: 'nccell'
-      dart-type: 'nccell'
-    'nccapabilities':
-      lib: 'main'
-      c-type: 'nccapabilities'
-      dart-type: 'nccapabilities'
-    'ncdirect':
-      lib: 'main'
-      c-type: 'ncdirect'
-      dart-type: 'ncdirect'
-    'ncinput':
-      lib: 'main'
-      c-type: 'ncinput'
-      dart-type: 'ncinput'
-    'ncplane':
-      lib: 'main'
-      c-type: 'ncplane'
-      dart-type: 'ncplane'
-    'notcurses':
-      lib: 'main'
-      c-type: 'notcurses'
-      dart-type: 'notcurses'
-    'ncpalette':
-      lib: 'main'
-      c-type: 'ncpalette'
-      dart-type: 'ncpalette'
-    'ncplane_options':
-      lib: 'main'
-      c-type: 'ncplane_options'
-      dart-type: 'ncplane_options'
-    'nctabbed':
-      lib: 'main'
-      c-type: 'nctabbed'
-      dart-type: 'nctabbed'
-    'ncvisual':
-      lib: 'main'
-      c-type: 'ncvisual'
-      dart-type: 'ncvisual'
-    'ncvisual_options':
-      lib: 'main'
-      c-type: 'ncvisual_options'
-      dart-type: 'ncvisual_options'
 enums:
   as-int:
     include:
@@ -91,7 +76,6 @@ functions:
     - ncqprefix.*
     - ncpalette.*
     - ncpixel.*
-    - ncplane.*
     - ncvisualplane.*
     - nctabbed.*
   exclude:

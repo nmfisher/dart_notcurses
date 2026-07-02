@@ -1,11 +1,13 @@
+// ignore_for_file: library_prefixes
 import 'dart:ffi' as ffi;
 
 import 'package:ffi/ffi.dart';
 
 import './ffi/memory.dart';
 import './ffi/notcurses_g.dart';
+import './ffi/notcurses_g.dart' as nc;
+import './ffi/notcurses_inline_g.dart' as ncInline;
 import './key.dart';
-import './load_library.dart';
 import './plane.dart';
 import './ptypes.dart';
 import './shared.dart';
@@ -95,7 +97,8 @@ ffi.Pointer<FILE> _fdopenFile(int fd, String mode) {
 }
 
 class NotCurses {
-  late final ffi.Pointer<notcurses> _ptr;
+  late ffi.Pointer<notcurses> _ptr;
+  bool _stopped = false;
 
   /// A FILE* we opened via fdopen (when constructed with an output fd), closed
   /// on [stop]. Null when notcurses owns the output (/dev/tty).
@@ -114,14 +117,26 @@ class NotCurses {
         opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
     ffi.Pointer<FILE> fp;
     if (outFd != null) {
-      _ownedFile = _fdopenFile(outFd, 'w');
-      fp = _ownedFile!;
+      final f = _fdopenFile(outFd, 'w');
+      if (f == ffi.nullptr) {
+        // Bad fd: init cannot proceed; leave the instance notInitialized.
+        if (optPtr != ffi.nullptr) allocator.free(optPtr);
+        _ptr = ffi.nullptr;
+        return;
+      }
+      _ownedFile = f;
+      fp = f;
     } else {
       fp = ffi.nullptr;
     }
     _ptr = nc.notcurses_init(optPtr, fp);
     if (optPtr != ffi.nullptr) {
       allocator.free(optPtr);
+    }
+    if (_ptr == ffi.nullptr && _ownedFile != null) {
+      // Init failed: close the FILE* we fdopen'd, nobody else will.
+      _fcloseLookup(_ownedFile!);
+      _ownedFile = null;
     }
   }
 
@@ -166,13 +181,18 @@ class NotCurses {
 
   /// Destroy a Notcurses context. If this context owns its output FILE*
   /// (constructed via [NotCurses.withOutputFd]), it is closed here.
+  /// Safe to call more than once; only the first call tears the context down.
   bool stop() {
+    if (_stopped) return true;
+    _stopped = true;
+    // notcurses_stop(NULL) is a harmless no-op, so a failed init is fine here.
     final ok = nc.notcurses_stop(_ptr) == 0;
+    _ptr = ffi.nullptr;
     final f = _ownedFile;
-    if (f != null) {
+    if (f != null && f != ffi.nullptr) {
       _fcloseLookup(f);
-      _ownedFile = null;
     }
+    _ownedFile = null;
     return ok;
   }
 
@@ -259,6 +279,10 @@ class NotCurses {
     if (keyInfo) {
       final k = Key();
       final rc = ncInline.notcurses_get_nblock(_ptr, k.ptr);
+      if (rc < 0) {
+        k.destroy();
+        return NcResult(rc, null);
+      }
       return NcResult(rc, k);
     }
     final rc = ncInline.notcurses_get_nblock(_ptr, ffi.nullptr);
@@ -368,19 +392,19 @@ class NotCurses {
 
   /// Can we emit 24-bit, three-channel RGB foregrounds and backgrounds?
   bool canTrueColor() {
-    return ncInline.notcurses_cantruecolor(_ptr) > 0;
+    return ncInline.notcurses_cantruecolor(_ptr);
   }
 
   /// Can we fade? Fading requires either the "rgb" or "ccc" terminfo capability.
   bool canFade() {
-    return ncInline.notcurses_canfade(_ptr) > 0;
+    return ncInline.notcurses_canfade(_ptr);
   }
 
   /// Can we set the "hardware" palette? Requires the "ccc" terminfo capability,
   /// and that the number of colors supported is at least the size of our
   /// ncpalette structure.
   bool canChangeColors() {
-    return ncInline.notcurses_canchangecolor(_ptr) > 0;
+    return ncInline.notcurses_canchangecolor(_ptr);
   }
 
   /// Can we load images? This requires being built against FFmpeg/OIIO.
@@ -395,37 +419,37 @@ class NotCurses {
 
   /// Is our encoding UTF-8? Requires LANG being set to a UTF8 locale.
   bool canUtf8() {
-    return ncInline.notcurses_canutf8(_ptr) != 0;
+    return ncInline.notcurses_canutf8(_ptr);
   }
 
   // Can we reliably use Unicode halfblocks? Any Unicode implementation can.
   bool canHalfBlock() {
-    return ncInline.notcurses_canhalfblock(_ptr) != 0;
+    return ncInline.notcurses_canhalfblock(_ptr);
   }
 
   /// Can we reliably use Unicode quadrants?
   bool canQuadrant() {
-    return ncInline.notcurses_canquadrant(_ptr) != 0;
+    return ncInline.notcurses_canquadrant(_ptr);
   }
 
   /// Can we reliably use Unicode 13 sextants?
   bool canSextant() {
-    return ncInline.notcurses_cansextant(_ptr) != 0;
+    return ncInline.notcurses_cansextant(_ptr);
   }
 
   /// Can we reliably use Unicode Braille?
   bool canBraille() {
-    return ncInline.notcurses_canbraille(_ptr) != 0;
+    return ncInline.notcurses_canbraille(_ptr);
   }
 
   /// Can we blit pixel-accurate bitmaps?
   bool canPixel() {
-    return ncInline.notcurses_canpixel(_ptr) != 0;
+    return ncInline.notcurses_canpixel(_ptr);
   }
 
   /// Can we reliably use Unicode 16 octants?
   bool canOctant() {
-    return ncInline.notcurses_canoctant(_ptr) != 0;
+    return ncInline.notcurses_canoctant(_ptr);
   }
 
   /// Can we blit pixel-accurate bitmaps?
@@ -441,12 +465,12 @@ class NotCurses {
   /// the number of bytes used is returned, or -1 if passed illegal ucs32, or too
   /// small of a buffer.
   String ucsToUtf8(int ucs) {
+    const buflen = 5; // up to 4 UTF-8 bytes per codepoint, plus NUL
     final ucsp = allocator<ffi.Uint32>();
     ucsp.value = ucs;
-    final resultbuf = allocator<ffi.UnsignedChar>(5);
-    final buflen = ffi.sizeOf<ffi.Uint8>();
-    nc.notcurses_ucs32_to_utf8(ucsp, 1, resultbuf, buflen);
-    final utf8 = resultbuf.cast<Utf8>().toDartString();
+    final resultbuf = allocator<ffi.UnsignedChar>(buflen);
+    final rc = nc.notcurses_ucs32_to_utf8(ucsp, 1, resultbuf, buflen);
+    final utf8 = rc < 0 ? '' : resultbuf.cast<Utf8>().toDartString(length: rc);
 
     allocator.free(resultbuf);
     allocator.free(ucsp);

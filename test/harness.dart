@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dart_notcurses/dart_notcurses.dart';
+import 'package:dart_notcurses/src/ffi/notcurses_inline_g.dart' as ncinline;
 
 // Test harness for notcurses.
 //
@@ -16,12 +17,20 @@ import 'package:dart_notcurses/dart_notcurses.dart';
 //
 // Note: init enters the alternate screen briefly; [stop] restores it.
 
-String get _mergedLibPath => Platform.isMacOS
-    ? '.dart_tool/lib/libnotcurses_merged.dylib'
-    : '.dart_tool/lib/libnotcurses_merged.so';
+bool? _libProbe;
 
-/// Whether the static notcurses library (built by the hook) is present.
-bool get hasNotcursesLib => File(_mergedLibPath).existsSync();
+/// Whether the notcurses code asset (built by the hook, resolved by the SDK
+/// via @Native) is available: probe with a harmless pure-computation call.
+bool get hasNotcursesLib {
+  return _libProbe ??= () {
+    try {
+      ncinline.ncchannels_combine(0, 0);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }();
+}
 
 /// Whether the process has a controlling terminal — the real condition
 /// notcurses needs (it opens /dev/tty). `stdout.hasTerminal` is false under

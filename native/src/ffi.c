@@ -1,5 +1,15 @@
-// Contains all inline functions in include/notcurses/*.h
-// This file is auto generated from tools/generate_ffi.py
+// Re-declarations of the static-inline functions in include/notcurses/*.h.
+//
+// Compiled with -DNOTCURSES_FFI, the headers drop `static` from the inline
+// definitions; these same-TU non-static declarations then force external
+// symbol emission, so the merged library exports the inline API. This file
+// is ALSO the ffigen entry point for the inline Dart bindings (see
+// ffi/inline.yml) — one file defines both the exported symbols and the
+// bindings, so they cannot drift. Any signature mismatch against the headers
+// is a compile error.
+//
+// Maintained by hand; when adding a function, regenerate the bindings with
+// tool/regen_bindings.sh.
 #include <notcurses/notcurses.h>
 #include <notcurses/direct.h>
 

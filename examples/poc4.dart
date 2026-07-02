@@ -39,6 +39,11 @@ void main() {
       ReaderOptionsFlags.cursor | ReaderOptionsFlags.horscroll,
     );
     final reader = Reader.create(pInput, opts);
+    if (reader == null) {
+      stderr.writeln('error creating reader');
+      nc.stop();
+      return;
+    }
 
     if (!nc.render()) {
       stderr.writeln('error rendering');

@@ -39,7 +39,6 @@ void main(List<String> args) async {
       '-DNOTCURSES_FFI',
       '-D_GNU_SOURCE',
       '-D_DEFAULT_SOURCE',
-      '-DXOPEN_SOURCE=700',
       '-L$libDir',
       if (isMacOS) ...[
         // -force_load pulls ALL objects from the archive into the merged lib
