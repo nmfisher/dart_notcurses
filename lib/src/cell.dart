@@ -64,23 +64,53 @@ class CellData {
 /// meaningfully set transparency, but it can be mixed into a cascading color.
 /// RGB is used if neither default terminal colors nor palette indexing are in
 /// play, and fully supports all transparency options.
-class Cell {
+class Cell implements ffi.Finalizable {
   ffi.Pointer<nccell> _ptr;
+
+  /// The plane this cell's EGC was loaded against (nccell_load/prime/
+  /// duplicate/at_yx_cell), if any. Its egcpool entry must be released
+  /// against that same plane and no other.
+  Plane? _loadedOn;
+
+  /// GC backstop: frees the calloc'd nccell if the owner never calls
+  /// [destroy]. The egcpool entry of a loaded cell is NOT released here —
+  /// pool entries are reclaimed when their plane is destroyed.
+  static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(allocator.nativeFree);
 
   /// Initialize a new Cell object and creates a pointer to be used
   Cell.init() : _ptr = allocator<nccell>() {
     ncInline.nccell_init(_ptr);
+    _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: ffi.sizeOf<nccell>());
   }
 
-  /// Release the memory asociated with this Cell. Pass the [Plane] the cell
-  /// was loaded against (nccell_load/prime/duplicate) so its egcpool entry is
-  /// released too; pass null only for cells that were never loaded.
-  /// Safe to call more than once; subsequent calls are no-ops.
-  void destroy(Plane? plane) {
+  /// Release the memory asociated with this Cell. If the cell was loaded
+  /// against a plane, its egcpool entry is released against that plane
+  /// automatically; [plane] no longer needs to be passed and, if it is, must
+  /// be the loading plane. Safe to call more than once.
+  void destroy([Plane? plane]) {
     if (_ptr == ffi.nullptr) return;
-    if (plane != null) plane.releaseCell(this);
+    final owner = _loadedOn;
+    if (plane != null && owner != null && !identical(plane, owner) && plane.ptr != owner.ptr) {
+      throw ArgumentError(
+          'cell was loaded against a different plane; releasing it against this one would corrupt that plane\'s egcpool');
+    }
+    final releaseOn = owner ?? plane;
+    // Skip the pool release if the plane itself is already gone — its pools
+    // died with it, and releasing against a freed plane is a use-after-free.
+    if (releaseOn != null && !releaseOn.destroyed) {
+      releaseOn.releaseCell(this);
+    }
+    _finalizer.detach(this);
     allocator.free(_ptr);
     _ptr = ffi.nullptr;
+    _loadedOn = null;
+  }
+
+  /// Record the plane this cell was loaded against, so [destroy] can release
+  /// its egcpool entry safely. Called by the Plane cell-loading APIs; not
+  /// intended for general use.
+  void markLoadedOn(Plane plane) {
+    _loadedOn = plane;
   }
 
   ffi.Pointer<nccell> get ptr => _ptr;

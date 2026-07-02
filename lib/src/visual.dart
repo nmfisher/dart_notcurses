@@ -185,10 +185,21 @@ class VisualGeom {
   }
 }
 
-class Visual {
+class Visual implements ffi.Finalizable {
   ffi.Pointer<ncvisual> _ptr;
 
-  Visual._(this._ptr);
+  /// GC backstop: destroys the ncvisual if the owner never calls [destroy].
+  /// ncvisual_destroy tears down only the visual's own buffers (it touches no
+  /// planes or global state), so it is safe to run from a finalizer.
+  static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(
+    ffi.Native.addressOf<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ncvisual>)>>(nc.ncvisual_destroy).cast(),
+  );
+
+  Visual._(this._ptr, [int? externalSize]) {
+    if (_ptr != ffi.nullptr) {
+      _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: externalSize);
+    }
+  }
 
   /// The C library reads exactly rows*rowstride bytes from pixel buffers; a
   /// shorter Dart buffer would let it read past the end of the native copy.
@@ -227,7 +238,7 @@ class Visual {
     for (var i = 0; i < rgba.length; i++) {
       pRgba[i] = rgba[i];
     }
-    final rc = Visual._(nc.ncvisual_from_rgba(pRgba.cast(), rows, rowstride, cols));
+    final rc = Visual._(nc.ncvisual_from_rgba(pRgba.cast(), rows, rowstride, cols), rows * rowstride);
     allocator.free(pRgba);
     return rc;
   }
@@ -240,7 +251,7 @@ class Visual {
     for (var i = 0; i < rgb.length; i++) {
       pRgb[i] = rgb[i];
     }
-    final rc = Visual._(nc.ncvisual_from_rgb_packed(pRgb.cast(), rows, rowstride, cols, alpha));
+    final rc = Visual._(nc.ncvisual_from_rgb_packed(pRgb.cast(), rows, rowstride, cols, alpha), rows * cols * 4);
     allocator.free(pRgb);
     return rc;
   }
@@ -253,7 +264,7 @@ class Visual {
     for (var i = 0; i < rgba.length; i++) {
       pRgb[i] = rgba[i];
     }
-    final rc = Visual._(nc.ncvisual_from_rgb_loose(pRgb.cast(), rows, rowstride, cols, alpha));
+    final rc = Visual._(nc.ncvisual_from_rgb_loose(pRgb.cast(), rows, rowstride, cols, alpha), rows * cols * 4);
     allocator.free(pRgb);
     return rc;
   }
@@ -267,7 +278,7 @@ class Visual {
     for (var i = 0; i < bgra.length; i++) {
       pRgb[i] = bgra[i];
     }
-    final rc = Visual._(nc.ncvisual_from_bgra(pRgb.cast(), rows, rowstride, cols));
+    final rc = Visual._(nc.ncvisual_from_bgra(pRgb.cast(), rows, rowstride, cols), rows * rowstride);
     allocator.free(pRgb);
     return rc;
   }
@@ -290,7 +301,8 @@ class Visual {
       pltte[i] = palette[i];
     }
 
-    final rc = Visual._(nc.ncvisual_from_palidx(pRgb.cast(), rows, rowstride, cols, palsize, palstride, pltte));
+    final rc =
+        Visual._(nc.ncvisual_from_palidx(pRgb.cast(), rows, rowstride, cols, palsize, palstride, pltte), rows * cols * 4);
     allocator.free(pRgb);
     allocator.free(pltte);
     return rc;
@@ -318,6 +330,7 @@ class Visual {
   /// frees the ncvisual.
   void destroy() {
     if (_ptr == ffi.nullptr) return;
+    _finalizer.detach(this);
     nc.ncvisual_destroy(_ptr);
     _ptr = ffi.nullptr;
   }

@@ -65,5 +65,21 @@ void main() {
       expect(v.destroy, returnsNormally);
       expect(v.notInitialized, isTrue);
     });
+
+    // Finalizer smoke: undisposed visuals are reclaimed by GC without
+    // crashing; explicitly destroyed ones must be detached (a missed detach
+    // would double-free on a later GC).
+    test('undisposed visuals are reclaimed without crashing', () {
+      const rows = 8, cols = 8, rowstride = cols * 4;
+      for (var i = 0; i < 100; i++) {
+        Visual.fromRGBA(Uint8List(rows * rowstride), rows, rowstride, cols);
+        Visual.fromRGBA(Uint8List(rows * rowstride), rows, rowstride, cols).destroy();
+      }
+      var sink = 0;
+      for (var i = 0; i < 50; i++) {
+        sink += List<int>.generate(64 * 1024, (j) => j).length;
+      }
+      expect(sink, greaterThan(0));
+    });
   }, skip: skip);
 }

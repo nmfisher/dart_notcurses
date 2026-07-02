@@ -314,16 +314,23 @@ String ncKeyStr(int value) {
 
 typedef _CheckModifierCB = bool Function(ffi.Pointer<ncinput>);
 
-class Key {
+class Key implements ffi.Finalizable {
   ffi.Pointer<ncinput> _ptr;
 
-  Key() : _ptr = allocator<ncinput>();
+  /// GC backstop: frees the calloc'd ncinput if the owner never calls
+  /// [destroy].
+  static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(allocator.nativeFree);
+
+  Key() : _ptr = allocator<ncinput>() {
+    _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: ffi.sizeOf<ncinput>());
+  }
 
   ffi.Pointer<ncinput> get ptr => _ptr;
 
   /// Free the underlying ncinput. Safe to call more than once.
   void destroy() {
     if (_ptr == ffi.nullptr) return;
+    _finalizer.detach(this);
     allocator.free(_ptr);
     _ptr = ffi.nullptr;
   }

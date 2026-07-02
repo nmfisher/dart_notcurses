@@ -117,6 +117,56 @@ void main() {
       });
     });
 
+    test('plane wrappers are canonical per ncplane', () async {
+      await withNotcurses((nc, std) {
+        expect(identical(nc.stdplane(), nc.stdplane()), isTrue);
+        final child = std.create(PlaneOptions(y: 0, x: 0, rows: 2, cols: 2));
+        expect(child, isNotNull);
+        expect(identical(child, Plane.fromPtr(child!.ptr)), isTrue);
+        child.destroy();
+      });
+    });
+
+    test('destroy through one alias is visible through the others', () async {
+      await withNotcurses((nc, std) {
+        final child = std.create(PlaneOptions(y: 0, x: 0, rows: 2, cols: 2));
+        final alias = Plane.fromPtr(child!.ptr);
+        child.destroy();
+        expect(alias.destroyed, isTrue);
+        expect(alias.destroy, returnsNormally);
+      });
+    });
+
+    test('loaded cells release against their loading plane automatically', () async {
+      await withNotcurses((nc, std) {
+        for (var i = 0; i < 100; i++) {
+          final res = std.loadCell('x');
+          expect(res.result, greaterThan(0));
+          res.value!.destroy(); // no plane argument: auto-release on loader
+        }
+        expect(std.putStrYX(0, 0, 'ok'), greaterThan(0));
+      });
+    });
+
+    test('releasing a cell against the wrong plane throws', () async {
+      await withNotcurses((nc, std) {
+        final other = std.create(PlaneOptions(y: 0, x: 0, rows: 2, cols: 2));
+        final cell = std.loadCell('x').value!;
+        expect(() => cell.destroy(other), throwsArgumentError);
+        cell.destroy(std); // matching plane is fine
+        other!.destroy();
+      });
+    });
+
+    test('cell destroy after its plane is gone skips the pool release', () async {
+      await withNotcurses((nc, std) {
+        final plane = std.create(PlaneOptions(y: 0, x: 0, rows: 2, cols: 2));
+        final cell = plane!.loadCell('x').value!;
+        plane.destroy();
+        expect(cell.destroy, returnsNormally);
+      });
+    });
+
     test('create/destroy loop leaves the context usable', () async {
       await withNotcurses((nc, std) {
         for (var i = 0; i < 100; i++) {

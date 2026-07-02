@@ -47,6 +47,29 @@ bool get hasControllingTty {
 /// notcurses is testable here when the lib is built and /dev/tty is openable.
 bool get notcursesSupported => hasNotcursesLib && hasControllingTty;
 
+/// Best-effort restoration of the controlling terminal's state.
+///
+/// Under `dart test`, the test process's stdout is a captured pipe, so
+/// notcurses' RESTORATION sequences land in the captured stream while some
+/// of its init-time state changes (cursor hide, kitty keyboard push) went
+/// straight to /dev/tty during the capability handshake. The asymmetry
+/// leaves the shell without a cursor after the suite. Write the inverse
+/// sequences directly to the terminal; every sequence is idempotent and
+/// harmless when the state is already correct.
+void restoreTty() {
+  try {
+    final tty = File('/dev/tty').openSync(mode: FileMode.writeOnlyAppend);
+    tty.writeStringSync(
+      '\x1b[0m' // reset SGR attributes
+      '\x1b[?25h' // show the cursor (DECTCEM)
+      '\x1b[<u', // pop kitty keyboard protocol (no-op if unsupported/empty)
+    );
+    tty.closeSync();
+  } catch (_) {
+    // No controlling terminal — nothing to restore.
+  }
+}
+
 /// Initialize [NotCurses] against the controlling terminal, run [body], and
 /// stop. Throws if init fails (e.g. no TTY).
 Future<void> withNotcurses(
@@ -54,11 +77,14 @@ Future<void> withNotcurses(
 ) async {
   final nc = NotCurses(CursesOptions(loglevel: LogLevel.silent));
   if (nc.notInitialized) {
+    // A failed init can still have mutated the terminal mid-handshake.
+    restoreTty();
     throw StateError('notcurses_init failed (is there a controlling TTY?)');
   }
   try {
     await body(nc, nc.stdplane());
   } finally {
     nc.stop();
+    restoreTty();
   }
 }

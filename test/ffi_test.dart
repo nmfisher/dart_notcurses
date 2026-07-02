@@ -44,6 +44,7 @@ void main() {
       expect(direct.stop(), isTrue);
       // Regression: stop() used to double-free on a second call.
       expect(direct.stop(), isTrue);
+      restoreTty();
     });
 
     test('reports sane dimensions and palette', () {

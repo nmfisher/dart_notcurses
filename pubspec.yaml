@@ -5,8 +5,10 @@ repository: https://github.com/kascote/dart_notcurses
 homepage: https://github.com/kascote/dart_notcurses
 
 
+# The build-hook (hooks/code_assets) + @Native code-asset stack needs a
+# recent SDK; Native.addressOf needs >=3.3.
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
   characters: ^1.2.0

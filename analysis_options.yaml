@@ -19,7 +19,6 @@ linter:
     always_declare_return_types: true
     prefer_relative_imports: true
     prefer_single_quotes: true
-    package_api_docs: true
     # Disabled.
     constant_identifier_names: false
     # there are some issues linting the first import on some files

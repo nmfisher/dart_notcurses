@@ -44,4 +44,43 @@ void main() {
       expect(n.stop(), isTrue);
     });
   }, skip: skip);
+
+  group('GC finalizer backstop', () {
+    // Churn Dart allocations to give the GC a reason to run. Finalizer
+    // execution is not deterministic; these tests prove the finalizer path
+    // cannot crash the process (a wrong detach/double-free would abort).
+    void churn() {
+      var sink = 0;
+      for (var i = 0; i < 50; i++) {
+        sink += List<int>.generate(64 * 1024, (j) => j).length;
+      }
+      expect(sink, greaterThan(0));
+    }
+
+    test('undisposed Keys and Cells are reclaimed without crashing', () {
+      for (var i = 0; i < 500; i++) {
+        Key();
+        final c = Cell.init();
+        c.setStyles(Style.bold);
+      }
+      churn();
+      // Mixed: explicitly destroyed objects must be detached from the
+      // finalizer (a missed detach would double-free on a later GC).
+      for (var i = 0; i < 500; i++) {
+        Key().destroy();
+        Cell.init().destroy();
+      }
+      churn();
+    });
+
+    test('destroy after finalizer attach stays idempotent', () {
+      final k = Key();
+      final c = Cell.init();
+      k.destroy();
+      c.destroy();
+      expect(k.destroy, returnsNormally);
+      expect(c.destroy, returnsNormally);
+      churn();
+    });
+  }, skip: skip);
 }

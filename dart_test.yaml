@@ -1,0 +1,6 @@
+# TTY-gated tests initialize notcurses against the controlling terminal.
+# Concurrent suites fight over /dev/tty — capability-handshake responses get
+# consumed by the wrong instance, causing spurious failures and leaving the
+# terminal in a corrupted state (hidden cursor). Run suites serially; the
+# whole suite takes about a second, so this costs nothing.
+concurrency: 1

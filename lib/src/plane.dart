@@ -98,8 +98,38 @@ class Plane {
 
   Plane._(this._ptr);
 
+  /// Canonical wrapper per live ncplane. Every API that surfaces a plane
+  /// (stdplane(), create(), above(), Menu.plane(), ...) returns the same
+  /// wrapper for the same underlying ncplane, so destroy-state is shared
+  /// across aliases: destroying a plane through one reference marks every
+  /// reference destroyed. Entries are weak — evicted when the wrapper is
+  /// GC'd or the plane destroyed (C recycles addresses).
+  static final Map<int, WeakReference<Plane>> _canonical = {};
+  static final Finalizer<int> _evict = Finalizer((address) {
+    final ref = _canonical[address];
+    // Only drop the entry if it still holds a dead wrapper — the address may
+    // have been recycled and remapped to a new plane by now.
+    if (ref != null && ref.target == null) _canonical.remove(address);
+  });
+
   factory Plane.fromPtr(ffi.Pointer<ncplane> planePtr) {
-    return Plane._(planePtr);
+    if (planePtr == ffi.nullptr) return Plane._(planePtr);
+    final address = planePtr.address;
+    final existing = _canonical[address]?.target;
+    if (existing != null && existing._ptr == planePtr) return existing;
+    final plane = Plane._(planePtr);
+    _canonical[address] = WeakReference(plane);
+    _evict.attach(plane, address, detach: plane);
+    return plane;
+  }
+
+  /// Drop this wrapper from the canonical cache (before nulling [_ptr]).
+  void _forget() {
+    final address = _ptr.address;
+    if (identical(_canonical[address]?.target, this)) {
+      _canonical.remove(address);
+    }
+    _evict.detach(this);
   }
 
   /// Create a new ncplane bound to plane 'n', at the offset 'y'x'x' (relative to
@@ -110,11 +140,11 @@ class Plane {
   Plane? create(PlaneOptions opts) {
     return using<Plane?>((Arena alloc) {
       final popts = opts.toPtr(alloc);
-      final p = Plane._(nc.ncplane_create(_ptr, popts));
-      if (p._ptr == ffi.nullptr) {
+      final p = nc.ncplane_create(_ptr, popts);
+      if (p == ffi.nullptr) {
         return null;
       }
-      return p;
+      return Plane.fromPtr(p);
     });
   }
 
@@ -122,27 +152,29 @@ class Plane {
   ffi.Pointer<ncplane> get ptr => _ptr;
 
   /// Destroy a plane. The Standar Plane can not be destroyed. It will be destroyed
-  /// by NotCurses when finish. Safe to call more than once through this
-  /// wrapper; only the first call frees the ncplane.
+  /// by NotCurses when finish. Safe to call more than once; aliases obtained
+  /// for the same ncplane share this wrapper, so they all observe [destroyed].
   void destroy() {
     if (_ptr == ffi.nullptr) return;
     final std = notCurses().stdplane();
     if (std.ptr != _ptr) {
       nc.ncplane_destroy(_ptr);
+      _forget();
       _ptr = ffi.nullptr;
     }
   }
 
   /// Destroy this plane and all its bound descendants. Safe to call more than
-  /// once through this wrapper. Note: other [Plane] wrappers pointing at
-  /// destroyed descendants must not be used afterwards.
+  /// once. Note: [Plane] wrappers pointing at destroyed descendants are NOT
+  /// marked (the descendant set isn't enumerable here) and must not be used.
   void familyDestroy() {
     if (_ptr == ffi.nullptr) return;
     nc.ncplane_family_destroy(_ptr);
+    _forget();
     _ptr = ffi.nullptr;
   }
 
-  /// True once this wrapper's ncplane has been destroyed (or consumed by a
+  /// True once the underlying ncplane has been destroyed (or consumed by a
   /// C call, see [markDestroyed]).
   bool get destroyed => _ptr == ffi.nullptr;
 
@@ -150,6 +182,8 @@ class Plane {
   /// consumed by ncdirect_raster_frame). Later [destroy] calls become no-ops.
   /// Not intended for general use.
   void markDestroyed() {
+    if (_ptr == ffi.nullptr) return;
+    _forget();
     _ptr = ffi.nullptr;
   }
 
@@ -619,7 +653,9 @@ class Plane {
   /// the primary column (nccell_wide_right_p(c) will return true). It is an
   /// error to call this on a sprixel plane (unlike ncplane_at_yx()).
   int atYXcell(int y, int x, Cell cell) {
-    return nc.ncplane_at_yx_cell(_ptr, y, x, cell.ptr);
+    final rc = nc.ncplane_at_yx_cell(_ptr, y, x, cell.ptr);
+    if (rc >= 0) cell.markLoadedOn(this);
+    return rc;
   }
 
   /// All planes are created with scrolling disabled. Scrolling can be dynamically
@@ -648,13 +684,13 @@ class Plane {
   /// Return the plane above this one, or NULL if this is at the top.
   Plane? above() {
     final rc = nc.ncplane_above(_ptr);
-    return rc == ffi.nullptr ? null : Plane._(rc);
+    return rc == ffi.nullptr ? null : Plane.fromPtr(rc);
   }
 
   // Return the plane below this one, or NULL if this is at the bottom.
   Plane? below() {
     final rc = nc.ncplane_below(_ptr);
-    return rc == ffi.nullptr ? null : Plane._(rc);
+    return rc == ffi.nullptr ? null : Plane.fromPtr(rc);
   }
 
   /// Splice ncplane 'n' out of the z-buffer, and reinsert it below 'below'.
@@ -786,14 +822,14 @@ class Plane {
   Plane? reparent(Plane newparent) {
     final newp = nc.ncplane_reparent(_ptr, newparent.ptr);
     if (newp == ffi.nullptr) return null;
-    return Plane._(newp);
+    return Plane.fromPtr(newp);
   }
 
   /// Move a Plane and to a another one. The new parent can not be a child of the current plane.
   Plane? reparentFamily(Plane newparent) {
     final newp = nc.ncplane_reparent_family(_ptr, newparent.ptr);
     if (newp == ffi.nullptr) return null;
-    return Plane._(newp);
+    return Plane.fromPtr(newp);
   }
 
   /// Return true iff 'n' is a proper descendent of 'ancestor'.
@@ -851,14 +887,14 @@ class Plane {
   Plane dup() {
     // TODO: figure how send the 'opaque' param that is a Void* to let the user
     // store some information on the pane
-    return Plane._(nc.ncplane_dup(_ptr, ffi.nullptr));
+    return Plane.fromPtr(nc.ncplane_dup(_ptr, ffi.nullptr));
   }
 
   /// Get the plane to which the plane 'n' is bound, if any.
   Plane? parent() {
     final p = nc.ncplane_parent(_ptr);
     if (p == ffi.nullptr) return null;
-    return Plane._(p);
+    return Plane.fromPtr(p);
   }
 
   /// Set the ncplane's base nccell to 'c'. The base cell is used for purposes of
@@ -891,9 +927,10 @@ class Plane {
     final c = Cell.init();
     final rc = nc.ncplane_at_cursor_cell(_ptr, c.ptr);
     if (rc == -1) {
-      c.destroy(null);
+      c.destroy();
       return NcResult(-1, null);
     }
+    c.markLoadedOn(this);
     return NcResult(rc, c);
   }
 
@@ -1262,6 +1299,11 @@ class Plane {
         ) ==
         0;
     allocator.free(u8);
+    if (rc) {
+      for (final c in [upperLeft, upperRight, lowerLeft, lowerRight, horizontalLine, verticalLine]) {
+        c.markLoadedOn(this);
+      }
+    }
     return rc;
   }
 
@@ -1276,7 +1318,7 @@ class Plane {
     int styles = 0,
     Channels? channels,
   ]) {
-    return ncInline.nccells_rounded_box(
+    final ok = ncInline.nccells_rounded_box(
           _ptr,
           styles,
           channels == null ? 0 : channels.value,
@@ -1286,8 +1328,14 @@ class Plane {
           lowerRight.ptr,
           horizontalLine.ptr,
           verticalLine.ptr,
-        ) !=
+        ) ==
         0;
+    if (ok) {
+      for (final c in [upperLeft, upperRight, lowerLeft, lowerRight, horizontalLine, verticalLine]) {
+        c.markLoadedOn(this);
+      }
+    }
+    return ok;
   }
 
   int roundedBox(
@@ -1334,7 +1382,7 @@ class Plane {
     int styles = 0,
     Channels? channels,
   ]) {
-    return ncInline.nccells_double_box(
+    final ok = ncInline.nccells_double_box(
           _ptr,
           styles,
           channels == null ? 0 : channels.value,
@@ -1344,8 +1392,14 @@ class Plane {
           lowerRight.ptr,
           horizontalLine.ptr,
           verticalLine.ptr,
-        ) !=
+        ) ==
         0;
+    if (ok) {
+      for (final c in [upperLeft, upperRight, lowerLeft, lowerRight, horizontalLine, verticalLine]) {
+        c.markLoadedOn(this);
+      }
+    }
+    return ok;
   }
 
   int doubleBox(
@@ -1492,6 +1546,7 @@ class Plane {
       c.destroy(this);
       return NcResult(rc, null);
     }
+    c.markLoadedOn(this);
     return NcResult(rc, c);
   }
 
@@ -1509,6 +1564,7 @@ class Plane {
       c.destroy(this);
       return NcResult(rc, null);
     }
+    c.markLoadedOn(this);
     return NcResult(rc, c);
   }
 
@@ -1520,6 +1576,7 @@ class Plane {
       targ.destroy(this);
       return null;
     }
+    targ.markLoadedOn(this);
     return targ;
   }
 
@@ -1553,19 +1610,25 @@ class Plane {
   // Load a 7-bit char 'ch' into the nccell 'c'. Returns the number of bytes
   // used, or -1 on error.
   int loadCharCell(Cell c, String value) {
-    return ncInline.nccell_load_char(_ptr, c.ptr, value.codeUnitAt(0));
+    final rc = ncInline.nccell_load_char(_ptr, c.ptr, value.codeUnitAt(0));
+    if (rc >= 0) c.markLoadedOn(this);
+    return rc;
   }
 
   /// Load a UTF-8 encoded EGC of up to 4 bytes into the nccell 'c'. Returns the
   /// number of bytes used, or -1 on error.
   int loadEgc32(Cell c, String value) {
-    return ncInline.nccell_load_egc32(_ptr, c.ptr, value.runes.elementAt(0));
+    final rc = ncInline.nccell_load_egc32(_ptr, c.ptr, value.runes.elementAt(0));
+    if (rc >= 0) c.markLoadedOn(this);
+    return rc;
   }
 
   /// Load a UCS-32 codepoint into the nccell 'c'. Returns the number of bytes
   /// used, or -1 on error.
   int loadUcs32(Cell c, String value) {
-    return ncInline.nccell_load_ucs32(_ptr, c.ptr, value.runes.elementAt(0));
+    final rc = ncInline.nccell_load_ucs32(_ptr, c.ptr, value.runes.elementAt(0));
+    if (rc >= 0) c.markLoadedOn(this);
+    return rc;
   }
 
   // FIXME: how to return this values ? what is the nice api ?
