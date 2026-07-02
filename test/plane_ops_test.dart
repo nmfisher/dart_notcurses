@@ -167,6 +167,33 @@ void main() {
       });
     });
 
+    // The resize callback is bridged via NativeCallable.isolateLocal; this
+    // covers registration + the lifetime path (the callable is closed on
+    // destroy without crashing). Firing on an actual terminal resize needs a
+    // real window/PTY resize and isn't automatable here.
+    test('resize callback registers and tears down cleanly', () async {
+      await withNotcurses((nc, std) {
+        final child = std.create(
+          PlaneOptions(y: 0, x: 0, rows: 2, cols: 4),
+          onResize: (_) => true, // firing needs a real terminal resize (manual)
+        );
+        expect(child, isNotNull);
+        expect(nc.render(), isTrue);
+
+        // Swap the callback (closes the previous callable).
+        child!.setResizeCallback((_) => true);
+        expect(nc.render(), isTrue);
+
+        // Clear it (sets nullptr, closes the callable).
+        child.setResizeCallback(null);
+        expect(nc.render(), isTrue);
+
+        // Destroy closes any registered callable; must not crash or double-free.
+        child.destroy();
+        expect(child.destroyed, isTrue);
+      });
+    });
+
     test('create/destroy loop leaves the context usable', () async {
       await withNotcurses((nc, std) {
         for (var i = 0; i < 100; i++) {

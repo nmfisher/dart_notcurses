@@ -96,6 +96,39 @@ ffi.Pointer<FILE> _fdopenFile(int fd, String mode) {
   return p;
 }
 
+// clock_gettime, looked up in-process. notcurses input deadlines are absolute
+// CLOCK_MONOTONIC timespans, so building a relative timeout needs the current
+// monotonic clock — wall-clock (DateTime) can jump on NTP/timezone changes and
+// is unsafe for a deadline.
+late final int Function(int clkId, ffi.Pointer<timespec> tp) _clockGettime =
+    ffi.DynamicLibrary.process().lookupFunction<
+        ffi.Int32 Function(ffi.Int32, ffi.Pointer<timespec>),
+        int Function(int, ffi.Pointer<timespec>)>('clock_gettime');
+
+// CLOCK_MONOTONIC. Identical value (1) on Linux glibc and macOS; the macro
+// isn't exposed to Dart, so it's pinned here. (CLOCK_REALTIME is 0 on both.)
+const int _clockMonotonic = 1;
+
+/// Build an absolute CLOCK_MONOTONIC deadline [Duration] from now, for
+/// notcurses input calls that take a `timespec*`. Returns `nullptr` when
+/// [timeout] is null (meaning "block indefinitely" to notcurses_get). Caller
+/// frees the pointer with the package allocator, or passes nullptr through
+/// unchanged. On a clock read failure, degrades to an immediate deadline so
+/// the call never blocks on a clock fault.
+ffi.Pointer<timespec> monotonicDeadline(Duration? timeout) {
+  if (timeout == null) return ffi.nullptr;
+  final ts = allocator<timespec>();
+  if (_clockGettime(_clockMonotonic, ts) != 0) {
+    return ts
+      ..ref.tv_sec = 0
+      ..ref.tv_nsec = 0;
+  }
+  final totalNs = ts.ref.tv_sec * 1000000000 + ts.ref.tv_nsec + timeout.inMicroseconds * 1000;
+  ts.ref.tv_sec = totalNs ~/ 1000000000;
+  ts.ref.tv_nsec = totalNs.remainder(1000000000);
+  return ts;
+}
+
 class NotCurses {
   late ffi.Pointer<notcurses> _ptr;
   bool _stopped = false;
@@ -243,15 +276,25 @@ class NotCurses {
     return nc.notcurses_mice_enable(_ptr, MiceEvents.noEvents) == 0;
   }
 
-  /// Read a UTF-32-encoded Unicode codepoint from input. This might only be part
-  /// of a larger EGC. Provide a NULL 'ts' to block at length, and otherwise a
-  /// timespec specifying an absolute deadline calculated using CLOCK_MONOTONIC.
-  /// Returns a single Unicode code point, or a synthesized special key constant,
-  /// or (uint32_t)-1 on error. Returns 0 on a timeout. If an event is processed,
-  /// the return value is the 'id' field from that event. 'ni' may be NULL.
-  NcResult<int, Key?> getBlocking() {
+  /// Read one input event. [timeout] of null blocks indefinitely; a finite
+  /// [Duration] blocks up to that long (an absolute CLOCK_MONOTONIC deadline is
+  /// built internally via [monotonicDeadline]); [Duration.zero] returns
+  /// immediately. When [keyInfo] is false, only the event id is read and the
+  /// returned value is null.
+  ///
+  /// [NcResult.result] is the event id, 0 on timeout, or a negative value on
+  /// error; [NcResult.value] is the [Key] (null on error or when [keyInfo] is
+  /// false). On timeout (id 0) an empty Key is still returned.
+  NcResult<int, Key?> get({Duration? timeout, bool keyInfo = true}) {
+    final ts = monotonicDeadline(timeout);
+    if (!keyInfo) {
+      final rc = nc.notcurses_get(_ptr, ts, ffi.nullptr);
+      if (ts != ffi.nullptr) allocator.free(ts);
+      return NcResult(rc, null);
+    }
     final k = Key();
-    final rc = nc.notcurses_get(_ptr, ffi.nullptr, k.ptr);
+    final rc = nc.notcurses_get(_ptr, ts, k.ptr);
+    if (ts != ffi.nullptr) allocator.free(ts);
     if (rc < 0) {
       k.destroy();
       return NcResult(rc, null);
@@ -259,34 +302,41 @@ class NotCurses {
     return NcResult(rc, k);
   }
 
-  /// Acquire up to 'vcount' ncinputs at the vector 'ni'. The number read will be
-  /// returned, or -1 on error without any reads, 0 on timeout.
-  // TODO: need to figure the right inteface
-  /* NcResult<int, List<ncinput>> getVec(Key key, int count) {
-    final keyArray = allocator<ncinput>(count);
-    final rc = nc.notcurses_getvec(_ptr, ffi.nullptr, key.ptr, count);
-    if (rc == -1) {
-      allocator.free(keyArray);
-      return NcResult(rc, []);
-    }
-    
-    return NcResult(rc, List<ncinput>.generate(count, (i) => keyArray[i]));
-  } */
+  /// Convenience: block indefinitely until an event arrives.
+  NcResult<int, Key?> getBlocking() => get();
 
-  /// 'ni' may be NULL if the caller is uninterested in event details. If no event
-  /// is immediately ready, returns 0.
-  NcResult<int, Key?> getNonBlocking({bool keyInfo = true}) {
-    if (keyInfo) {
-      final k = Key();
-      final rc = ncInline.notcurses_get_nblock(_ptr, k.ptr);
-      if (rc < 0) {
-        k.destroy();
-        return NcResult(rc, null);
-      }
-      return NcResult(rc, k);
+  /// Convenience: return immediately; 0 means no event was ready.
+  NcResult<int, Key?> getNonBlocking({bool keyInfo = true}) =>
+      get(timeout: Duration.zero, keyInfo: keyInfo);
+
+  /// Acquire up to [max] input events at once. [NcResult.result] is the number
+  /// read (negative on error, 0 on timeout); [NcResult.value] is the list of
+  /// [Key]s, each owning a copy of its slot. [timeout] semantics match [get].
+  NcResult<int, List<Key>> getVec({Duration? timeout, int max = 16}) {
+    RangeError.checkNotNegative(max, 'max');
+    final ts = monotonicDeadline(timeout);
+    final buf = allocator<ncinput>(max == 0 ? 1 : max);
+    final count = nc.notcurses_getvec(_ptr, ts, buf, max);
+    if (ts != ffi.nullptr) allocator.free(ts);
+    if (count < 0) {
+      allocator.free(buf);
+      return NcResult(count, <Key>[]);
     }
-    final rc = ncInline.notcurses_get_nblock(_ptr, ffi.nullptr);
-    return NcResult(rc, null);
+    final elemSize = ffi.sizeOf<ncinput>();
+    final keys = <Key>[];
+    for (var i = 0; i < count; i++) {
+      // Copy the filled slot into its own owning Key (byte-copy is robust to
+      // future struct-field additions; avoids a borrowed-pointer ownership mode).
+      final dst = allocator<ncinput>();
+      final src = (buf + i).cast<ffi.Uint8>();
+      final dstBytes = dst.cast<ffi.Uint8>();
+      for (var b = 0; b < elemSize; b++) {
+        dstBytes[b] = src[b];
+      }
+      keys.add(Key.wrap(dst));
+    }
+    allocator.free(buf);
+    return NcResult(count, keys);
   }
 
   /// Get a file descriptor suitable for input event poll()ing. When this

@@ -321,8 +321,17 @@ class Key implements ffi.Finalizable {
   /// [destroy].
   static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(allocator.nativeFree);
 
-  Key() : _ptr = allocator<ncinput>() {
-    _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: ffi.sizeOf<ncinput>());
+  /// Allocate a zeroed ncinput owned by this Key.
+  Key() : this.wrap(allocator<ncinput>());
+
+  /// Wrap an already-allocated [ncinput] that this Key takes ownership of
+  /// (freed on [destroy] or GC). Used internally by NotCurses.getVec to hand
+  /// each slot of a scratch array to its own owning Key; not intended for
+  /// general use.
+  Key.wrap(this._ptr) {
+    if (_ptr != ffi.nullptr) {
+      _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: ffi.sizeOf<ncinput>());
+    }
   }
 
   ffi.Pointer<ncinput> get ptr => _ptr;

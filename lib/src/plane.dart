@@ -33,7 +33,6 @@ class Dimensions {
   }
 }
 
-typedef PlaneResizerCB = ffi.Pointer<ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<ncplane>)>>;
 typedef PlaneUserPointer = ffi.Pointer<ffi.Void>;
 
 class PlaneOptions {
@@ -54,9 +53,6 @@ class PlaneOptions {
 
   /// name (used only for debugging), may be NULL
   String name;
-
-  /// callback when parent is resized
-  PlaneResizerCB? resizerCB;
 
   /// closure over NCPLANE_OPTION_*
   int flags;
@@ -95,6 +91,18 @@ class PlaneOptions {
 
 class Plane {
   ffi.Pointer<ncplane> _ptr;
+
+  /// A resize callback registered via [setResizeCallback], kept reachable for
+  /// as long as the plane holds it and closed on swap/destroy. `isolateLocal`
+  /// is correct here: resize is processed on the notcurses thread, which is
+  /// this isolate's event loop, so the callback need not cross isolates.
+  ffi.NativeCallable<ffi.Int Function(ffi.Pointer<ncplane>)>? _resizeCallable;
+
+  // Closes [_resizeCallable] if the Plane is GC'd without an explicit destroy
+  // (planes otherwise require manual destroy). Without this, the C side would
+  // keep a pointer to a trampoline whose Dart closure context is gone.
+  static final Finalizer<ffi.NativeCallable> _callableFinalizer =
+      Finalizer((ffi.NativeCallable cb) => cb.close());
 
   Plane._(this._ptr);
 
@@ -137,25 +145,74 @@ class Plane {
   /// must both be positive. This plane is initially at the top of the z-buffer,
   /// as if ncplane_move_top() had been called on it. The void* 'userptr' can be
   /// retrieved (and reset) later. A 'name' can be set, used in debugging.
-  Plane? create(PlaneOptions opts) {
+  ///
+  /// If [onResize] is given, it is registered as the new plane's resize callback
+  /// (see [setResizeCallback]).
+  Plane? create(PlaneOptions opts, {bool Function(Plane resized)? onResize}) {
     return using<Plane?>((Arena alloc) {
       final popts = opts.toPtr(alloc);
       final p = nc.ncplane_create(_ptr, popts);
       if (p == ffi.nullptr) {
         return null;
       }
-      return Plane.fromPtr(p);
+      final plane = Plane.fromPtr(p);
+      if (onResize != null) plane.setResizeCallback(onResize);
+      return plane;
     });
   }
 
   /// Returns a pointer to NcPlane to be used by the NotCurses API
   ffi.Pointer<ncplane> get ptr => _ptr;
 
+  /// Set a callback invoked (on the next render/raster cycle) when this plane's
+  /// parent is resized. The callback receives this [Plane] and returns whether
+  /// it handled the resize: returning true (handled) leaves the plane's geometry
+  /// to the callback; returning false lets notcurses apply its default resize.
+  /// Pass null to clear an existing callback.
+  ///
+  /// The standard plane may not have a resize callback (notcurses ignores the
+  /// set on it). The callback must not call back into blocking notcurses APIs.
+  void setResizeCallback(bool Function(Plane resized)? cb) {
+    if (_ptr == ffi.nullptr) return;
+    _closeResizeCallable();
+    if (cb == null) {
+      nc.ncplane_set_resizecb(_ptr, ffi.nullptr);
+      return;
+    }
+    final callable =
+        ffi.NativeCallable<ffi.Int Function(ffi.Pointer<ncplane>)>.isolateLocal(
+      (ffi.Pointer<ncplane> n) {
+        // Resolve the raw ncplane back to its canonical wrapper; if Dart has
+        // no wrapper for it, defer to notcurses' default resize.
+        final plane = _canonical[n.address]?.target;
+        if (plane == null || plane._ptr != n) return 1;
+        return cb(plane) ? 0 : 1; // C: 0 = handled, non-zero = default
+      },
+      // If the Dart callback throws or the isolate is gone, let notcurses
+      // apply its default resize rather than read garbage. (exceptionalReturn
+      // must be named — the analyzer's FFI verifier mishandles the positional
+      // form.)
+      exceptionalReturn: 1,
+    );
+    nc.ncplane_set_resizecb(_ptr, callable.nativeFunction);
+    _resizeCallable = callable;
+    _callableFinalizer.attach(this, callable, detach: this);
+  }
+
+  void _closeResizeCallable() {
+    final cb = _resizeCallable;
+    if (cb == null) return;
+    _callableFinalizer.detach(this);
+    cb.close();
+    _resizeCallable = null;
+  }
+
   /// Destroy a plane. The Standar Plane can not be destroyed. It will be destroyed
   /// by NotCurses when finish. Safe to call more than once; aliases obtained
   /// for the same ncplane share this wrapper, so they all observe [destroyed].
   void destroy() {
     if (_ptr == ffi.nullptr) return;
+    _closeResizeCallable();
     final std = notCurses().stdplane();
     if (std.ptr != _ptr) {
       nc.ncplane_destroy(_ptr);
@@ -169,6 +226,7 @@ class Plane {
   /// marked (the descendant set isn't enumerable here) and must not be used.
   void familyDestroy() {
     if (_ptr == ffi.nullptr) return;
+    _closeResizeCallable();
     nc.ncplane_family_destroy(_ptr);
     _forget();
     _ptr = ffi.nullptr;
@@ -183,6 +241,7 @@ class Plane {
   /// Not intended for general use.
   void markDestroyed() {
     if (_ptr == ffi.nullptr) return;
+    _closeResizeCallable();
     _forget();
     _ptr = ffi.nullptr;
   }
