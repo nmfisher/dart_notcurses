@@ -30,10 +30,41 @@ void main(List<String> args) async {
 
     // The merged-library link step differs between GNU ld (Linux) and ld64
     // (macOS): macOS has no --whole-archive (use -force_load instead) and no
-    // separate libtinfo (terminfo lives in libncurses). On macOS the core
-    // deps are statically embedded so the merged dylib has no runtime
-    // Homebrew dependency.
+    // separate libtinfo (terminfo lives in libncurses). On macOS notcurses-core's
+    // transitive deps are statically embedded from vendored archives, so the
+    // merged dylib has no runtime Homebrew dependency; on Linux they stay system
+    // shared libraries (-l flags).
     final isMacOS = targetOS == OS.macOS;
+
+    // Vendored transitive deps linked statically on macOS (next to
+    // libnotcurses-core.a in native/lib/<os>_<arch>/). Linux keeps using system
+    // shared libs.
+    const macosDeps = ['libncursesw.a', 'libunistring.a', 'libdeflate.a'];
+
+    // Verify every required archive is present before linking, so a missing
+    // vendored dep surfaces a clear pointer to the build script instead of an
+    // opaque "file not found" from ld.
+    for (final name in [
+      'libnotcurses-core.a',
+      if (isMacOS) ...macosDeps,
+    ]) {
+      final archive = p.join(libDir, name);
+      if (!File(archive).existsSync()) {
+        throw UnsupportedError(
+          'Missing vendored static archive for $targetOS/$targetArch: $name\n'
+          'Looked in: $archive\n'
+          '(Re)build the vendored archives with tool/build_notcurses.sh.',
+        );
+      }
+    }
+
+    // -force_load (macOS) / --whole-archive (Linux) is LOAD-BEARING. The Dart
+    // @Native externals reference notcurses symbols that no C glue (ffi.c /
+    // shim.c) actually calls, so the linker sees no C-side reference to most of
+    // the notcurses-core API. Without forcing the whole archive in, those
+    // objects would be dropped and the bindings would resolve to undefined
+    // symbols at runtime. Forcing it all in re-exports the full API.
+    final notcursesArchive = '$libDir/libnotcurses-core.a';
 
     final flags = <String>[
       '-DNOTCURSES_FFI',
@@ -41,22 +72,12 @@ void main(List<String> args) async {
       '-D_DEFAULT_SOURCE',
       '-L$libDir',
       if (isMacOS) ...[
-        // -force_load pulls ALL objects from the archive into the merged lib
-        // (the ld64 equivalent of --whole-archive) so the full notcurses-core
-        // API is re-exported for the Dart FFI bindings.
         '-force_load',
-        '$libDir/libnotcurses-core.a',
-        // Statically embed notcurses-core's transitive deps. Homebrew ships
-        // single-arch arm64 archives on Apple Silicon.
-        '/opt/homebrew/opt/ncurses/lib/libncursesw.a',
-        '/opt/homebrew/lib/libunistring.a',
-        '/opt/homebrew/lib/libdeflate.a',
+        notcursesArchive,
+        for (final dep in macosDeps) '$libDir/$dep',
       ] else ...[
-        // --whole-archive forces ALL symbols from the static archive to be
-        // included, not just those referenced by ffi.c. This ensures the
-        // merged library exports the full notcurses-core API.
         '-Wl,--whole-archive',
-        '$libDir/libnotcurses-core.a',
+        notcursesArchive,
         '-Wl,--no-whole-archive',
         '-ltinfo',
         '-lunistring',
