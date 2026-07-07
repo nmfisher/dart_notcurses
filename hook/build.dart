@@ -72,6 +72,7 @@ void main(List<String> args) async {
       '-D_DEFAULT_SOURCE',
       '-L$libDir',
       if (isMacOS) ...[
+        '-Wl,-w', // suppress benign "built for newer macOS version" ld warnings
         '-force_load',
         notcursesArchive,
         for (final dep in macosDeps) '$libDir/$dep',
