@@ -1,5 +1,6 @@
 // ignore_for_file: library_prefixes
 import 'dart:ffi' as ffi;
+import 'dart:io' show File, FileMode;
 
 import 'package:ffi/ffi.dart';
 
@@ -345,6 +346,26 @@ class NotCurses {
   /// the file descriptor associated with stdin (but it might be!).
   int getInputReadyFD() {
     return nc.notcurses_inputready_fd(_ptr);
+  }
+
+  /// Write a raw byte sequence directly to the controlling terminal
+  /// (`/dev/tty`), bypassing notcurses' retained-mode output. notcurses
+  /// owns its output `FILE*` and exposes no raw-write API, and writing to
+  /// `stdout` interleaves badly with notcurses render output — so we open
+  /// `/dev/tty` directly, the same pattern the test harness uses to emit
+  /// XTMODKEYS undo sequences.
+  ///
+  /// Used for terminal mode toggles that have no notcurses API, such as
+  /// bracketed paste (`ESC[?2004h` / `ESC[?2004l`). Silently does nothing
+  /// when there is no controlling terminal.
+  void writeRawToTty(String s) {
+    try {
+      final tty = File('/dev/tty').openSync(mode: FileMode.writeOnlyAppend);
+      tty.writeStringSync(s);
+      tty.closeSync();
+    } catch (_) {
+      // No controlling terminal (e.g. running under a pipe or in CI).
+    }
   }
 
   /// Restore signals originating from the terminal's line discipline, i.e.
