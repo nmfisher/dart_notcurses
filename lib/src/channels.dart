@@ -4,8 +4,35 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
 import './extensions/int.dart';
-import './ffi/memory.dart';
 import './ffi/notcurses_inline_g.dart' as ncInline;
+
+// Channel encoding (mirrors notcurses channel.h). A 64-bit channel pair packs a
+// background channel in the low 32 bits and a foreground channel in the high 32
+// bits. The masks below are 64-bit-positioned; _CH_* are the unshifted 32-bit
+// forms used when operating on a single channel (class Channel).
+const int NC_NOBACKGROUND_MASK = 0x8700000000000000;
+// if this bit is set, we are *not* using the default background color
+const int NC_BGDEFAULT_MASK = 0x0000000040000000;
+// extract these bits to get the background RGB value
+const int NC_BG_RGB_MASK = 0x0000000000ffffff;
+// if this bit *and* NC_BGDEFAULT_MASK are set, we're using a
+// palette-indexed background color
+const int NC_BG_PALETTE = 0x0000000008000000;
+// extract these bits to get the background alpha mask
+const int NC_BG_ALPHA_MASK = 0x30000000;
+
+// Foreground occupies the high 32 bits of the 64-bit channel pair.
+const int NC_FGDEFAULT_MASK = 0x4000000000000000;
+const int NC_FG_RGB_MASK = 0xffffff0000000000;
+const int NC_FG_PALETTE = 0x0800000000000000;
+const int NC_FG_ALPHA_MASK = 0x3000000000000000;
+
+// Single 32-bit channel masks (class Channel; value is one channel).
+const int _CH_DEFAULT = 0x40000000;
+const int _CH_RGB = 0x00ffffff;
+const int _CH_PALETTE = 0x08000000;
+const int _CH_ALPHA = 0x30000000;
+const int _NCPALETTESIZE = 256; // NCPALETTESIZE in notcurses.h
 
 class RGB {
   final int r, g, b;
@@ -24,20 +51,6 @@ class RGB {
     return 'RGB: $r/${r.toStrHex()} $g/${g.toStrHex()} $b/${b.toStrHex()}';
   }
 }
-
-// Does this glyph completely obscure the background? If so, there's no need
-// to emit a background when rasterizing, a small optimization. These are
-// also used to track regions into which we must not cellblit.
-const int NC_NOBACKGROUND_MASK = 0x8700000000000000;
-// if this bit is set, we are *not* using the default background color
-const int NC_BGDEFAULT_MASK = 0x0000000040000000;
-// extract these bits to get the background RGB value
-const int NC_BG_RGB_MASK = 0x0000000000ffffff;
-// if this bit *and* NC_BGDEFAULT_MASK are set, we're using a
-// palette-indexed background color
-const int NC_BG_PALETTE = 0x0000000008000000;
-// extract these bits to get the background alpha mask
-const int NC_BG_ALPHA_MASK = 0x30000000;
 
 class Channels {
   int _value;
@@ -100,44 +113,44 @@ class Channels {
   /// Set the r, g, and b channels for the foreground component of this 64-bit
   /// 'channels' variable, and mark it as not using the default color.
   bool setFgRGB8(int r, int g, int b) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_fg_rgb8(chn, r, g, b);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (r >= 256 || g >= 256 || b >= 256) return false;
+    final fg = ((_value >> 32) & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+        _CH_DEFAULT |
+        ((r << 16) | (g << 8) | b);
+    _value = (fg << 32) | (_value & 0xffffffff);
+    return true;
   }
 
   /// Set the r, g, and b channels for the background component of this 64-bit
   /// 'channels' variable, and mark it as not using the default color.
   bool setBgRGB8(int r, int g, int b) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_bg_rgb8(chn, r, g, b);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (r >= 256 || g >= 256 || b >= 256) return false;
+    final bg = (_value & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+        _CH_DEFAULT |
+        ((r << 16) | (g << 8) | b);
+    _value = (_value & ~0xffffffff) | bg;
+    return true;
   }
 
   /// Set an assembled 24 bit channel at once.
   bool setFgRGB(int rgb) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_fg_rgb(chn, rgb);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (rgb > 0xffffff) return false;
+    final fg = ((_value >> 32) & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+        _CH_DEFAULT |
+        (rgb & 0xffffff);
+    _value = (fg << 32) | (_value & 0xffffffff);
+    return true;
   }
 
   /// assembled 24-bit RGB value. A value over 0xffffff
   /// will be rejected, with a non-zero return value.
   bool setBgRGB(int rgb) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_bg_rgb(chn, rgb);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (rgb > 0xffffff) return false;
+    final bg = (_value & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+        _CH_DEFAULT |
+        (rgb & 0xffffff);
+    _value = (_value & ~0xffffffff) | bg;
+    return true;
   }
 
   /// Extract 24 bits of foreground RGB from 'channels', split into subchannels.
@@ -186,43 +199,45 @@ class Channels {
   /// Set the cell's foreground palette index, set the foreground palette index
   /// bit, set it foreground-opaque, and clear the foreground default color bit.
   bool setFgPalindex(int ndx) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_fg_palindex(chn, ndx);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (ndx >= _NCPALETTESIZE) return false;
+    final fg = ((_value >> 32) & 0xffffffff) & 0xff000000 |
+        _CH_DEFAULT |
+        _CH_PALETTE |
+        (ndx & 0xff);
+    _value = (fg << 32) | (_value & 0xffffffff);
+    return true;
   }
 
   /// Set the cell's background palette index, set the background palette index
   /// bit, set it background-opaque, and clear the background default color bit.
   bool setBgPalindex(int ndx) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_bg_palindex(chn, ndx);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (ndx >= _NCPALETTESIZE) return false;
+    final bg = (_value & 0xffffffff) & 0xff000000 |
+        _CH_DEFAULT |
+        _CH_PALETTE |
+        (ndx & 0xff);
+    _value = (_value & ~0xffffffff) | bg;
+    return true;
   }
 
   /// Set the 2-bit alpha component of the foreground channel.
   bool setFgAlpha(int alpha) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_fg_alpha(chn, alpha);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (alpha & ~_CH_ALPHA != 0) return false;
+    var fg = ((_value >> 32) & 0xffffffff);
+    fg = (alpha & 0xffffffff) | (fg & ~_CH_ALPHA);
+    if (alpha != 0) fg |= _CH_DEFAULT;
+    _value = (fg << 32) | (_value & 0xffffffff);
+    return true;
   }
 
   /// Set the 2-bit alpha component of the background channel.
   bool setBgAlpha(int alpha) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    final rc = ncInline.ncchannels_set_bg_alpha(chn, alpha);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (alpha & ~_CH_ALPHA != 0) return false;
+    var bg = (_value & 0xffffffff);
+    bg = (alpha & 0xffffffff) | (bg & ~_CH_ALPHA);
+    if (alpha != 0) bg |= _CH_DEFAULT;
+    _value = (_value & ~0xffffffff) | bg;
+    return true;
   }
 
   /// Extract 2 bits of foreground alpha from 'channels', shifted to LSBs.
@@ -237,20 +252,14 @@ class Channels {
 
   /// Mark the background channel as using its default color.
   void setBgDefault() {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    ncInline.ncchannels_set_bg_default(chn);
-    _value = chn.value;
-    allocator.free(chn);
+    final bg = (_value & 0xffffffff) & ~(_CH_DEFAULT | _CH_ALPHA);
+    _value = (_value & ~0xffffffff) | bg;
   }
 
   /// Mark the foreground channel as using its default color.
   void setFgDefault() {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    ncInline.ncchannels_set_fg_default(chn);
-    _value = chn.value;
-    allocator.free(chn);
+    final fg = ((_value >> 32) & 0xffffffff) & ~(_CH_DEFAULT | _CH_ALPHA);
+    _value = (fg << 32) | (_value & 0xffffffff);
   }
 
   /// Returns the channels with the fore- and background's color information
@@ -263,11 +272,7 @@ class Channels {
 
   /// Set the alpha and coloring bits of a channel pair from another channel pair.
   void setChannels(int channel) {
-    final chn = allocator<Uint64>();
-    chn.value = _value;
-    ncInline.ncchannels_set_channels(chn, channel);
-    _value = chn.value;
-    allocator.free(chn);
+    _value = (((channel >> 32) & 0xffffffff) << 32) | (channel & 0xffffffff);
   }
 
   /// Extract the background alpha and coloring bits from a 64-bit channel pair.
@@ -327,35 +332,32 @@ class Channel {
   /// the default color. Retain the other bits unchanged. Any value greater than
   /// 255 will result in a return of -1 and no change to the channel.
   bool setRGB8(int r, int g, int b) {
-    final chn = allocator<Uint32>();
-    chn.value = _value;
-    final rc = ncInline.ncchannel_set_rgb8(chn, r, g, b);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (r >= 256 || g >= 256 || b >= 256) return false;
+    _value = (_value & ~(_CH_RGB | _CH_PALETTE)) |
+        _CH_DEFAULT |
+        ((r << 16) | (g << 8) | b);
+    return true;
   }
 
   /// Set the 32-bit rgb of a 32-bit channel, and mark it as not using
   /// the default color. Retain the other bits unchanged. Any value greater than
   /// 0xffffff will result in a return of -1 and no change to the channel.
   bool setRGB32(int rgb) {
-    final chn = allocator<Uint32>();
-    chn.value = _value;
-    final rc = ncInline.ncchannel_set(chn, rgb);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (rgb > 0xffffff) return false;
+    _value = (_value & ~(_CH_RGB | _CH_PALETTE)) | _CH_DEFAULT | (rgb & 0xffffff);
+    return true;
   }
 
   /// Set the three 8-bit components of a 32-bit channel, and mark it as not using
   /// the default color. Retain the other bits unchanged. r, g, and b will be
   /// clipped to the range [0..255].
   void setRgb8Clipped(int r, int g, int b) {
-    final chn = allocator<Uint32>();
-    chn.value = _value;
-    ncInline.ncchannel_set_rgb8_clipped(chn, r, g, b);
-    _value = chn.value;
-    allocator.free(chn);
+    if (r >= 256) r = 255;
+    if (g >= 256) g = 255;
+    if (b >= 256) b = 255;
+    _value = (_value & ~(_CH_RGB | _CH_PALETTE)) |
+        _CH_DEFAULT |
+        ((r << 16) | (g << 8) | b);
   }
 
   /// Extract the 2-bit alpha component from a 32-bit channel. It is not
@@ -368,21 +370,15 @@ class Channel {
   /// must not be set to NCALPHA_HIGHCONTRAST. It is an error if alpha contains
   /// any bits other than NCALPHA_*.
   bool setAlpha(int alpha) {
-    final chn = allocator<Uint32>();
-    chn.value = _value;
-    final rc = ncInline.ncchannel_set_alpha(chn, alpha);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (alpha & ~_CH_ALPHA != 0) return false;
+    _value = (alpha & 0xffffffff) | (_value & ~_CH_ALPHA);
+    if (alpha != 0) _value |= _CH_DEFAULT;
+    return true;
   }
 
   /// Mark the channel as using its default color. Alpha is set opaque.
   void setDefault() {
-    final chn = allocator<Uint32>();
-    chn.value = _value;
-    ncInline.ncchannel_set_default(chn);
-    _value = chn.value;
-    allocator.free(chn);
+    _value &= ~(_CH_DEFAULT | _CH_ALPHA);
   }
 
   /// Extract the palette index from a channel. Only valid if
@@ -394,11 +390,8 @@ class Channel {
   /// Mark the channel as using the specified palette color. It is an error if
   /// the index is greater than NCPALETTESIZE. Alpha is set opaque.
   bool setPalindex(int idx) {
-    final chn = allocator<Uint32>();
-    chn.value = _value;
-    final rc = ncInline.ncchannel_set_palindex(chn, idx);
-    _value = chn.value;
-    allocator.free(chn);
-    return rc == 0;
+    if (idx >= _NCPALETTESIZE) return false;
+    _value = (_value & 0xff000000) | _CH_DEFAULT | _CH_PALETTE | (idx & 0xff);
+    return true;
   }
 }

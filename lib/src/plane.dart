@@ -633,12 +633,13 @@ class Plane {
   /// 32-bit UTF-32 on the supported platforms). The ncplane_putwstr* APIs
   /// expect wide characters, not UTF-8 bytes.
   static ffi.Pointer<ffi.WChar> _toWcs(String value) {
-    final runes = value.runes.toList();
+    final runes = value.runes;
     final buf = allocator<ffi.WChar>(runes.length + 1);
-    for (var i = 0; i < runes.length; i++) {
-      buf[i] = runes[i];
+    var i = 0;
+    for (final r in runes) {
+      buf[i++] = r;
     }
-    buf[runes.length] = 0;
+    buf[i] = 0;
     return buf;
   }
 

@@ -92,19 +92,20 @@ class VisualOptions {
 
   @override
   String toString() {
-    print(' plane: $plane');
-    print(' scaling: $scaling');
-    print(' y: $y');
-    print(' x: $x');
-    print(' begy: $begy');
-    print(' begx: $begx');
-    print(' leny: $lenx');
-    print(' blitter: $blitter');
-    print(' flags: $flags');
-    print(' transcolor: $transcolor');
-    print(' pxoffy: $pxoffy');
-    print(' pxoffx: $pxoffx');
-    return super.toString();
+    final b = StringBuffer()
+      ..writeln(' plane: $plane')
+      ..writeln(' scaling: $scaling')
+      ..writeln(' y: $y')
+      ..writeln(' x: $x')
+      ..writeln(' begy: $begy')
+      ..writeln(' begx: $begx')
+      ..writeln(' leny: $lenx')
+      ..writeln(' blitter: $blitter')
+      ..writeln(' flags: $flags')
+      ..writeln(' transcolor: $transcolor')
+      ..writeln(' pxoffy: $pxoffy')
+      ..writeln(' pxoffx: $pxoffx');
+    return b.toString();
   }
 }
 

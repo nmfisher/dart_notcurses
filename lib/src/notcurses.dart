@@ -328,12 +328,11 @@ class NotCurses {
     for (var i = 0; i < count; i++) {
       // Copy the filled slot into its own owning Key (byte-copy is robust to
       // future struct-field additions; avoids a borrowed-pointer ownership mode).
+      // Use a typed-list copy rather than a per-byte Dart loop.
       final dst = allocator<ncinput>();
       final src = (buf + i).cast<ffi.Uint8>();
       final dstBytes = dst.cast<ffi.Uint8>();
-      for (var b = 0; b < elemSize; b++) {
-        dstBytes[b] = src[b];
-      }
+      dstBytes.asTypedList(elemSize).setAll(0, src.asTypedList(elemSize));
       keys.add(Key.wrap(dst));
     }
     allocator.free(buf);

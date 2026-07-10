@@ -55,6 +55,12 @@ void main() {
       c.setDefault();
       expect(c.isUsingDefault, isTrue);
     });
+
+    test('setRgb8Clipped clamps components to 255', () {
+      final c = Channel.initializer(0, 0, 0);
+      c.setRgb8Clipped(300, 5, 7);
+      expect(c.rgb, equals(0xff0507));
+    });
   }, skip: skip);
 
   group('Channels', () {
@@ -123,6 +129,26 @@ void main() {
       dst.setChannels(src.channels());
       expect(dst.fgRGB(), equals(0x112233));
       expect(dst.bgRGB(), equals(0x445566));
+    });
+
+    test('setFgDefault marks fg default and clears alpha, preserving RGB', () {
+      final ch = Channels.initializer(0x11, 0x22, 0x33, 0x44, 0x55, 0x66);
+      ch.setFgDefault();
+      expect(ch.fgRGB(), equals(0x112233));
+      expect(ch.fgAlpha(), equals(Alpha.opaque));
+      // NC_BGDEFAULT_MASK is a *not-default* bit: cleared means fg uses default.
+      // FG default bit (bit 30 of the high word) clear; FG alpha bits (28-29) clear.
+      expect((ch.value >> 32) & 0x40000000, equals(0));
+      expect((ch.value >> 32) & 0x30000000, equals(0));
+    });
+
+    test('setBgDefault marks bg default and clears alpha, preserving RGB', () {
+      final ch = Channels.initializer(0x11, 0x22, 0x33, 0x44, 0x55, 0x66);
+      ch.setBgDefault();
+      expect(ch.bgRGB(), equals(0x445566));
+      expect(ch.bgAlpha(), equals(Alpha.opaque));
+      expect(ch.value & 0x40000000, equals(0));
+      expect(ch.value & 0x30000000, equals(0));
     });
   }, skip: skip);
 }
