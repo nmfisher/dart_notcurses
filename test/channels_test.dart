@@ -61,6 +61,28 @@ void main() {
       c.setRgb8Clipped(300, 5, 7);
       expect(c.rgb, equals(0xff0507));
     });
+
+    // Regression: setRgb8Clipped (pre-Dart-port) also clamped negatives to 0;
+    // the Dart port only clamped >= 256 and let negatives corrupt the channel.
+    test('setRgb8Clipped clamps negative components to 0', () {
+      final c = Channel.initializer(0, 0, 0);
+      c.setRgb8Clipped(-1, 5, 7);
+      expect(c.r, equals(0));
+      expect(c.g, equals(5));
+      expect(c.b, equals(7));
+    });
+
+    // Regression: C ncchannel_set_palindex forces alpha to OPAQUE first; the
+    // Dart port masked with 0xff000000 (which includes the alpha bits) and so
+    // retained a previously-set non-opaque alpha.
+    test('setPalindex clears stale alpha to opaque', () {
+      final c = Channel.initializer(1, 2, 3);
+      expect(c.setAlpha(Alpha.blend), isTrue);
+      expect(c.alpha(), equals(Alpha.blend));
+      expect(c.setPalindex(42), isTrue);
+      expect(c.palindex(), equals(42));
+      expect(c.alpha(), equals(Alpha.opaque));
+    });
   }, skip: skip);
 
   group('Channels', () {
@@ -112,6 +134,32 @@ void main() {
       expect(ch.fgPalindex(), equals(7));
       expect(ch.setBgPalindex(9), isTrue);
       expect(ch.bgPalindex(), equals(9));
+    });
+
+    // Regression: C ncchannel_set_palindex forces alpha to OPAQUE; the Dart
+    // port masked with 0xff000000 (includes alpha bits) and retained stale alpha.
+    test('setFgPalindex / setBgPalindex clear stale alpha to opaque', () {
+      final ch = Channels.zero();
+      expect(ch.setFgAlpha(Alpha.blend), isTrue);
+      expect(ch.fgAlpha(), equals(Alpha.blend));
+      expect(ch.setFgPalindex(7), isTrue);
+      expect(ch.fgPalindex(), equals(7));
+      expect(ch.fgAlpha(), equals(Alpha.opaque));
+
+      expect(ch.setBgAlpha(Alpha.transparent), isTrue);
+      expect(ch.bgAlpha(), equals(Alpha.transparent));
+      expect(ch.setBgPalindex(9), isTrue);
+      expect(ch.bgPalindex(), equals(9));
+      expect(ch.bgAlpha(), equals(Alpha.opaque));
+    });
+
+    // Regression: C ncchannels_set_bg_alpha forbids NCALPHA_HIGHCONTRAST for
+    // backgrounds; the Dart port's `& ~_CH_ALPHA` guard passed it through.
+    test('setBgAlpha rejects highcontrast for background', () {
+      final ch = Channels.zero();
+      final before = ch.value;
+      expect(ch.setBgAlpha(Alpha.highcontrast), isFalse);
+      expect(ch.value, equals(before)); // unchanged on rejection
     });
 
     test('reverse swaps fg and bg color info', () {

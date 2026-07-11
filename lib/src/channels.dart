@@ -1,8 +1,4 @@
 // ignore_for_file: library_prefixes
-import 'dart:ffi';
-
-import 'package:ffi/ffi.dart';
-
 import './extensions/int.dart';
 import './ffi/notcurses_inline_g.dart' as ncInline;
 
@@ -33,6 +29,9 @@ const int _CH_RGB = 0x00ffffff;
 const int _CH_PALETTE = 0x08000000;
 const int _CH_ALPHA = 0x30000000;
 const int _NCPALETTESIZE = 256; // NCPALETTESIZE in notcurses.h
+// NCALPHA_HIGHCONTRAST is forbidden for background channels (see notcurses.h
+// ncchannels_set_bg_alpha). Kept local so channels.dart stays self-contained.
+const int _NCALPHA_HIGHCONTRAST = 0x30000000;
 
 class RGB {
   final int r, g, b;
@@ -97,17 +96,24 @@ class Channels {
   /// Creates a new channel pair using 'fchan' as the foreground channel
   /// and 'bchan' as the background channel.
   factory Channels.combine(Channel fchan, Channel bchan) {
-    return Channels._(ncInline.ncchannels_combine(fchan.value, bchan.value));
+    // Mirrors C ncchannels_combine -> set_fchannel + set_bchannel on a zero
+    // pair: each input's NC_NOBACKGROUND_MASK housekeeping bits are stripped.
+    final fg = fchan.value & ~NC_NOBACKGROUND_MASK;
+    final bg = bchan.value & ~NC_NOBACKGROUND_MASK;
+    return Channels._((fg << 32) | bg);
   }
 
   /// Extract the 32-bit background channel from a channel pair.
   int bchannel() {
-    return ncInline.ncchannels_bchannel(_value);
+    return _value &
+        (NC_BG_RGB_MASK | NC_BG_PALETTE | NC_BGDEFAULT_MASK | NC_BG_ALPHA_MASK);
   }
 
   /// Extract the 32-bit foreground channel from a channel pair.
   int fchannel() {
-    return ncInline.ncchannels_fchannel(_value);
+    // ncchannels_fchannel == ncchannels_bchannel(channels >> 32).
+    return (_value >> 32) &
+        (NC_BG_RGB_MASK | NC_BG_PALETTE | NC_BGDEFAULT_MASK | NC_BG_ALPHA_MASK);
   }
 
   /// Set the r, g, and b channels for the foreground component of this 64-bit
@@ -155,52 +161,43 @@ class Channels {
 
   /// Extract 24 bits of foreground RGB from 'channels', split into subchannels.
   RGB fgRGB8() {
-    return using<RGB>((Arena alloc) {
-      final r = alloc<UnsignedInt>();
-      final g = alloc<UnsignedInt>();
-      final b = alloc<UnsignedInt>();
-
-      ncInline.ncchannels_fg_rgb8(_value, r, g, b);
-      return RGB(r.value, g.value, b.value);
-    });
+    final fg = fchannel();
+    return RGB((fg & 0xff0000) >> 16, (fg & 0x00ff00) >> 8, fg & 0x0000ff);
   }
 
   /// Extract 24 bits of background RGB from 'channels', split into subchannels.
   RGB bgRGB8() {
-    return using<RGB>((Arena alloc) {
-      final r = alloc<UnsignedInt>();
-      final g = alloc<UnsignedInt>();
-      final b = alloc<UnsignedInt>();
-      ncInline.ncchannels_bg_rgb8(_value, r, g, b);
-      return RGB(r.value, g.value, b.value);
-    });
+    final bg = bchannel();
+    return RGB((bg & 0xff0000) >> 16, (bg & 0x00ff00) >> 8, bg & 0x0000ff);
   }
 
   /// Extract 24 bits of foreground RGB from 'channels', shifted to LSBs.
   int fgRGB() {
-    return ncInline.ncchannels_fg_rgb(_value);
+    return fchannel() & _CH_RGB;
   }
 
   /// Extract 24 bits of background RGB from 'channels', shifted to LSBs.
   int bgRGB() {
-    return ncInline.ncchannels_bg_rgb(_value);
+    return bchannel() & _CH_RGB;
   }
 
   /// Estract palette index foreground color
   int fgPalindex() {
-    return ncInline.ncchannels_fg_palindex(_value);
+    return fchannel() & 0xff;
   }
 
   /// Estract palette index background color
   int bgPalindex() {
-    return ncInline.ncchannels_bg_palindex(_value);
+    return bchannel() & 0xff;
   }
 
   /// Set the cell's foreground palette index, set the foreground palette index
   /// bit, set it foreground-opaque, and clear the foreground default color bit.
   bool setFgPalindex(int ndx) {
     if (ndx >= _NCPALETTESIZE) return false;
-    final fg = ((_value >> 32) & 0xffffffff) & 0xff000000 |
+    // Mirror C ncchannel_set_palindex: alpha is forced opaque (cleared) before
+    // the palette/default/idx bits are applied — otherwise stale alpha survives.
+    final fg = ((_value >> 32) & 0xffffffff) & 0xff000000 & ~_CH_ALPHA |
         _CH_DEFAULT |
         _CH_PALETTE |
         (ndx & 0xff);
@@ -212,7 +209,7 @@ class Channels {
   /// bit, set it background-opaque, and clear the background default color bit.
   bool setBgPalindex(int ndx) {
     if (ndx >= _NCPALETTESIZE) return false;
-    final bg = (_value & 0xffffffff) & 0xff000000 |
+    final bg = (_value & 0xffffffff) & 0xff000000 & ~_CH_ALPHA |
         _CH_DEFAULT |
         _CH_PALETTE |
         (ndx & 0xff);
@@ -232,6 +229,7 @@ class Channels {
 
   /// Set the 2-bit alpha component of the background channel.
   bool setBgAlpha(int alpha) {
+    if (alpha == _NCALPHA_HIGHCONTRAST) return false; // forbidden for background
     if (alpha & ~_CH_ALPHA != 0) return false;
     var bg = (_value & 0xffffffff);
     bg = (alpha & 0xffffffff) | (bg & ~_CH_ALPHA);
@@ -242,12 +240,12 @@ class Channels {
 
   /// Extract 2 bits of foreground alpha from 'channels', shifted to LSBs.
   int fgAlpha() {
-    return ncInline.ncchannels_fg_alpha(_value);
+    return fchannel() & _CH_ALPHA;
   }
 
   /// Extract 2 bits of background alpha from 'cl', shifted to LSBs.
   int bgAlpha() {
-    return ncInline.ncchannels_bg_alpha(_value);
+    return bchannel() & _CH_ALPHA;
   }
 
   /// Mark the background channel as using its default color.
@@ -277,7 +275,9 @@ class Channels {
 
   /// Extract the background alpha and coloring bits from a 64-bit channel pair.
   int channels() {
-    return ncInline.ncchannels_channels(_value);
+    // ncchannels_channels == bchannel | (fchannel << 32): reconstructs only the
+    // valid channel bits, dropping any housekeeping bits.
+    return bchannel() | (fchannel() << 32);
   }
 }
 
@@ -293,39 +293,33 @@ class Channel {
 
   /// Extract the 8-bit red component from a 32-bit channel. Only valid if
   /// ncchannel_rgb_p() would return true for the channel.
-  int get r => ncInline.ncchannel_r(_value);
+  int get r => (_value & 0xff0000) >> 16;
 
   /// Extract the 8-bit green component from a 32-bit channel. Only valid if
   /// ncchannel_rgb_p() would return true for the channel.
-  int get g => ncInline.ncchannel_g(_value);
+  int get g => (_value & 0x00ff00) >> 8;
 
   /// Extract the 8-bit blue component from a 32-bit channel. Only valid if
   /// ncchannel_rgb_p() would return true for the channel.
-  int get b => ncInline.ncchannel_b(_value);
+  int get b => _value & 0x0000ff;
 
   /// Extract the 24-bit RGB value from a 32-bit channel.
   /// Only valid if ncchannel_rgb_p() would return true for the channel.
-  int get rgb => ncInline.ncchannel_rgb(_value);
+  int get rgb => _value & _CH_RGB;
 
   /// Is this channel using the "default color" rather than RGB/palette-indexed?
-  bool get isUsingDefault => ncInline.ncchannel_default_p(_value);
+  bool get isUsingDefault => (_value & _CH_DEFAULT) == 0;
 
   /// Is this channel using palette-indexed color?
-  bool get isUsingPalindex => ncInline.ncchannel_palindex_p(_value);
+  bool get isUsingPalindex => !isUsingDefault && (_value & _CH_PALETTE) != 0;
 
   /// Is this channel using RGB color?
-  bool get isUsingRGB => ncInline.ncchannel_rgb_p(_value);
+  bool get isUsingRGB => !isUsingDefault && !isUsingPalindex;
 
   /// Extract the three 8-bit R/G/B components from a 32-bit channel.
   /// Only valid if ncchannel_rgb_p() would return true for the channel.
   RGB rgb8() {
-    return using<RGB>((Arena alloc) {
-      final r = alloc<UnsignedInt>();
-      final g = alloc<UnsignedInt>();
-      final b = alloc<UnsignedInt>();
-      ncInline.ncchannel_rgb8(_value, r, g, b);
-      return RGB(r.value, g.value, b.value);
-    });
+    return RGB(r, g, b);
   }
 
   /// Set the three 8-bit components of a 32-bit channel, and mark it as not using
@@ -355,6 +349,9 @@ class Channel {
     if (r >= 256) r = 255;
     if (g >= 256) g = 255;
     if (b >= 256) b = 255;
+    if (r <= -1) r = 0;
+    if (g <= -1) g = 0;
+    if (b <= -1) b = 0;
     _value = (_value & ~(_CH_RGB | _CH_PALETTE)) |
         _CH_DEFAULT |
         ((r << 16) | (g << 8) | b);
@@ -363,7 +360,7 @@ class Channel {
   /// Extract the 2-bit alpha component from a 32-bit channel. It is not
   /// shifted down, and can be directly compared to NCALPHA_* values.
   int alpha() {
-    return ncInline.ncchannel_alpha(_value);
+    return _value & _CH_ALPHA;
   }
 
   /// Set the 2-bit alpha component of the 32-bit channel. Background channels
@@ -384,14 +381,18 @@ class Channel {
   /// Extract the palette index from a channel. Only valid if
   /// ncchannel_palindex_p() would return true for the channel.
   int palindex() {
-    return ncInline.ncchannel_palindex(_value);
+    return _value & 0xff;
   }
 
   /// Mark the channel as using the specified palette color. It is an error if
   /// the index is greater than NCPALETTESIZE. Alpha is set opaque.
   bool setPalindex(int idx) {
     if (idx >= _NCPALETTESIZE) return false;
-    _value = (_value & 0xff000000) | _CH_DEFAULT | _CH_PALETTE | (idx & 0xff);
+    // Mirror C ncchannel_set_palindex: alpha forced opaque (cleared) first.
+    _value = (_value & 0xff000000 & ~_CH_ALPHA) |
+        _CH_DEFAULT |
+        _CH_PALETTE |
+        (idx & 0xff);
     return true;
   }
 }

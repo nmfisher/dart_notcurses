@@ -236,9 +236,7 @@ class Visual implements ffi.Finalizable {
   factory Visual.fromRGBA(Uint8List rgba, int rows, int rowstride, int cols) {
     _checkBufferSize('rgba', rgba.length, rows, rowstride);
     final pRgba = allocator<ffi.Uint8>(rgba.length);
-    for (var i = 0; i < rgba.length; i++) {
-      pRgba[i] = rgba[i];
-    }
+    pRgba.asTypedList(rgba.length).setAll(0, rgba);
     final rc = Visual._(nc.ncvisual_from_rgba(pRgba.cast(), rows, rowstride, cols), rows * rowstride);
     allocator.free(pRgba);
     return rc;
@@ -249,9 +247,7 @@ class Visual implements ffi.Finalizable {
   factory Visual.fromRgbPacked(Uint8List rgb, int rows, int rowstride, int cols, int alpha) {
     _checkBufferSize('rgb', rgb.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(rgb.length);
-    for (var i = 0; i < rgb.length; i++) {
-      pRgb[i] = rgb[i];
-    }
+    pRgb.asTypedList(rgb.length).setAll(0, rgb);
     final rc = Visual._(nc.ncvisual_from_rgb_packed(pRgb.cast(), rows, rowstride, cols, alpha), rows * cols * 4);
     allocator.free(pRgb);
     return rc;
@@ -262,9 +258,7 @@ class Visual implements ffi.Finalizable {
   factory Visual.fromRgbLoose(Uint8List rgba, int rows, int rowstride, int cols, int alpha) {
     _checkBufferSize('rgba', rgba.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(rgba.length);
-    for (var i = 0; i < rgba.length; i++) {
-      pRgb[i] = rgba[i];
-    }
+    pRgb.asTypedList(rgba.length).setAll(0, rgba);
     final rc = Visual._(nc.ncvisual_from_rgb_loose(pRgb.cast(), rows, rowstride, cols, alpha), rows * cols * 4);
     allocator.free(pRgb);
     return rc;
@@ -276,9 +270,7 @@ class Visual implements ffi.Finalizable {
   factory Visual.fromBgra(Uint8List bgra, int rows, int rowstride, int cols) {
     _checkBufferSize('bgra', bgra.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(bgra.length);
-    for (var i = 0; i < bgra.length; i++) {
-      pRgb[i] = bgra[i];
-    }
+    pRgb.asTypedList(bgra.length).setAll(0, bgra);
     final rc = Visual._(nc.ncvisual_from_bgra(pRgb.cast(), rows, rowstride, cols), rows * rowstride);
     allocator.free(pRgb);
     return rc;
@@ -294,13 +286,9 @@ class Visual implements ffi.Finalizable {
       throw ArgumentError('palette has ${palette.length} entries but palsize is $palsize');
     }
     final pRgb = allocator<ffi.Uint8>(data.length);
-    for (var i = 0; i < data.length; i++) {
-      pRgb[i] = data[i];
-    }
+    pRgb.asTypedList(data.length).setAll(0, data);
     final pltte = allocator<ffi.Uint32>(palette.length);
-    for (var i = 0; i < palette.length; i++) {
-      pltte[i] = palette[i];
-    }
+    pltte.asTypedList(palette.length).setAll(0, palette);
 
     final rc =
         Visual._(nc.ncvisual_from_palidx(pRgb.cast(), rows, rowstride, cols, palsize, palstride, pltte), rows * cols * 4);
