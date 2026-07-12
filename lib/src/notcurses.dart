@@ -213,6 +213,16 @@ class NotCurses {
     return ncInline.notcurses_render(_ptr) == 0;
   }
 
+  /// Re-emit the last rasterized frame to the terminal in full, ignoring
+  /// damage tracking. Use to recover when the terminal has dropped cells that
+  /// the cell grid still holds correctly (e.g. after external corruption or a
+  /// hardware-cursor interaction). Cheaper than a full re-build: it replays the
+  /// already-rasterized frame. The optional out-params report the cursor
+  /// position; pass `null` to ignore them.
+  bool refresh() {
+    return nc.notcurses_refresh(_ptr, ffi.nullptr, ffi.nullptr) == 0;
+  }
+
   /// Destroy a Notcurses context. If this context owns its output FILE*
   /// (constructed via [NotCurses.withOutputFd]), it is closed here.
   /// Safe to call more than once; only the first call tears the context down.
