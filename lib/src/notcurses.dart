@@ -1,4 +1,5 @@
 // ignore_for_file: library_prefixes
+import 'dart:async';
 import 'dart:ffi' as ffi;
 import 'dart:io' show File, FileMode;
 
@@ -12,6 +13,72 @@ import './key.dart';
 import './plane.dart';
 import './ptypes.dart';
 import './shared.dart';
+
+typedef _InputPumpCallbackNative =
+    ffi.Void Function(ffi.Uint32, ffi.Uint32, ffi.Int64);
+
+@ffi.Native<
+  ffi.Pointer<ffi.Void> Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<ffi.NativeFunction<_InputPumpCallbackNative>>,
+  )
+>(
+  symbol: 'cocoon_input_pump_start',
+  assetId: 'package:dart_notcurses/dart_notcurses.dart',
+)
+external ffi.Pointer<ffi.Void> _inputPumpStart(
+  ffi.Pointer<notcurses> nc,
+  ffi.Pointer<ffi.NativeFunction<_InputPumpCallbackNative>> callback,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+  symbol: 'cocoon_input_pump_stop',
+  assetId: 'package:dart_notcurses/dart_notcurses.dart',
+)
+external void _inputPumpStop(ffi.Pointer<ffi.Void> pump);
+
+class PumpedInput {
+  final int id;
+  final int modifiers;
+  final int monotonicNanos;
+
+  const PumpedInput(this.id, this.modifiers, this.monotonicNanos);
+}
+
+class NotcursesInputPump {
+  final StreamController<PumpedInput> _controller =
+      StreamController<PumpedInput>(sync: true);
+  late final ffi.NativeCallable<_InputPumpCallbackNative> _callback;
+  late final ffi.Pointer<ffi.Void> _handle;
+  bool _stopped = false;
+
+  NotcursesInputPump._(ffi.Pointer<notcurses> nc) {
+    _callback = ffi.NativeCallable<_InputPumpCallbackNative>.listener((
+      int id,
+      int modifiers,
+      int nanos,
+    ) {
+      if (!_stopped) {
+        _controller.add(PumpedInput(id, modifiers, nanos));
+      }
+    });
+    _handle = _inputPumpStart(nc, _callback.nativeFunction);
+    if (_handle == ffi.nullptr) {
+      _callback.close();
+      throw StateError('Failed to start notcurses input pump');
+    }
+  }
+
+  Stream<PumpedInput> get events => _controller.stream;
+
+  void stop() {
+    if (_stopped) return;
+    _stopped = true;
+    _inputPumpStop(_handle);
+    _callback.close();
+    _controller.close();
+  }
+}
 
 /// Configuration options to be used when create a new NotCurses intance
 class CursesOptions {
@@ -81,14 +148,17 @@ class Capabilities {
 // libc fdopen/fclose, looked up in-process (present in libc/libSystem). Used to
 // target a specific output file (e.g. a PTY slave) instead of /dev/tty.
 late final ffi.Pointer<FILE> Function(int fd, ffi.Pointer<ffi.Char> mode)
-    _fdopenLookup = ffi.DynamicLibrary.process().lookupFunction<
-        ffi.Pointer<FILE> Function(ffi.Int32, ffi.Pointer<ffi.Char>),
-        ffi.Pointer<FILE> Function(int, ffi.Pointer<ffi.Char>)>('fdopen');
+_fdopenLookup = ffi.DynamicLibrary.process()
+    .lookupFunction<
+      ffi.Pointer<FILE> Function(ffi.Int32, ffi.Pointer<ffi.Char>),
+      ffi.Pointer<FILE> Function(int, ffi.Pointer<ffi.Char>)
+    >('fdopen');
 
 late final int Function(ffi.Pointer<FILE>) _fcloseLookup =
     ffi.DynamicLibrary.process().lookupFunction<
-        ffi.Int32 Function(ffi.Pointer<FILE>),
-        int Function(ffi.Pointer<FILE>)>('fclose');
+      ffi.Int32 Function(ffi.Pointer<FILE>),
+      int Function(ffi.Pointer<FILE>)
+    >('fclose');
 
 ffi.Pointer<FILE> _fdopenFile(int fd, String mode) {
   final modePtr = mode.toNativeUtf8().cast<ffi.Char>();
@@ -103,12 +173,25 @@ ffi.Pointer<FILE> _fdopenFile(int fd, String mode) {
 // is unsafe for a deadline.
 late final int Function(int clkId, ffi.Pointer<timespec> tp) _clockGettime =
     ffi.DynamicLibrary.process().lookupFunction<
-        ffi.Int32 Function(ffi.Int32, ffi.Pointer<timespec>),
-        int Function(int, ffi.Pointer<timespec>)>('clock_gettime');
+      ffi.Int32 Function(ffi.Int32, ffi.Pointer<timespec>),
+      int Function(int, ffi.Pointer<timespec>)
+    >('clock_gettime');
 
 // CLOCK_MONOTONIC. Identical value (1) on Linux glibc and macOS; the macro
 // isn't exposed to Dart, so it's pinned here. (CLOCK_REALTIME is 0 on both.)
 const int _clockMonotonic = 1;
+
+/// Current CLOCK_MONOTONIC timestamp in nanoseconds, sharing the clock used by
+/// the native input pump. Returns zero if the platform clock read fails.
+int monotonicNanosNow() {
+  final ts = allocator<timespec>();
+  try {
+    if (_clockGettime(_clockMonotonic, ts) != 0) return 0;
+    return ts.ref.tv_sec * 1000000000 + ts.ref.tv_nsec;
+  } finally {
+    allocator.free(ts);
+  }
+}
 
 /// Build an absolute CLOCK_MONOTONIC deadline [Duration] from now, for
 /// notcurses input calls that take a `timespec*`. Returns `nullptr` when
@@ -124,7 +207,10 @@ ffi.Pointer<timespec> monotonicDeadline(Duration? timeout) {
       ..ref.tv_sec = 0
       ..ref.tv_nsec = 0;
   }
-  final totalNs = ts.ref.tv_sec * 1000000000 + ts.ref.tv_nsec + timeout.inMicroseconds * 1000;
+  final totalNs =
+      ts.ref.tv_sec * 1000000000 +
+      ts.ref.tv_nsec +
+      timeout.inMicroseconds * 1000;
   ts.ref.tv_sec = totalNs ~/ 1000000000;
   ts.ref.tv_nsec = totalNs.remainder(1000000000);
   return ts;
@@ -144,11 +230,13 @@ class NotCurses {
   /// notcurses_init's output file) instead of /dev/tty. Lets a caller render
   /// to a specific tty/file — notably a PTY slave in tests. The FILE* is
   /// closed by [stop].
-  NotCurses.withOutputFd(int outFd, [CursesOptions? opts]) : this._(opts, outFd);
+  NotCurses.withOutputFd(int outFd, [CursesOptions? opts])
+    : this._(opts, outFd);
 
   NotCurses._(CursesOptions? opts, int? outFd) {
-    final ffi.Pointer<notcurses_options> optPtr =
-        opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
+    final ffi.Pointer<notcurses_options> optPtr = opts == null
+        ? ffi.nullptr
+        : _makeOptionsPtr(opts);
     ffi.Pointer<FILE> fp;
     if (outFd != null) {
       final f = _fdopenFile(outFd, 'w');
@@ -179,8 +267,9 @@ class NotCurses {
   }
 
   NotCurses.core([CursesOptions? opts]) {
-    final ffi.Pointer<notcurses_options> optPtr =
-        opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
+    final ffi.Pointer<notcurses_options> optPtr = opts == null
+        ? ffi.nullptr
+        : _makeOptionsPtr(opts);
     _ptr = nc.notcurses_core_init(optPtr, ffi.nullptr);
     if (optPtr != ffi.nullptr) {
       allocator.free(optPtr);
@@ -266,7 +355,9 @@ class NotCurses {
   /// there can be four numbers separated by commas.
   bool lexMargins(String margins, CursesOptions? opts) {
     final op = margins.toNativeUtf8().cast<ffi.Char>();
-    final ffi.Pointer<notcurses_options> optPtr = opts == null ? ffi.nullptr : _makeOptionsPtr(opts);
+    final ffi.Pointer<notcurses_options> optPtr = opts == null
+        ? ffi.nullptr
+        : _makeOptionsPtr(opts);
     final rc = nc.notcurses_lex_margins(op, optPtr);
     allocator.free(op);
     if (optPtr != ffi.nullptr) {
@@ -356,6 +447,10 @@ class NotCurses {
   int getInputReadyFD() {
     return nc.notcurses_inputready_fd(_ptr);
   }
+
+  /// Start an event-driven native pump over notcurses' readiness descriptor.
+  /// The returned pump must be stopped before this context is destroyed.
+  NotcursesInputPump startInputPump() => NotcursesInputPump._(_ptr);
 
   /// Write a raw byte sequence directly to the controlling terminal
   /// (`/dev/tty`), bypassing notcurses' retained-mode output. notcurses

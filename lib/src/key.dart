@@ -90,7 +90,9 @@ abstract class NcKey {
   static final int dright = preterunicode(124);
   static final int uleft = preterunicode(125); // up + left on keypad
   static final int uright = preterunicode(126);
-  static final int center = preterunicode(127); // the most truly neutral of keypresses
+  static final int center = preterunicode(
+    127,
+  ); // the most truly neutral of keypresses
   static final int begin = preterunicode(128);
   static final int cancel = preterunicode(129);
   static final int close = preterunicode(130);
@@ -151,6 +153,8 @@ abstract class NcKey {
   static final int button9 = preterunicode(209);
   static final int button10 = preterunicode(210);
   static final int button11 = preterunicode(211);
+  static final int pasteBegin = preterunicode(300);
+  static final int pasteEnd = preterunicode(301);
 
   // we received SIGCONT
   static final int signal = preterunicode(400);
@@ -319,7 +323,9 @@ class Key implements ffi.Finalizable {
 
   /// GC backstop: frees the calloc'd ncinput if the owner never calls
   /// [destroy].
-  static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(allocator.nativeFree);
+  static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(
+    allocator.nativeFree,
+  );
 
   /// Allocate a zeroed ncinput owned by this Key.
   Key() : this.wrap(allocator<ncinput>());
@@ -330,7 +336,12 @@ class Key implements ffi.Finalizable {
   /// general use.
   Key.wrap(this._ptr) {
     if (_ptr != ffi.nullptr) {
-      _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: ffi.sizeOf<ncinput>());
+      _finalizer.attach(
+        this,
+        _ptr.cast(),
+        detach: this,
+        externalSize: ffi.sizeOf<ncinput>(),
+      );
     }
   }
 
@@ -355,7 +366,8 @@ class Key implements ffi.Finalizable {
   /// The UTF-8 bytes of the input, unsigned (the struct field is a signed
   /// char, so bytes >= 0x80 must be masked). Re-read on every access — the
   /// ncinput is refilled by the C library on each input event.
-  List<int> get utf8List => List<int>.generate(5, (i) => ptr.ref.utf8[i] & 0xff);
+  List<int> get utf8List =>
+      List<int>.generate(5, (i) => ptr.ref.utf8[i] & 0xff);
 
   String get keyStr {
     final k = id;

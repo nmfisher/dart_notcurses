@@ -56,6 +56,8 @@ void main() {
       expect(NcKey.enter, equals(1115121));
       expect(NcKey.motion, equals(1115200));
       expect(NcKey.button1, equals(1115201));
+      expect(NcKey.pasteBegin, equals(1115300));
+      expect(NcKey.pasteEnd, equals(1115301));
     });
 
     test('ncKeyStr maps known keys and falls back to unknown', () {

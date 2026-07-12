@@ -1,0 +1,46 @@
+diff --git a/include/notcurses/nckeys.h b/include/notcurses/nckeys.h
+index aef9d4e..da00c07 100644
+--- a/include/notcurses/nckeys.h
++++ b/include/notcurses/nckeys.h
+@@ -175,6 +175,9 @@ extern "C" {
+ #define NCKEY_BUTTON10  preterunicode(210)
+ #define NCKEY_BUTTON11  preterunicode(211)
+ 
++#define NCKEY_PASTE_BEGIN preterunicode(300)
++#define NCKEY_PASTE_END   preterunicode(301)
++
+ // we received SIGCONT
+ #define NCKEY_SIGNAL    preterunicode(400)
+ 
+diff --git a/src/lib/in.c b/src/lib/in.c
+index 43f768a..9e0ad2b 100644
+--- a/src/lib/in.c
++++ b/src/lib/in.c
+@@ -951,6 +951,18 @@ simple_cb_begin(inputctx* ictx){
+   return 2;
+ }
+ 
++static int
++simple_cb_paste_begin(inputctx* ictx){
++  kitty_kbd(ictx, NCKEY_PASTE_BEGIN, 0, 0);
++  return 2;
++}
++
++static int
++simple_cb_paste_end(inputctx* ictx){
++  kitty_kbd(ictx, NCKEY_PASTE_END, 0, 0);
++  return 2;
++}
++
+ static int
+ kitty_cb_functional(inputctx* ictx){
+   unsigned val = amata_next_numeric(&ictx->amata, "\x1b[", ';');
+@@ -1789,6 +1801,8 @@ build_cflow_automaton(inputctx* ictx){
+     { "[E", simple_cb_begin, },
+     { "[<\\N;\\N;\\NM", mouse_press_cb, },
+     { "[<\\N;\\N;\\Nm", mouse_release_cb, },
++    { "[200~", simple_cb_paste_begin, },
++    { "[201~", simple_cb_paste_end, },
+     // technically these must begin with "4" or "8"; enforce in callbacks
+     { "[\\N;\\N;\\Nt", geom_cb, },
+     { "[\\Nu", kitty_cb_simple, },

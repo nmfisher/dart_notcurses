@@ -66,6 +66,16 @@ else
   git clone --depth 1 --branch "v$NOTCURSES_VERSION" "$NOTCURSES_REPO" "$SRC_DIR"
 fi
 
+# Apply Cocoon's small input extension after checking out the pristine tag.
+# --check keeps archive rebuilds deterministic and fails loudly if an upstream
+# upgrade changes the parser context.
+PASTE_PATCH="$PKG_ROOT/native/patches/notcurses-paste-events.patch"
+if ! git -C "$SRC_DIR" diff --quiet -- include/notcurses/nckeys.h src/lib/in.c; then
+  git -C "$SRC_DIR" checkout -- include/notcurses/nckeys.h src/lib/in.c
+fi
+git -C "$SRC_DIR" apply --check "$PASTE_PATCH"
+git -C "$SRC_DIR" apply "$PASTE_PATCH"
+
 BUILD_DIR="$SRC_DIR/build"
 mkdir -p "$BUILD_DIR"
 

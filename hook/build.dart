@@ -94,6 +94,7 @@ void main(List<String> args) async {
       sources: [
         p.join('native', 'src', 'ffi.c'),
         p.join('native', 'src', 'shim.c'),
+        p.join('native', 'src', 'input_pump.c'),
       ],
       includes: [
         p.join('native', 'include'),
