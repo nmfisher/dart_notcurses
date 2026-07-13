@@ -14,13 +14,29 @@ import './plane.dart';
 import './ptypes.dart';
 import './shared.dart';
 
-typedef _InputPumpCallbackNative =
-    ffi.Void Function(ffi.Uint32, ffi.Uint32, ffi.Int64);
+// Phase 6: the native pump no longer invokes a per-event callback. It queues
+// events in a native ring buffer and fires a zero-arg "queue is non-empty"
+// notification on the empty→non-empty transition. Dart responds by calling
+// the synchronous _inputPumpDrain to copy a batch of records out in one
+// native→Dart transition, looping until the queue is empty (lost-wakeup-free:
+// any event arriving after a drain that emptied the queue re-arms the flag and
+// re-fires this listener).
+typedef _InputPumpNotifyNative = ffi.Void Function();
+
+// Mirrors cocoon_input_record in native/src/input_pump.c.
+final class _CocoonInputRecord extends ffi.Struct {
+  @ffi.Uint32()
+  external int id;
+  @ffi.Uint32()
+  external int modifiers;
+  @ffi.Int64()
+  external int monotonicNs;
+}
 
 @ffi.Native<
   ffi.Pointer<ffi.Void> Function(
     ffi.Pointer<notcurses>,
-    ffi.Pointer<ffi.NativeFunction<_InputPumpCallbackNative>>,
+    ffi.Pointer<ffi.NativeFunction<_InputPumpNotifyNative>>,
   )
 >(
   symbol: 'cocoon_input_pump_start',
@@ -28,7 +44,23 @@ typedef _InputPumpCallbackNative =
 )
 external ffi.Pointer<ffi.Void> _inputPumpStart(
   ffi.Pointer<notcurses> nc,
-  ffi.Pointer<ffi.NativeFunction<_InputPumpCallbackNative>> callback,
+  ffi.Pointer<ffi.NativeFunction<_InputPumpNotifyNative>> notify,
+);
+
+@ffi.Native<
+  ffi.Size Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Pointer<_CocoonInputRecord>,
+    ffi.Size,
+  )
+>(
+  symbol: 'cocoon_input_pump_drain',
+  assetId: 'package:dart_notcurses/dart_notcurses.dart',
+)
+external int _inputPumpDrain(
+  ffi.Pointer<ffi.Void> pump,
+  ffi.Pointer<_CocoonInputRecord> out,
+  int max,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
@@ -45,27 +77,58 @@ class PumpedInput {
   const PumpedInput(this.id, this.modifiers, this.monotonicNanos);
 }
 
+/// The native ring-buffer capacity (must match COCOON_INPUT_QUEUE_CAP in
+/// input_pump.c). The Dart drain buffer is sized to this so one drain call can
+/// empty a full queue.
+const int _inputPumpQueueCap = 256;
+
 class NotcursesInputPump {
   final StreamController<PumpedInput> _controller =
       StreamController<PumpedInput>(sync: true);
-  late final ffi.NativeCallable<_InputPumpCallbackNative> _callback;
+  late final ffi.NativeCallable<_InputPumpNotifyNative> _notify;
   late final ffi.Pointer<ffi.Void> _handle;
+  // Long-lived drain buffer, allocated once and reused across drains to avoid
+  // per-batch alloc/free. Freed in stop().
+  late final ffi.Pointer<_CocoonInputRecord> _drainBuf;
   bool _stopped = false;
 
+  /// Invoked once before each drain batch's records are added to [events].
+  /// Lets consumers count native→Dart notifications (one per batch) separately
+  /// from records, and reset per-batch state (e.g. the first-event-of-batch
+  /// synchronous-emit flag). Null in tests that inject records directly.
+  /// Settable so an owner can construct the pump first, then bind the callback
+  /// before starting to listen — the pump only fires notifications while the
+  /// consumer is subscribed (after [events] is listened to), so setting it
+  /// post-construction is race-free.
+  void Function(int recordCount)? onBatchStart;
+
   NotcursesInputPump._(ffi.Pointer<notcurses> nc) {
-    _callback = ffi.NativeCallable<_InputPumpCallbackNative>.listener((
-      int id,
-      int modifiers,
-      int nanos,
-    ) {
-      if (!_stopped) {
-        _controller.add(PumpedInput(id, modifiers, nanos));
-      }
+    _notify = ffi.NativeCallable<_InputPumpNotifyNative>.listener(() {
+      if (!_stopped) _drain();
     });
-    _handle = _inputPumpStart(nc, _callback.nativeFunction);
+    _drainBuf = allocator<_CocoonInputRecord>(_inputPumpQueueCap);
+    _handle = _inputPumpStart(nc, _notify.nativeFunction);
     if (_handle == ffi.nullptr) {
-      _callback.close();
+      _notify.close();
+      allocator.free(_drainBuf);
       throw StateError('Failed to start notcurses input pump');
+    }
+  }
+
+  /// Drain the native queue into the stream. Called on each "non-empty"
+  /// notification; loops until a drain returns 0 so a full paste is copied in
+  /// the fewest possible native→Dart transitions (one per cap-sized batch).
+  /// Lost-wakeup-free: events arriving between drain-returns-0 and
+  /// listener-return hit the native 0→1 transition and re-fire the listener.
+  void _drain() {
+    while (true) {
+      final n = _inputPumpDrain(_handle, _drainBuf, _inputPumpQueueCap);
+      if (n == 0) break;
+      onBatchStart?.call(n);
+      for (var i = 0; i < n; i++) {
+        final r = _drainBuf[i];
+        _controller.add(PumpedInput(r.id, r.modifiers, r.monotonicNs));
+      }
     }
   }
 
@@ -74,11 +137,15 @@ class NotcursesInputPump {
   void stop() {
     if (_stopped) return;
     _stopped = true;
+    // stop joins the native thread before returning, so no notification fires
+    // after this returns; the _notify NativeCallable is safe to close here.
     _inputPumpStop(_handle);
-    _callback.close();
+    _notify.close();
+    allocator.free(_drainBuf);
     _controller.close();
   }
 }
+
 
 /// Configuration options to be used when create a new NotCurses intance
 class CursesOptions {
@@ -450,6 +517,9 @@ class NotCurses {
 
   /// Start an event-driven native pump over notcurses' readiness descriptor.
   /// The returned pump must be stopped before this context is destroyed.
+  ///
+  /// Set [NotcursesInputPump.onBatchStart] after construction (before
+  /// listening to [NotcursesInputPump.events]) to observe batch boundaries.
   NotcursesInputPump startInputPump() => NotcursesInputPump._(_ptr);
 
   /// Write a raw byte sequence directly to the controlling terminal
