@@ -1,0 +1,13 @@
+# Keep the docker build context (package root) small. The Dockerfile only
+# COPYs tool/build_notcurses.sh and native/patches/, so exclude everything
+# else — most importantly the large vendored native/.build/notcurses source
+# tree and the dart build caches.
+native/.build
+build
+.dart_tool
+.git
+test
+examples
+docs
+ffi
+hook
