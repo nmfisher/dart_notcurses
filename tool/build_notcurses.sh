@@ -76,6 +76,17 @@ fi
 git -C "$SRC_DIR" apply --check "$PASTE_PATCH"
 git -C "$SRC_DIR" apply "$PASTE_PATCH"
 
+# notcurses compiles its *-static targets with -fPIE (executable-style PIC).
+# That is invalid for a static archive that gets --whole-archive'd into a
+# SHARED library: aarch64's linker rejects it (R_AARCH64_ADR_PREL_PG_HI21
+# "dangerous relocation" in menu/plot/progbar/reel/selector/tabbed). Flip the
+# static targets to -fPIC. (x86-64 tolerates -fPIE here, so the linux_x64
+# artifact happened to link; arm64 does not.)
+PIC_PATCH="$PKG_ROOT/native/patches/notcurses-static-pic.patch"
+git -C "$SRC_DIR" checkout -- CMakeLists.txt
+git -C "$SRC_DIR" apply --check "$PIC_PATCH"
+git -C "$SRC_DIR" apply "$PIC_PATCH"
+
 BUILD_DIR="$SRC_DIR/build"
 mkdir -p "$BUILD_DIR"
 

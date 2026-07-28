@@ -1,0 +1,22 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index eb27747..009a3f9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -597,7 +597,7 @@ target_compile_options(notcurses-core
+ 
+ target_compile_options(notcurses-core-static
+   PRIVATE
+-    -fPIE
++    -fPIC
+ )
+ 
+ target_compile_options(notcurses
+@@ -607,7 +607,7 @@ target_compile_options(notcurses
+ 
+ target_compile_options(notcurses-static
+   PRIVATE
+-    -fPIE
++    -fPIC
+ )
+ 
+ file(GLOB NCPP_HEADERS
