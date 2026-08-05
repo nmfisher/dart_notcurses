@@ -1,11 +1,20 @@
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#ifndef _WIN32
+// The real input pump is POSIX (pthreads + poll + pipe). Native Windows/ConPTY
+// input is a follow-up (see the TODO in the #else branch below); until then
+// this TU compiles a no-op stub on Windows so that notcurses_merged.dll links
+// and the @Native cocoon_input_pump_* externs resolve. The Dart side falls back
+// to AnsiInputBackend on Windows in the meantime.
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#endif // !_WIN32
 
 #include <notcurses/notcurses.h>
 
@@ -49,6 +58,7 @@ typedef struct {
 /// transition. The Dart side responds by calling cocoon_input_pump_drain.
 typedef void (*cocoon_input_notify)(void);
 
+#ifndef _WIN32
 #define COCOON_INPUT_QUEUE_CAP 256
 
 typedef struct cocoon_input_pump {
@@ -217,3 +227,37 @@ void cocoon_input_pump_stop(void* opaque) {
   free(pump->queue);
   free(pump);
 }
+
+#else // _WIN32 ---------------------------------------------------------------
+// TODO(windows): replace this stub with a real ConPTY input pump. The POSIX
+// pump above runs a thread that polls notcurses_inputready_fd(nc) + a cancel
+// pipe, dequeues with notcurses_get_nblock, and notifies Dart via the
+// cocoon_input_notify callback on the empty->non-empty queue transition. The
+// Windows port should mirror that using WaitForMultipleObjects on the
+// inputready handle and a cancel event, batch-drain into the same ring, and
+// call the listener through a NativeCallable. Until that lands these stubs
+// return "no events ever": notcurses_merged.dll still links, the @Native
+// cocoon_input_pump_* externs (notcurses.dart) resolve, output rendering works,
+// and native input is supplied by AnsiInputBackend on the Dart side.
+
+void* cocoon_input_pump_start(struct notcurses* nc,
+                              cocoon_input_notify notify) {
+  (void)nc;
+  (void)notify;
+  // Non-null sentinel: the Dart side treats construction as success. The pump
+  // owns no resources and produces no events, so drain() always reports zero.
+  return (void*)1;
+}
+
+size_t cocoon_input_pump_drain(void* opaque, cocoon_input_record* out,
+                               size_t max) {
+  (void)opaque;
+  (void)out;
+  (void)max;
+  return 0;
+}
+
+void cocoon_input_pump_stop(void* opaque) {
+  (void)opaque;
+}
+#endif // _WIN32

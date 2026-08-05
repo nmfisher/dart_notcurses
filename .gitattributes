@@ -1,0 +1,13 @@
+# Force LF line endings on checkout for text files that must keep LF to work:
+#
+#  - *.patch: `git apply` matches context byte-for-byte; CRLF patches fail to
+#    apply against the LF notcurses source (see tool/build_notcurses_windows_x64.sh).
+#  - *.sh:    bash errors on CRLF (`$'\r': command not found`).
+#  - native C headers/sources: matched by patches; must stay LF.
+#
+# Without these rules, a Windows checkout with core.autocrlf=true rewrites these
+# files to CRLF and breaks the native build.
+*.patch   text eol=lf
+*.sh      text eol=lf
+native/include/** text eol=lf
+native/src/**     text eol=lf
