@@ -124,6 +124,12 @@ static void* pump_main(void* opaque) {
       ncinput input = {0};
       const uint32_t id = notcurses_get_nblock(pump->nc, &input);
       if (id == 0 || id == (uint32_t)-1) break;
+      // Under the kitty/extended-keyboard protocol a single physical key
+      // produces a PRESS and a RELEASE ncinput. We only ever want presses
+      // (REPEAT is kept so held-key auto-repeat still scrolls/types), so drop
+      // releases here — the one place that owns the ncinput, since evtype
+      // isn't propagated to Dart (PumpedInput carries only id/modifiers).
+      if (input.evtype == NCTYPE_RELEASE) continue;
       if (!pump_push(pump, id, input.modifiers, monotonic_ns())) {
         // Stopping: drain remaining kernel events is not safe once the queue
         // is rejecting; bail out of the inner loop so stop can join us.
