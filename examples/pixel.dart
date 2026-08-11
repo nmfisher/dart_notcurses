@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:math';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
+import 'image_loader.dart';
+
 const int max_rand = 0x7ffff;
 
 int main(List<String> args) {
@@ -42,13 +44,28 @@ int main(List<String> args) {
 
 int handle(NotCurses nc, String fname) {
   final rnd = Random();
-  final visual = Visual.fromFile(fname);
-  if (visual.notInitialized) {
-    return -1;
-  }
+  final visual = loadImageFromFile(fname);
 
   final std = nc.stdplane();
   final dim = std.dimyx();
+
+  // Pixel blits refuse a visual larger than the destination plane ("sprixel
+  // too tall/wide for plane" in ncvisual_geom_inner), so scale the image down
+  // to the terminal before the grid loop. Query the geometry without a plane:
+  // only scaley/scalex are needed, and passing the plane would trip that same
+  // size check.
+  final fit = VisualOptions(scaling: Scale.noneHires, blitter: Blitter.pixel);
+  final fg = visual.geom(nc, fit);
+  if (fg == null || fg.scaley == null || fg.scalex == null) {
+    stderr.writeln('pixel: unable to determine pixel geometry');
+    visual.destroy();
+    return -1;
+  }
+  if (!visual.resize(dim.y * fg.scaley!, dim.x * fg.scalex!)) {
+    stderr.writeln('pixel: unable to scale image to terminal');
+    visual.destroy();
+    return -1;
+  }
 
   for (var y = 0; y < dim.y; y += 15) {
     for (var x = 0; x < dim.x; x += 15) {
@@ -73,6 +90,7 @@ int handle(NotCurses nc, String fname) {
 
       final nv = visual.blit(nc, vopts);
       if (nv == null) {
+        stderr.writeln('pixel: blit failed at $y,$x');
         visual.destroy();
         return -1;
       }

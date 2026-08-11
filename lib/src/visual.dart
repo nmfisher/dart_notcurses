@@ -216,6 +216,11 @@ class Visual implements ffi.Finalizable {
 
   /// Open a visual at 'file', extract a codec and parameters, decode the first
   /// image to memory.
+  ///
+  /// NOTE: requires a notcurses build with a multimedia engine (FFmpeg or
+  /// OpenImageIO). The core-only build vendored in this package has no engine,
+  /// so this always returns an uninitialized visual here; decode in pure Dart
+  /// and use [Visual.fromRGBA] instead (see examples/image_loader.dart).
   factory Visual.fromFile(String path) {
     final i8 = path.toNativeUtf8().cast<ffi.Char>();
     final v = nc.ncvisual_from_file(i8);

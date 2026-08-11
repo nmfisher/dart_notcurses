@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
+import 'image_loader.dart';
+
 int main(List<String> args) {
   final opts = CursesOptions(
     loglevel: LogLevel.trace,
@@ -57,11 +59,7 @@ int blts(NotCurses notc, List<String> args) {
       for (int i = 0; i < args.length; ++i) {
         std.erase();
         final fname = args[i];
-        final ncv = Visual.fromFile(fname);
-        if (ncv.notInitialized) {
-          stderr.writeln('ERROR: creating visual');
-          return -1;
-        }
+        final ncv = loadImageFromFile(fname);
         notc.render();
         final vopts = VisualOptions(
           plane: std,

@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
+import 'image_loader.dart';
+
 const int max_rand = 0x7ffff;
 const double M_PI = 3.141592653589793115997963468544185161590576171875;
 
@@ -44,10 +46,7 @@ bool handle(NotCurses nc, String fname) {
   final std = nc.stdplane();
   final dim = std.dimyx();
   final n = std.dup();
-  final visual = Visual.fromFile(fname);
-  if (visual.notInitialized) {
-    return false;
-  }
+  final visual = loadImageFromFile(fname);
   final vopts = VisualOptions(plane: n);
   final blt = visual.blit(nc, vopts);
   if (blt == null) {

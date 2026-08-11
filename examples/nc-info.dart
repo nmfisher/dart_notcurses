@@ -1,6 +1,8 @@
 import 'package:characters/characters.dart';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
+import 'image_loader.dart';
+
 int main() {
   final nc = NotCurses(CursesOptions(
     flags: OptionFlags.noAlternateScreen |
@@ -515,10 +517,7 @@ int emojiViz(Plane plane) {
 
 void displayLogo(NotCurses nc, Plane plane) {
   final geom = plane.pixelGeom(celldimy: true, celldimx: true);
-  final visual = Visual.fromFile('./resources/notcurses.png');
-  if (visual.notInitialized) {
-    return;
-  }
+  final visual = loadImageFromFile('./resources/notcurses.png');
   if (!visual.resize(3 * geom.celldimy, 24 * geom.celldimx)) {
     visual.destroy();
   }
