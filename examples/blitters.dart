@@ -71,8 +71,10 @@ int blts(NotCurses notc, List<String> args) {
         final cn = ncv.blit(notc, vopts);
         if (cn == null) {
           ncv.destroy();
-          stderr.writeln('ERROR: creating blitting visual');
-          return -1;
+          // e.g. NCBLIT_PIXEL with an image larger than the terminal ("sprixel
+          // too tall/wide for plane") — note it and carry on with the rest.
+          stderr.writeln('skip: $blitter scaling=$scaling (image too large or unsupported)');
+          continue;
         }
 
         notc.render();

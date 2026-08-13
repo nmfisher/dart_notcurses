@@ -150,6 +150,10 @@ bool interp(NotCurses nc, PixelGeomData geom) {
   nc.render();
 
   final k = nc.getBlocking();
+  if (k.result < 0) {
+    freeResources();
+    return false;
+  }
   k.value!.destroy();
 
   freeResources();
