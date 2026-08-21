@@ -140,7 +140,17 @@ static void* pump_main(void* opaque) {
       // releases here — the one place that owns the ncinput, since evtype
       // isn't propagated to Dart (PumpedInput carries only id/modifiers).
       if (input.evtype == NCTYPE_RELEASE) continue;
-      if (!pump_push(pump, id, input.modifiers, monotonic_ns())) {
+      // notcurses' deprecated modifier bools (alt/shift/ctrl) are not always
+      // mirrored into |modifiers| — walk_automaton's readline-style Alt path
+      // (bare ESC + key, how macOS Terminal.app sends Alt+key) sets only
+      // ni->alt, leaving the bitmask at 0. PumpedInput carries just the
+      // bitmask, so fold the bools in here or the modifier is lost. (Upstream
+      // FIXME: abi4 merges the bools into |modifiers|.)
+      uint32_t modifiers = input.modifiers;
+      if (input.alt)   modifiers |= NCKEY_MOD_ALT;
+      if (input.shift) modifiers |= NCKEY_MOD_SHIFT;
+      if (input.ctrl)  modifiers |= NCKEY_MOD_CTRL;
+      if (!pump_push(pump, id, modifiers, monotonic_ns())) {
         // Stopping: drain remaining kernel events is not safe once the queue
         // is rejecting; bail out of the inner loop so stop can join us.
         goto done;
