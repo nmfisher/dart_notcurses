@@ -382,9 +382,18 @@ class NotCurses {
   /// Destroy a Notcurses context. If this context owns its output FILE*
   /// (constructed via [NotCurses.withOutputFd]), it is closed here.
   /// Safe to call more than once; only the first call tears the context down.
+  /// True once [stop] has run (or is tearing the context down).
+  bool get stopped => _stopped;
+
   bool stop() {
     if (_stopped) return true;
     _stopped = true;
+    // Detach every Dart plane wrapper of THIS context BEFORE the C teardown:
+    // notcurses_stop frees all planes, and any later destroy() on a stale
+    // wrapper would call ncplane_destroy / ncplane_notcurses into freed
+    // memory (quit-time SEGV / double free). While the context is still
+    // alive the wrapper sweep's own FFI is safe; afterwards it never runs.
+    Plane.detachContext(this);
     // notcurses_stop(NULL) is a harmless no-op, so a failed init is fine here.
     final ok = nc.notcurses_stop(_ptr) == 0;
     _ptr = ffi.nullptr;

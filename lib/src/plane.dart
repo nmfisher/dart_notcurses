@@ -120,6 +120,25 @@ class Plane {
     if (ref != null && ref.target == null) _canonical.remove(address);
   });
 
+  /// Mark every live wrapper belonging to [context] destroyed WITHOUT
+  /// freeing (Dart-side only: resize callable closed, alias entry dropped,
+  /// pointer nulled — later [destroy] calls become no-ops).
+  ///
+  /// Called by [NotCurses.stop] BEFORE notcurses_stop frees the planes. The
+  /// notCurses() identity probe performs FFI on the still-live plane, so the
+  /// sweep must run while the context is alive — it does, by construction.
+  static void detachContext(NotCurses context) {
+    for (final ref in _canonical.values) {
+      final p = ref.target;
+      if (p == null || p._ptr == ffi.nullptr) continue;
+      if (identical(p.notCurses(), context)) {
+        p._closeResizeCallable();
+        p._forget();
+        p._ptr = ffi.nullptr;
+      }
+    }
+  }
+
   factory Plane.fromPtr(ffi.Pointer<ncplane> planePtr) {
     if (planePtr == ffi.nullptr) return Plane._(planePtr);
     final address = planePtr.address;
