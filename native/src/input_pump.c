@@ -59,6 +59,37 @@ typedef struct {
 typedef void (*cocoon_input_notify)(void);
 
 #ifndef _WIN32
+// Preserve text supplied by the terminal instead of guessing a keyboard layout.
+typedef bool (*cocoon_input_emit_fn)(void*, uint32_t, uint32_t, int64_t);
+
+static bool cocoon_input_emit(const ncinput* input, uint32_t id, int64_t ns,
+                             cocoon_input_emit_fn emit, void* target) {
+  if (input->evtype == NCTYPE_RELEASE) return true;
+  uint32_t mods = input->modifiers;
+  if (input->alt) mods |= NCKEY_MOD_ALT;
+  if (input->shift) mods |= NCKEY_MOD_SHIFT;
+  if (input->ctrl) mods |= NCKEY_MOD_CTRL;
+
+  size_t count = 0;
+  bool printable = true;
+  for (; count < NCINPUT_MAX_EFF_TEXT_CODEPOINTS && input->eff_text[count]; ++count) {
+    const uint32_t cp = input->eff_text[count];
+    if (cp < 0x20 || (cp >= 0x7f && cp < 0xa0) || cp > 0x10ffff ||
+        (cp >= 0xd800 && cp <= 0xdfff)) printable = false;
+  }
+  // notcurses fills eff_text with id when no associated text was supplied.
+  // Preserve shortcuts in that case, and never reinterpret Ctrl/Super/Meta.
+  const bool changed = count > 1 || (count == 1 && input->eff_text[0] != id);
+  if (!nckey_synthesized_p(id) && changed && printable &&
+      !(mods & (NCKEY_MOD_CTRL | NCKEY_MOD_SUPER | NCKEY_MOD_META | NCKEY_MOD_HYPER))) {
+    for (size_t i = 0; i < count; ++i) {
+      if (!emit(target, input->eff_text[i], 0, ns)) return false;
+    }
+    return true;
+  }
+  return emit(target, id, mods, ns);
+}
+
 #define COCOON_INPUT_QUEUE_CAP 256
 
 typedef struct cocoon_input_pump {
@@ -86,8 +117,9 @@ static int64_t monotonic_ns(void) {
 
 /// Push one record onto the ring under the mutex. Blocks while the queue is
 /// full (no event is dropped); returns false if the pump is stopping.
-static bool pump_push(cocoon_input_pump* pump, uint32_t id,
+static bool pump_push(void* opaque, uint32_t id,
                       uint32_t modifiers, int64_t ns) {
+  cocoon_input_pump* pump = opaque;
   pthread_mutex_lock(&pump->mtx);
   while (pump->count == pump->cap && !pump->stopping) {
     pthread_cond_wait(&pump->not_full, &pump->mtx);
@@ -134,23 +166,9 @@ static void* pump_main(void* opaque) {
       ncinput input = {0};
       const uint32_t id = notcurses_get_nblock(pump->nc, &input);
       if (id == 0 || id == (uint32_t)-1) break;
-      // Under the kitty/extended-keyboard protocol a single physical key
-      // produces a PRESS and a RELEASE ncinput. We only ever want presses
-      // (REPEAT is kept so held-key auto-repeat still scrolls/types), so drop
-      // releases here — the one place that owns the ncinput, since evtype
-      // isn't propagated to Dart (PumpedInput carries only id/modifiers).
-      if (input.evtype == NCTYPE_RELEASE) continue;
-      // notcurses' deprecated modifier bools (alt/shift/ctrl) are not always
-      // mirrored into |modifiers| — walk_automaton's readline-style Alt path
-      // (bare ESC + key, how macOS Terminal.app sends Alt+key) sets only
-      // ni->alt, leaving the bitmask at 0. PumpedInput carries just the
-      // bitmask, so fold the bools in here or the modifier is lost. (Upstream
-      // FIXME: abi4 merges the bools into |modifiers|.)
-      uint32_t modifiers = input.modifiers;
-      if (input.alt)   modifiers |= NCKEY_MOD_ALT;
-      if (input.shift) modifiers |= NCKEY_MOD_SHIFT;
-      if (input.ctrl)  modifiers |= NCKEY_MOD_CTRL;
-      if (!pump_push(pump, id, modifiers, monotonic_ns())) {
+      // Preserve effective text before reducing ncinput to pump records.
+      // The converter also folds legacy modifier bools and drops releases.
+      if (!cocoon_input_emit(&input, id, monotonic_ns(), pump_push, pump)) {
         // Stopping: drain remaining kernel events is not safe once the queue
         // is rejecting; bail out of the inner loop so stop can join us.
         goto done;
