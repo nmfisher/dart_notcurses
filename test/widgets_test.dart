@@ -7,19 +7,28 @@ import 'harness.dart';
 
 // Menu / Plot / Reader smoke tests against a real terminal.
 void main() {
-  final skip = notcursesSupported ? null : 'requires built lib + controlling TTY';
+  final skip = notcursesSupported
+      ? null
+      : 'requires built lib + controlling TTY';
 
   group('Menu (real terminal)', () {
     Menu buildMenu() {
-      return Menu(
-        [
-          MenuSection('File', [
-            MenuItem('open', 'Open', shortcutKey: 'o', shortcutModifier: KeyMod.ctrl),
-            MenuItem('quit', 'Quit', shortcutKey: 'q', shortcutModifier: KeyMod.ctrl),
-          ]),
-        ],
-        MenuOptions(),
-      );
+      return Menu([
+        MenuSection('File', [
+          MenuItem(
+            'open',
+            'Open',
+            shortcutKey: 'o',
+            shortcutModifier: KeyMod.ctrl,
+          ),
+          MenuItem(
+            'quit',
+            'Quit',
+            shortcutKey: 'q',
+            shortcutModifier: KeyMod.ctrl,
+          ),
+        ]),
+      ], MenuOptions());
     }
 
     test('create succeeds on the standard plane', () async {

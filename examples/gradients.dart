@@ -3,10 +3,9 @@ import 'dart:io';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
 int main() {
-  final nc = NotCurses(CursesOptions(
-    loglevel: LogLevel.error,
-    flags: OptionFlags.drainInput,
-  ));
+  final nc = NotCurses(
+    CursesOptions(loglevel: LogLevel.error, flags: OptionFlags.drainInput),
+  );
   if (nc.notInitialized) return -1;
 
   bool rc = false;

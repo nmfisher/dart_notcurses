@@ -75,12 +75,19 @@ class Cell implements ffi.Finalizable {
   /// GC backstop: frees the calloc'd nccell if the owner never calls
   /// [destroy]. The egcpool entry of a loaded cell is NOT released here —
   /// pool entries are reclaimed when their plane is destroyed.
-  static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(allocator.nativeFree);
+  static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(
+    allocator.nativeFree,
+  );
 
   /// Initialize a new Cell object and creates a pointer to be used
   Cell.init() : _ptr = allocator<nccell>() {
     ncInline.nccell_init(_ptr);
-    _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: ffi.sizeOf<nccell>());
+    _finalizer.attach(
+      this,
+      _ptr.cast(),
+      detach: this,
+      externalSize: ffi.sizeOf<nccell>(),
+    );
   }
 
   /// Release the memory asociated with this Cell. If the cell was loaded
@@ -90,9 +97,13 @@ class Cell implements ffi.Finalizable {
   void destroy([Plane? plane]) {
     if (_ptr == ffi.nullptr) return;
     final owner = _loadedOn;
-    if (plane != null && owner != null && !identical(plane, owner) && plane.ptr != owner.ptr) {
+    if (plane != null &&
+        owner != null &&
+        !identical(plane, owner) &&
+        plane.ptr != owner.ptr) {
       throw ArgumentError(
-          'cell was loaded against a different plane; releasing it against this one would corrupt that plane\'s egcpool');
+        'cell was loaded against a different plane; releasing it against this one would corrupt that plane\'s egcpool',
+      );
     }
     final releaseOn = owner ?? plane;
     // Skip the pool release if the plane itself is already gone — its pools

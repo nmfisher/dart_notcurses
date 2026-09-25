@@ -39,9 +39,11 @@ int main(List<String> args) {
     if (finalDim == null) {
       return -1;
     }
-    final realcols = (finalDim.x - origDim.x) + nc.dimx() * (finalDim.y - origDim.y);
+    final realcols =
+        (finalDim.x - origDim.x) + nc.dimx() * (finalDim.y - origDim.y);
     nc.putStr(
-        '\niterated wcwidth: $totalCols total bytes: $totalBytes wcswidth: ${characters.length} true width: $realcols\n\n');
+      '\niterated wcwidth: $totalCols total bytes: $totalBytes wcswidth: ${characters.length} true width: $realcols\n\n',
+    );
 
     // throw up a background color for invisible glyphs
     origDim = nc.cursorYX();
@@ -75,7 +77,9 @@ int main(List<String> args) {
           }
         }
 
-        stdout.write('True width: ${newyx!.x - origDim.x} wcwidth: ${cols.result} [${cols.value}]');
+        stdout.write(
+          'True width: ${newyx!.x - origDim.x} wcwidth: ${cols.result} [${cols.value}]',
+        );
         nc.cursorMoveYX(newyx.y - newscrolls, newyx.x);
       }
 

@@ -16,13 +16,15 @@ int main(List<String> args) {
       return -1;
     }
 
-    nc = NotCurses(CursesOptions(
-      marginT: 2,
-      marginR: 2,
-      marginB: 2,
-      marginL: 2,
-      flags: OptionFlags.inhibitSetlocale,
-    ));
+    nc = NotCurses(
+      CursesOptions(
+        marginT: 2,
+        marginR: 2,
+        marginB: 2,
+        marginL: 2,
+        flags: OptionFlags.inhibitSetlocale,
+      ),
+    );
 
     if (nc.checkPixelSupport() <= 0) {
       print('pixel graphics not supported');

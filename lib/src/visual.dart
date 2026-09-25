@@ -41,7 +41,8 @@ class VisualOptions {
   // chosen for NCBLIT_DEFAULT.
   int? blitter; // glyph set to use (maps input to output cells)
   int? flags; // bitmask over NCVISUAL_OPTION_*
-  int? transcolor; // treat this color as transparent under NCVISUAL_OPTION_ADDALPHA
+  int?
+  transcolor; // treat this color as transparent under NCVISUAL_OPTION_ADDALPHA
   // pixel offsets within the cell. if NCBLIT_PIXEL is used, the bitmap will
   // be drawn offset from the upper-left cell's origin by these amounts. it is
   // an error if either number exceeds the cell-pixel geometry in its
@@ -193,24 +194,40 @@ class Visual implements ffi.Finalizable {
   /// ncvisual_destroy tears down only the visual's own buffers (it touches no
   /// planes or global state), so it is safe to run from a finalizer.
   static final ffi.NativeFinalizer _finalizer = ffi.NativeFinalizer(
-    ffi.Native.addressOf<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ncvisual>)>>(nc.ncvisual_destroy).cast(),
+    ffi.Native.addressOf<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ncvisual>)>
+        >(nc.ncvisual_destroy)
+        .cast(),
   );
 
   Visual._(this._ptr, [int? externalSize]) {
     if (_ptr != ffi.nullptr) {
-      _finalizer.attach(this, _ptr.cast(), detach: this, externalSize: externalSize);
+      _finalizer.attach(
+        this,
+        _ptr.cast(),
+        detach: this,
+        externalSize: externalSize,
+      );
     }
   }
 
   /// The C library reads exactly rows*rowstride bytes from pixel buffers; a
   /// shorter Dart buffer would let it read past the end of the native copy.
-  static void _checkBufferSize(String name, int length, int rows, int rowstride) {
+  static void _checkBufferSize(
+    String name,
+    int length,
+    int rows,
+    int rowstride,
+  ) {
     if (rows < 0 || rowstride < 0) {
-      throw ArgumentError('rows ($rows) and rowstride ($rowstride) must be non-negative');
+      throw ArgumentError(
+        'rows ($rows) and rowstride ($rowstride) must be non-negative',
+      );
     }
     if (length < rows * rowstride) {
       throw ArgumentError(
-          '$name has $length bytes but rows*rowstride requires ${rows * rowstride}');
+        '$name has $length bytes but rows*rowstride requires ${rows * rowstride}',
+      );
     }
   }
 
@@ -242,29 +259,50 @@ class Visual implements ffi.Finalizable {
     _checkBufferSize('rgba', rgba.length, rows, rowstride);
     final pRgba = allocator<ffi.Uint8>(rgba.length);
     pRgba.asTypedList(rgba.length).setAll(0, rgba);
-    final rc = Visual._(nc.ncvisual_from_rgba(pRgba.cast(), rows, rowstride, cols), rows * rowstride);
+    final rc = Visual._(
+      nc.ncvisual_from_rgba(pRgba.cast(), rows, rowstride, cols),
+      rows * rowstride,
+    );
     allocator.free(pRgba);
     return rc;
   }
 
   /// ncvisual_from_rgba(), but the pixels are 3-byte RGB. A is filled in
   /// throughout using 'alpha'.
-  factory Visual.fromRgbPacked(Uint8List rgb, int rows, int rowstride, int cols, int alpha) {
+  factory Visual.fromRgbPacked(
+    Uint8List rgb,
+    int rows,
+    int rowstride,
+    int cols,
+    int alpha,
+  ) {
     _checkBufferSize('rgb', rgb.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(rgb.length);
     pRgb.asTypedList(rgb.length).setAll(0, rgb);
-    final rc = Visual._(nc.ncvisual_from_rgb_packed(pRgb.cast(), rows, rowstride, cols, alpha), rows * cols * 4);
+    final rc = Visual._(
+      nc.ncvisual_from_rgb_packed(pRgb.cast(), rows, rowstride, cols, alpha),
+      rows * cols * 4,
+    );
     allocator.free(pRgb);
     return rc;
   }
 
   /// ncvisual_from_rgba(), but the pixels are 4-byte RGBx. A is filled in
   /// throughout using 'alpha'. rowstride must be a multiple of 4.
-  factory Visual.fromRgbLoose(Uint8List rgba, int rows, int rowstride, int cols, int alpha) {
+  factory Visual.fromRgbLoose(
+    Uint8List rgba,
+    int rows,
+    int rowstride,
+    int cols,
+    int alpha,
+  ) {
     _checkBufferSize('rgba', rgba.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(rgba.length);
     pRgb.asTypedList(rgba.length).setAll(0, rgba);
-    final rc = Visual._(nc.ncvisual_from_rgb_loose(pRgb.cast(), rows, rowstride, cols, alpha), rows * cols * 4);
+    final rc = Visual._(
+      nc.ncvisual_from_rgb_loose(pRgb.cast(), rows, rowstride, cols, alpha),
+      rows * cols * 4,
+    );
     allocator.free(pRgb);
     return rc;
   }
@@ -276,7 +314,10 @@ class Visual implements ffi.Finalizable {
     _checkBufferSize('bgra', bgra.length, rows, rowstride);
     final pRgb = allocator<ffi.Uint8>(bgra.length);
     pRgb.asTypedList(bgra.length).setAll(0, bgra);
-    final rc = Visual._(nc.ncvisual_from_bgra(pRgb.cast(), rows, rowstride, cols), rows * rowstride);
+    final rc = Visual._(
+      nc.ncvisual_from_bgra(pRgb.cast(), rows, rowstride, cols),
+      rows * rowstride,
+    );
     allocator.free(pRgb);
     return rc;
   }
@@ -285,18 +326,37 @@ class Visual implements ffi.Finalizable {
   /// arranged in 'rows' lines of 'rowstride' bytes each, composed of 'cols'
   /// pixels. 'palette' is an array of at least 'palsize' ncchannels.
   factory Visual.fromPalidx(
-      Uint8List data, int rows, int rowstride, int cols, int palsize, int palstride, Uint32List palette) {
+    Uint8List data,
+    int rows,
+    int rowstride,
+    int cols,
+    int palsize,
+    int palstride,
+    Uint32List palette,
+  ) {
     _checkBufferSize('data', data.length, rows, rowstride);
     if (palette.length < palsize) {
-      throw ArgumentError('palette has ${palette.length} entries but palsize is $palsize');
+      throw ArgumentError(
+        'palette has ${palette.length} entries but palsize is $palsize',
+      );
     }
     final pRgb = allocator<ffi.Uint8>(data.length);
     pRgb.asTypedList(data.length).setAll(0, data);
     final pltte = allocator<ffi.Uint32>(palette.length);
     pltte.asTypedList(palette.length).setAll(0, palette);
 
-    final rc =
-        Visual._(nc.ncvisual_from_palidx(pRgb.cast(), rows, rowstride, cols, palsize, palstride, pltte), rows * cols * 4);
+    final rc = Visual._(
+      nc.ncvisual_from_palidx(
+        pRgb.cast(),
+        rows,
+        rowstride,
+        cols,
+        palsize,
+        palstride,
+        pltte,
+      ),
+      rows * cols * 4,
+    );
     allocator.free(pRgb);
     allocator.free(pltte);
     return rc;
@@ -308,8 +368,17 @@ class Visual implements ffi.Finalizable {
   /// planes can be subjected to ncvisual transformations. If possible, it's
   /// better to create the ncvisual from memory using ncvisual_from_rgba().
   /// Lengths of 0 are interpreted to mean "all available remaining area".
-  factory Visual.fromPlane(Plane plane, int blit, int begy, int begx, int leny, int lenx) {
-    return Visual._(nc.ncvisual_from_plane(plane.ptr, blit, begy, begx, leny, lenx));
+  factory Visual.fromPlane(
+    Plane plane,
+    int blit,
+    int begy,
+    int begx,
+    int leny,
+    int lenx,
+  ) {
+    return Visual._(
+      nc.ncvisual_from_plane(plane.ptr, blit, begy, begx, leny, lenx),
+    );
   }
 
   /// Construct an ncvisual from a nul-terminated Sixel control sequence.

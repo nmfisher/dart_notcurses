@@ -11,7 +11,10 @@ final U32_SIZE = ffi.sizeOf<ffi.Uint32>();
 const pause = 1;
 
 int main() {
-  final opts = CursesOptions(loglevel: LogLevel.trace, flags: OptionFlags.drainInput);
+  final opts = CursesOptions(
+    loglevel: LogLevel.trace,
+    flags: OptionFlags.drainInput,
+  );
   final notc = NotCurses.core(opts);
 
   final x = notc.checkPixelSupport();
@@ -140,7 +143,8 @@ int wipebitmap(NotCurses notc) {
   p.erase();
 
   for (var i = geom.celldimy; i < 5 * geom.celldimy; ++i) {
-    final start = (i * 6 * geom.celldimx * U32_SIZE) + (geom.celldimx * U32_SIZE);
+    final start =
+        (i * 6 * geom.celldimx * U32_SIZE) + (geom.celldimx * U32_SIZE);
     final end = start + (geom.celldimx * 4 * U32_SIZE);
     i8.fillRange(start, end + 1, 0);
   }

@@ -146,7 +146,6 @@ class NotcursesInputPump {
   }
 }
 
-
 /// Configuration options to be used when create a new NotCurses intance
 class CursesOptions {
   /// NcLogLevel options

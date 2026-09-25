@@ -73,7 +73,9 @@ int blts(NotCurses notc, List<String> args) {
           ncv.destroy();
           // e.g. NCBLIT_PIXEL with an image larger than the terminal ("sprixel
           // too tall/wide for plane") — note it and carry on with the rest.
-          stderr.writeln('skip: $blitter scaling=$scaling (image too large or unsupported)');
+          stderr.writeln(
+            'skip: $blitter scaling=$scaling (image too large or unsupported)',
+          );
           continue;
         }
 

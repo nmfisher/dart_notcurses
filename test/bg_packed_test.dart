@@ -19,13 +19,19 @@ void main() {
     () {
       test('setBgRGB(hex) sets the cell background', () async {
         await withNotcurses((nc, std) {
-          expect(std.setBgRGB(0x0000FF), isTrue,
-              reason: 'setBgRGB reports success'); // blue
+          expect(
+            std.setBgRGB(0x0000FF),
+            isTrue,
+            reason: 'setBgRGB reports success',
+          ); // blue
           std.putStrYX(0, 0, 'B');
           final c = std.atYX(0, 0);
           expect(c, isNotNull);
-          expect(c!.channels & 0xFFFFFF, 0x0000FF,
-              reason: 'packed setBgRGB must be stored on the written cell');
+          expect(
+            c!.channels & 0xFFFFFF,
+            0x0000FF,
+            reason: 'packed setBgRGB must be stored on the written cell',
+          );
         });
       });
 
@@ -35,53 +41,69 @@ void main() {
           std.putStrYX(0, 0, 'R');
           final c = std.atYX(0, 0);
           expect(c, isNotNull);
-          expect((c!.channels >> 32) & 0xFFFFFF, 0xFF0000,
-              reason: 'packed setFgRGB must be stored on the written cell');
+          expect(
+            (c!.channels >> 32) & 0xFFFFFF,
+            0xFF0000,
+            reason: 'packed setFgRGB must be stored on the written cell',
+          );
         });
       });
 
-      test('fg + bg together across a multi-char run (the bar pattern)',
-          () async {
-        // Mirrors how cocoon paints a message bar: a foreground color over a
-        // distinct background, written as a run of characters (the padded
-        // bar). Every cell in the run must carry both channels — not just the
-        // first.
-        await withNotcurses((nc, std) {
-          std.setFgRGB(0xFFFFFF); // white text
-          std.setBgRGB(0x112233); // dark slate bg (non-zero => unambiguous)
-          std.putStrYX(0, 0, 'hello');
-          for (var i = 0; i < 5; i++) {
-            final c = std.atYX(0, i);
-            expect(c, isNotNull, reason: 'cell $i missing');
-            expect((c!.channels >> 32) & 0xFFFFFF, 0xFFFFFF,
-                reason: 'cell $i fg should be white');
-            expect(c.channels & 0xFFFFFF, 0x112233,
-                reason: 'cell $i bg should be the slate bar');
-          }
-        });
-      });
+      test(
+        'fg + bg together across a multi-char run (the bar pattern)',
+        () async {
+          // Mirrors how cocoon paints a message bar: a foreground color over a
+          // distinct background, written as a run of characters (the padded
+          // bar). Every cell in the run must carry both channels — not just the
+          // first.
+          await withNotcurses((nc, std) {
+            std.setFgRGB(0xFFFFFF); // white text
+            std.setBgRGB(0x112233); // dark slate bg (non-zero => unambiguous)
+            std.putStrYX(0, 0, 'hello');
+            for (var i = 0; i < 5; i++) {
+              final c = std.atYX(0, i);
+              expect(c, isNotNull, reason: 'cell $i missing');
+              expect(
+                (c!.channels >> 32) & 0xFFFFFF,
+                0xFFFFFF,
+                reason: 'cell $i fg should be white',
+              );
+              expect(
+                c.channels & 0xFFFFFF,
+                0x112233,
+                reason: 'cell $i bg should be the slate bar',
+              );
+            }
+          });
+        },
+      );
 
-      test('explicit black bg is distinct from the default (transparent) bg',
-          () async {
-        // The user-message bar uses bg=black (setBgRGB(0x000000)). If notcurses
-        // treats explicit black the same as the "default"/transparent
-        // background, the black bar never paints — the prime suspect for the
-        // user-message bar not showing. Compare the two channels directly so
-        // the assertion doesn't depend on a specific default-flag bit.
-        await withNotcurses((nc, std) {
-          std.setBgRGB(0x000000); // explicit black
-          std.putStrYX(0, 0, 'X');
-          final black = std.atYX(0, 0)!.channels & 0xFFFFFFFF;
+      test(
+        'explicit black bg is distinct from the default (transparent) bg',
+        () async {
+          // The user-message bar uses bg=black (setBgRGB(0x000000)). If notcurses
+          // treats explicit black the same as the "default"/transparent
+          // background, the black bar never paints — the prime suspect for the
+          // user-message bar not showing. Compare the two channels directly so
+          // the assertion doesn't depend on a specific default-flag bit.
+          await withNotcurses((nc, std) {
+            std.setBgRGB(0x000000); // explicit black
+            std.putStrYX(0, 0, 'X');
+            final black = std.atYX(0, 0)!.channels & 0xFFFFFFFF;
 
-          std.setBgDefault();
-          std.putStrYX(0, 1, 'Y');
-          final def = std.atYX(0, 1)!.channels & 0xFFFFFFFF;
+            std.setBgDefault();
+            std.putStrYX(0, 1, 'Y');
+            final def = std.atYX(0, 1)!.channels & 0xFFFFFFFF;
 
-          expect(black, isNot(equals(def)),
+            expect(
+              black,
+              isNot(equals(def)),
               reason:
-                  'explicit black bg must differ from the transparent default');
-        });
-      });
+                  'explicit black bg must differ from the transparent default',
+            );
+          });
+        },
+      );
     },
     skip: !notcursesSupported
         ? 'needs a controlling TTY (notcurses opens /dev/tty)'

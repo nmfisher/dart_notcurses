@@ -17,8 +17,13 @@ import 'dart:ffi' as ffi;
 external ffi.Pointer<ffi.Char> notcurses_version();
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>,
-        ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Void Function(
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external void notcurses_version_components(
   ffi.Pointer<ffi.Int> major,
   ffi.Pointer<ffi.Int> minor,
@@ -27,8 +32,12 @@ external void notcurses_version_components(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Int Function(
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external int ncstrwidth(
   ffi.Pointer<ffi.Char> egcs,
   ffi.Pointer<ffi.Int> validbytes,
@@ -36,8 +45,13 @@ external int ncstrwidth(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ffi.Uint32>, ffi.UnsignedInt,
-        ffi.Pointer<ffi.UnsignedChar>, ffi.Size)>()
+  ffi.Int Function(
+    ffi.Pointer<ffi.Uint32>,
+    ffi.UnsignedInt,
+    ffi.Pointer<ffi.UnsignedChar>,
+    ffi.Size,
+  )
+>()
 external int notcurses_ucs32_to_utf8(
   ffi.Pointer<ffi.Uint32> ucs32,
   int ucs32count,
@@ -46,8 +60,12 @@ external int notcurses_ucs32_to_utf8(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<nccell>, ffi.Pointer<ffi.Char>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<nccell>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
 external int nccell_load(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nccell> c,
@@ -55,8 +73,12 @@ external int nccell_load(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<nccell>, ffi.Pointer<nccell>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<nccell>,
+    ffi.Pointer<nccell>,
+  )
+>()
 external int nccell_duplicate(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nccell> targ,
@@ -64,84 +86,79 @@ external int nccell_duplicate(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>, ffi.Pointer<nccell>)>()
-external void nccell_release(
-  ffi.Pointer<ncplane> n,
-  ffi.Pointer<nccell> c,
-);
+external void nccell_release(ffi.Pointer<ncplane> n, ffi.Pointer<nccell> c);
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncplane>, ffi.Pointer<nccell>)>()
+  ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncplane>, ffi.Pointer<nccell>)
+>()
 external ffi.Pointer<ffi.Char> nccell_extended_gcluster(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nccell> c,
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<notcurses_options>)>()
+  ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<notcurses_options>)
+>()
 external int notcurses_lex_margins(
   ffi.Pointer<ffi.Char> op,
   ffi.Pointer<notcurses_options> opts,
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.UnsignedInt>)
+>()
 external int notcurses_lex_blitter(
   ffi.Pointer<ffi.Char> op,
   ffi.Pointer<ffi.UnsignedInt> blitter,
 );
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.UnsignedInt)>()
-external ffi.Pointer<ffi.Char> notcurses_str_blitter(
-  int blitter,
-);
+external ffi.Pointer<ffi.Char> notcurses_str_blitter(int blitter);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.UnsignedInt>)
+>()
 external int notcurses_lex_scalemode(
   ffi.Pointer<ffi.Char> op,
   ffi.Pointer<ffi.UnsignedInt> scalemode,
 );
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.UnsignedInt)>()
-external ffi.Pointer<ffi.Char> notcurses_str_scalemode(
-  int scalemode,
-);
+external ffi.Pointer<ffi.Char> notcurses_str_scalemode(int scalemode);
 
 @ffi.Native<
-    ffi.Pointer<notcurses> Function(
-        ffi.Pointer<notcurses_options>, ffi.Pointer<FILE>)>()
+  ffi.Pointer<notcurses> Function(
+    ffi.Pointer<notcurses_options>,
+    ffi.Pointer<FILE>,
+  )
+>()
 external ffi.Pointer<notcurses> notcurses_init(
   ffi.Pointer<notcurses_options> opts,
   ffi.Pointer<FILE> fp,
 );
 
 @ffi.Native<
-    ffi.Pointer<notcurses> Function(
-        ffi.Pointer<notcurses_options>, ffi.Pointer<FILE>)>()
+  ffi.Pointer<notcurses> Function(
+    ffi.Pointer<notcurses_options>,
+    ffi.Pointer<FILE>,
+  )
+>()
 external ffi.Pointer<notcurses> notcurses_core_init(
   ffi.Pointer<notcurses_options> opts,
   ffi.Pointer<FILE> fp,
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>)>()
-external int notcurses_stop(
-  ffi.Pointer<notcurses> nc,
-);
+external int notcurses_stop(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>)>()
-external int notcurses_enter_alternate_screen(
-  ffi.Pointer<notcurses> nc,
-);
+external int notcurses_enter_alternate_screen(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>)>()
-external int notcurses_leave_alternate_screen(
-  ffi.Pointer<notcurses> nc,
-);
+external int notcurses_leave_alternate_screen(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<notcurses>)>()
-external ffi.Pointer<ncplane> notcurses_stdplane(
-  ffi.Pointer<notcurses> nc,
-);
+external ffi.Pointer<ncplane> notcurses_stdplane(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<notcurses>)>()
 external ffi.Pointer<ncplane> notcurses_stdplane_const(
@@ -149,28 +166,24 @@ external ffi.Pointer<ncplane> notcurses_stdplane_const(
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ncplane> ncpile_top(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ncplane> ncpile_top(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ncplane> ncpile_bottom(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ncplane> ncpile_bottom(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncpile_render(
-  ffi.Pointer<ncplane> n,
-);
+external int ncpile_render(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncpile_rasterize(
-  ffi.Pointer<ncplane> n,
-);
+external int ncpile_rasterize(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.Pointer<ffi.Char>>,
-        ffi.Pointer<ffi.Size>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ffi.Pointer<ffi.Size>,
+  )
+>()
 external int ncpile_render_to_buffer(
   ffi.Pointer<ncplane> p,
   ffi.Pointer<ffi.Pointer<ffi.Char>> buf,
@@ -184,13 +197,15 @@ external int ncpile_render_to_file(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<notcurses>)>()
-external void notcurses_drop_planes(
-  ffi.Pointer<notcurses> nc,
-);
+external void notcurses_drop_planes(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<
-    ffi.Uint32 Function(
-        ffi.Pointer<notcurses>, ffi.Pointer<timespec>, ffi.Pointer<ncinput>)>()
+  ffi.Uint32 Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<timespec>,
+    ffi.Pointer<ncinput>,
+  )
+>()
 external int notcurses_get(
   ffi.Pointer<notcurses> n,
   ffi.Pointer<timespec> ts,
@@ -198,8 +213,13 @@ external int notcurses_get(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<notcurses>, ffi.Pointer<timespec>,
-        ffi.Pointer<ncinput>, ffi.Int)>()
+  ffi.Int Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<timespec>,
+    ffi.Pointer<ncinput>,
+    ffi.Int,
+  )
+>()
 external int notcurses_getvec(
   ffi.Pointer<notcurses> n,
   ffi.Pointer<timespec> ts,
@@ -208,29 +228,24 @@ external int notcurses_getvec(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>)>()
-external int notcurses_inputready_fd(
-  ffi.Pointer<notcurses> n,
-);
+external int notcurses_inputready_fd(ffi.Pointer<notcurses> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>, ffi.UnsignedInt)>()
-external int notcurses_mice_enable(
-  ffi.Pointer<notcurses> n,
-  int eventmask,
-);
+external int notcurses_mice_enable(ffi.Pointer<notcurses> n, int eventmask);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>)>()
-external int notcurses_linesigs_disable(
-  ffi.Pointer<notcurses> n,
-);
+external int notcurses_linesigs_disable(ffi.Pointer<notcurses> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>)>()
-external int notcurses_linesigs_enable(
-  ffi.Pointer<notcurses> n,
-);
+external int notcurses_linesigs_enable(ffi.Pointer<notcurses> n);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<notcurses>, ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Int Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+  )
+>()
 external int notcurses_refresh(
   ffi.Pointer<notcurses> n,
   ffi.Pointer<ffi.UnsignedInt> y,
@@ -238,18 +253,18 @@ external int notcurses_refresh(
 );
 
 @ffi.Native<ffi.Pointer<notcurses> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<notcurses> ncplane_notcurses(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<notcurses> ncplane_notcurses(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Pointer<notcurses> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<notcurses> ncplane_notcurses_const(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<notcurses> ncplane_notcurses_const(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+  )
+>()
 external void ncplane_dim_yx(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.UnsignedInt> y,
@@ -257,14 +272,16 @@ external void ncplane_dim_yx(
 );
 
 @ffi.Native<
-    ffi.Void Function(
-        ffi.Pointer<ncplane>,
-        ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+  )
+>()
 external void ncplane_pixel_geom(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.UnsignedInt> pxy,
@@ -276,8 +293,14 @@ external void ncplane_pixel_geom(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(ffi.Pointer<notcurses>, ffi.UnsignedInt,
-        ffi.UnsignedInt, ffi.Pointer<ffi.Uint16>, ffi.Pointer<ffi.Uint64>)>()
+  ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<notcurses>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Pointer<ffi.Uint16>,
+    ffi.Pointer<ffi.Uint64>,
+  )
+>()
 external ffi.Pointer<ffi.Char> notcurses_at_yx(
   ffi.Pointer<notcurses> nc,
   int yoff,
@@ -287,59 +310,57 @@ external ffi.Pointer<ffi.Char> notcurses_at_yx(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncplane> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncplane_options>)>()
+  ffi.Pointer<ncplane> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncplane_options>,
+  )
+>()
 external ffi.Pointer<ncplane> ncplane_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncplane_options> nopts,
 );
 
 @ffi.Native<
-    ffi.Pointer<ncplane> Function(
-        ffi.Pointer<notcurses>, ffi.Pointer<ncplane_options>)>()
+  ffi.Pointer<ncplane> Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<ncplane_options>,
+  )
+>()
 external ffi.Pointer<ncplane> ncpile_create(
   ffi.Pointer<notcurses> nc,
   ffi.Pointer<ncplane_options> nopts,
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_resize_maximize(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_resize_maximize(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_resize_marginalized(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_resize_marginalized(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_resize_realign(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_resize_realign(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_resize_placewithin(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_resize_placewithin(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Void Function(
-        ffi.Pointer<ncplane>,
-        ffi.Pointer<
-            ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>>,
+  )
+>()
 external void ncplane_set_resizecb(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>>
-      resizecb,
+  resizecb,
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>>
-        Function(ffi.Pointer<ncplane>)>()
+  ffi.Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>>
+  Function(ffi.Pointer<ncplane>)
+>()
 external ffi.Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>>
-    ncplane_resizecb(
-  ffi.Pointer<ncplane> n,
-);
+ncplane_resizecb(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.Char>)>()
 external int ncplane_set_name(
@@ -348,35 +369,40 @@ external int ncplane_set_name(
 );
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ffi.Char> ncplane_name(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ffi.Char> ncplane_name(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>)>()
+  ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>)
+>()
 external ffi.Pointer<ncplane> ncplane_reparent(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncplane> newparent,
 );
 
 @ffi.Native<
-    ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>)>()
+  ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>)
+>()
 external ffi.Pointer<ncplane> ncplane_reparent_family(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncplane> newparent,
 );
 
 @ffi.Native<
-    ffi.Pointer<ncplane> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Void>)>()
+  ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.Void>)
+>()
 external ffi.Pointer<ncplane> ncplane_dup(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Void> opaque,
 );
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>,
-        ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external void ncplane_translate(
   ffi.Pointer<ncplane> src,
   ffi.Pointer<ncplane> dst,
@@ -385,8 +411,12 @@ external void ncplane_translate(
 );
 
 @ffi.Native<
-    ffi.Bool Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Bool Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external bool ncplane_translate_abs(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Int> y,
@@ -394,52 +424,31 @@ external bool ncplane_translate_abs(
 );
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncplane>, ffi.UnsignedInt)>()
-external bool ncplane_set_scrolling(
-  ffi.Pointer<ncplane> n,
-  int scrollp,
-);
+external bool ncplane_set_scrolling(ffi.Pointer<ncplane> n, int scrollp);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncplane>)>()
-external bool ncplane_scrolling_p(
-  ffi.Pointer<ncplane> n,
-);
+external bool ncplane_scrolling_p(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncplane>, ffi.UnsignedInt)>()
-external bool ncplane_set_autogrow(
-  ffi.Pointer<ncplane> n,
-  int growp,
-);
+external bool ncplane_set_autogrow(ffi.Pointer<ncplane> n, int growp);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncplane>)>()
-external bool ncplane_autogrow_p(
-  ffi.Pointer<ncplane> n,
-);
+external bool ncplane_autogrow_p(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Pointer<ncpalette> Function(ffi.Pointer<notcurses>)>()
-external ffi.Pointer<ncpalette> ncpalette_new(
-  ffi.Pointer<notcurses> nc,
-);
+external ffi.Pointer<ncpalette> ncpalette_new(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>, ffi.Pointer<ncpalette>)>()
-external int ncpalette_use(
-  ffi.Pointer<notcurses> nc,
-  ffi.Pointer<ncpalette> p,
-);
+external int ncpalette_use(ffi.Pointer<notcurses> nc, ffi.Pointer<ncpalette> p);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncpalette>)>()
-external void ncpalette_free(
-  ffi.Pointer<ncpalette> p,
-);
+external void ncpalette_free(ffi.Pointer<ncpalette> p);
 
 @ffi.Native<ffi.Uint16 Function(ffi.Pointer<notcurses>)>()
-external int notcurses_supported_styles(
-  ffi.Pointer<notcurses> nc,
-);
+external int notcurses_supported_styles(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.UnsignedInt Function(ffi.Pointer<notcurses>)>()
-external int notcurses_palette_size(
-  ffi.Pointer<notcurses> nc,
-);
+external int notcurses_palette_size(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<notcurses>)>()
 external ffi.Pointer<ffi.Char> notcurses_detected_terminal(
@@ -452,24 +461,16 @@ external ffi.Pointer<nccapabilities> notcurses_capabilities(
 );
 
 @ffi.Native<ffi.UnsignedInt Function(ffi.Pointer<notcurses>)>()
-external int notcurses_check_pixel_support(
-  ffi.Pointer<notcurses> nc,
-);
+external int notcurses_check_pixel_support(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<notcurses>)>()
-external bool notcurses_canopen_images(
-  ffi.Pointer<notcurses> nc,
-);
+external bool notcurses_canopen_images(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<notcurses>)>()
-external bool notcurses_canopen_videos(
-  ffi.Pointer<notcurses> nc,
-);
+external bool notcurses_canopen_videos(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Pointer<ncstats> Function(ffi.Pointer<notcurses>)>()
-external ffi.Pointer<ncstats> notcurses_stats_alloc(
-  ffi.Pointer<notcurses> nc,
-);
+external ffi.Pointer<ncstats> notcurses_stats_alloc(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<notcurses>, ffi.Pointer<ncstats>)>()
 external void notcurses_stats(
@@ -484,8 +485,18 @@ external void notcurses_stats_reset(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.UnsignedInt,
-        ffi.UnsignedInt, ffi.Int, ffi.Int, ffi.UnsignedInt, ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncplane_resize(
   ffi.Pointer<ncplane> n,
   int keepy,
@@ -499,9 +510,7 @@ external int ncplane_resize(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_destroy(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_destroy(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<nccell>)>()
 external int ncplane_set_base_cell(
@@ -510,8 +519,13 @@ external int ncplane_set_base_cell(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Char>, ffi.Uint16, ffi.Uint64)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Uint16,
+    ffi.Uint64,
+  )
+>()
 external int ncplane_set_base(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Char> egc,
@@ -520,14 +534,15 @@ external int ncplane_set_base(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<nccell>)>()
-external int ncplane_base(
-  ffi.Pointer<ncplane> n,
-  ffi.Pointer<nccell> c,
-);
+external int ncplane_base(ffi.Pointer<ncplane> n, ffi.Pointer<nccell> c);
 
 @ffi.Native<
-    ffi.Void Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external void ncplane_yx(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Int> y,
@@ -535,25 +550,21 @@ external void ncplane_yx(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_y(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_y(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_x(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_x(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int)>()
-external int ncplane_move_yx(
-  ffi.Pointer<ncplane> n,
-  int y,
-  int x,
-);
+external int ncplane_move_yx(ffi.Pointer<ncplane> n, int y, int x);
 
 @ffi.Native<
-    ffi.Void Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external void ncplane_abs_yx(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Int> y,
@@ -561,24 +572,16 @@ external void ncplane_abs_yx(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_abs_y(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_abs_y(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_abs_x(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_abs_x(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ncplane> ncplane_parent(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ncplane> ncplane_parent(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ncplane> ncplane_parent_const(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ncplane> ncplane_parent_const(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>)>()
 external int ncplane_move_above(
@@ -605,25 +608,16 @@ external int ncplane_move_family_below(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_family_destroy(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_family_destroy(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ncplane> ncplane_below(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ncplane> ncplane_below(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ncplane> ncplane_above(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ncplane> ncplane_above(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int)>()
-external int ncplane_scrollup(
-  ffi.Pointer<ncplane> n,
-  int r,
-);
+external int ncplane_scrollup(ffi.Pointer<ncplane> n, int r);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>)>()
 external int ncplane_scrollup_child(
@@ -632,18 +626,18 @@ external int ncplane_scrollup_child(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_rotate_cw(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_rotate_cw(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>)>()
-external int ncplane_rotate_ccw(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_rotate_ccw(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncplane>,
-        ffi.Pointer<ffi.Uint16>, ffi.Pointer<ffi.Uint64>)>()
+  ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Uint16>,
+    ffi.Pointer<ffi.Uint64>,
+  )
+>()
 external ffi.Pointer<ffi.Char> ncplane_at_cursor(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Uint16> stylemask,
@@ -657,8 +651,14 @@ external int ncplane_at_cursor_cell(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int,
-        ffi.Pointer<ffi.Uint16>, ffi.Pointer<ffi.Uint64>)>()
+  ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.Pointer<ffi.Uint16>,
+    ffi.Pointer<ffi.Uint64>,
+  )
+>()
 external ffi.Pointer<ffi.Char> ncplane_at_yx(
   ffi.Pointer<ncplane> n,
   int y,
@@ -668,8 +668,8 @@ external ffi.Pointer<ffi.Char> ncplane_at_yx(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Pointer<nccell>)>()
+  ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Pointer<nccell>)
+>()
 external int ncplane_at_yx_cell(
   ffi.Pointer<ncplane> n,
   int y,
@@ -678,8 +678,14 @@ external int ncplane_at_yx_cell(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int,
-        ffi.UnsignedInt, ffi.UnsignedInt)>()
+  ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external ffi.Pointer<ffi.Char> ncplane_contents(
   ffi.Pointer<ncplane> n,
   int begy,
@@ -689,21 +695,23 @@ external ffi.Pointer<ffi.Char> ncplane_contents(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Void> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Void>)>()
+  ffi.Pointer<ffi.Void> Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.Void>)
+>()
 external ffi.Pointer<ffi.Void> ncplane_set_userptr(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Void> opaque,
 );
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ffi.Void> ncplane_userptr(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ffi.Void> ncplane_userptr(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Void Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external void ncplane_center_abs(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Int> y,
@@ -711,15 +719,17 @@ external void ncplane_center_abs(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Uint32> Function(
-        ffi.Pointer<ncplane>,
-        ffi.UnsignedInt,
-        ffi.Int,
-        ffi.Int,
-        ffi.UnsignedInt,
-        ffi.UnsignedInt,
-        ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Pointer<ffi.Uint32> Function(
+    ffi.Pointer<ncplane>,
+    ffi.UnsignedInt,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+  )
+>()
 external ffi.Pointer<ffi.Uint32> ncplane_as_rgba(
   ffi.Pointer<ncplane> n,
   int blit,
@@ -732,27 +742,21 @@ external ffi.Pointer<ffi.Uint32> ncplane_as_rgba(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int)>()
-external int ncplane_cursor_move_yx(
-  ffi.Pointer<ncplane> n,
-  int y,
-  int x,
-);
+external int ncplane_cursor_move_yx(ffi.Pointer<ncplane> n, int y, int x);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int)>()
-external int ncplane_cursor_move_rel(
-  ffi.Pointer<ncplane> n,
-  int y,
-  int x,
-);
+external int ncplane_cursor_move_rel(ffi.Pointer<ncplane> n, int y, int x);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>)>()
-external void ncplane_home(
-  ffi.Pointer<ncplane> n,
-);
+external void ncplane_home(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Void Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+  )
+>()
 external void ncplane_cursor_yx(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.UnsignedInt> y,
@@ -760,18 +764,14 @@ external void ncplane_cursor_yx(
 );
 
 @ffi.Native<ffi.Uint64 Function(ffi.Pointer<ncplane>)>()
-external int ncplane_channels(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_channels(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Uint16 Function(ffi.Pointer<ncplane>)>()
-external int ncplane_styles(
-  ffi.Pointer<ncplane> n,
-);
+external int ncplane_styles(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Pointer<nccell>)>()
+  ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Pointer<nccell>)
+>()
 external int ncplane_putc_yx(
   ffi.Pointer<ncplane> n,
   int y,
@@ -780,14 +780,17 @@ external int ncplane_putc_yx(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Char)>()
-external int ncplane_putchar_stained(
-  ffi.Pointer<ncplane> n,
-  int c,
-);
+external int ncplane_putchar_stained(ffi.Pointer<ncplane> n, int c);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int,
-        ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Size>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Size>,
+  )
+>()
 external int ncplane_putegc_yx(
   ffi.Pointer<ncplane> n,
   int y,
@@ -797,8 +800,12 @@ external int ncplane_putegc_yx(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Size>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Size>,
+  )
+>()
 external int ncplane_putegc_stained(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.Char> gclust,
@@ -806,8 +813,12 @@ external int ncplane_putegc_stained(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ffi.WChar>, ffi.Pointer<ffi.Size>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.WChar>,
+    ffi.Pointer<ffi.Size>,
+  )
+>()
 external int ncplane_putwegc_stained(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.WChar> gclust,
@@ -815,8 +826,14 @@ external int ncplane_putwegc_stained(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.UnsignedInt, ffi.Size,
-        ffi.Pointer<ffi.Char>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.Size,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
 external int ncplane_putnstr_aligned(
   ffi.Pointer<ncplane> n,
   int y,
@@ -832,8 +849,14 @@ external int ncplane_putwstr_stained(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.UnsignedInt,
-        ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Size>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Size>,
+  )
+>()
 external int ncplane_puttext(
   ffi.Pointer<ncplane> n,
   int y,
@@ -843,8 +866,14 @@ external int ncplane_puttext(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<nccell>, ffi.UnsignedInt,
-        ffi.Uint64, ffi.Uint64)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<nccell>,
+    ffi.UnsignedInt,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
 external int ncplane_hline_interp(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nccell> c,
@@ -854,8 +883,14 @@ external int ncplane_hline_interp(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<nccell>, ffi.UnsignedInt,
-        ffi.Uint64, ffi.Uint64)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<nccell>,
+    ffi.UnsignedInt,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
 external int ncplane_vline_interp(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nccell> c,
@@ -865,17 +900,19 @@ external int ncplane_vline_interp(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>,
-        ffi.Pointer<nccell>,
-        ffi.Pointer<nccell>,
-        ffi.Pointer<nccell>,
-        ffi.Pointer<nccell>,
-        ffi.Pointer<nccell>,
-        ffi.Pointer<nccell>,
-        ffi.UnsignedInt,
-        ffi.UnsignedInt,
-        ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<nccell>,
+    ffi.Pointer<nccell>,
+    ffi.Pointer<nccell>,
+    ffi.Pointer<nccell>,
+    ffi.Pointer<nccell>,
+    ffi.Pointer<nccell>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncplane_box(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nccell> ul,
@@ -890,8 +927,8 @@ external int ncplane_box(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Pointer<nccell>)>()
+  ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Pointer<nccell>)
+>()
 external int ncplane_polyfill_yx(
   ffi.Pointer<ncplane> n,
   int y,
@@ -900,18 +937,20 @@ external int ncplane_polyfill_yx(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>,
-        ffi.Int,
-        ffi.Int,
-        ffi.UnsignedInt,
-        ffi.UnsignedInt,
-        ffi.Pointer<ffi.Char>,
-        ffi.Uint16,
-        ffi.Uint64,
-        ffi.Uint64,
-        ffi.Uint64,
-        ffi.Uint64)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Pointer<ffi.Char>,
+    ffi.Uint16,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
 external int ncplane_gradient(
   ffi.Pointer<ncplane> n,
   int y,
@@ -927,8 +966,18 @@ external int ncplane_gradient(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.UnsignedInt,
-        ffi.UnsignedInt, ffi.Uint32, ffi.Uint32, ffi.Uint32, ffi.Uint32)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Uint32,
+    ffi.Uint32,
+    ffi.Uint32,
+    ffi.Uint32,
+  )
+>()
 external int ncplane_gradient2x1(
   ffi.Pointer<ncplane> n,
   int y,
@@ -942,8 +991,15 @@ external int ncplane_gradient2x1(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.UnsignedInt,
-        ffi.UnsignedInt, ffi.Uint16)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Uint16,
+  )
+>()
 external int ncplane_format(
   ffi.Pointer<ncplane> n,
   int y,
@@ -954,8 +1010,18 @@ external int ncplane_format(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.UnsignedInt,
-        ffi.UnsignedInt, ffi.Uint64, ffi.Uint64, ffi.Uint64, ffi.Uint64)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
 external int ncplane_stain(
   ffi.Pointer<ncplane> n,
   int y,
@@ -975,8 +1041,17 @@ external int ncplane_mergedown_simple(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ncplane>, ffi.Int,
-        ffi.Int, ffi.UnsignedInt, ffi.UnsignedInt, ffi.Int, ffi.Int)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncplane>,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Int,
+    ffi.Int,
+  )
+>()
 external int ncplane_mergedown(
   ffi.Pointer<ncplane> src,
   ffi.Pointer<ncplane> dst,
@@ -989,13 +1064,11 @@ external int ncplane_mergedown(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>)>()
-external void ncplane_erase(
-  ffi.Pointer<ncplane> n,
-);
+external void ncplane_erase(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Int, ffi.Int)>()
+  ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Int, ffi.Int)
+>()
 external int ncplane_erase_region(
   ffi.Pointer<ncplane> n,
   int ystart,
@@ -1005,63 +1078,46 @@ external int ncplane_erase_region(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>, ffi.Uint64)>()
-external void ncplane_set_channels(
-  ffi.Pointer<ncplane> n,
-  int channels,
-);
+external void ncplane_set_channels(ffi.Pointer<ncplane> n, int channels);
 
 @ffi.Native<ffi.Uint64 Function(ffi.Pointer<ncplane>, ffi.Uint32)>()
-external int ncplane_set_bchannel(
-  ffi.Pointer<ncplane> n,
-  int channel,
-);
+external int ncplane_set_bchannel(ffi.Pointer<ncplane> n, int channel);
 
 @ffi.Native<ffi.Uint64 Function(ffi.Pointer<ncplane>, ffi.Uint32)>()
-external int ncplane_set_fchannel(
-  ffi.Pointer<ncplane> n,
-  int channel,
-);
+external int ncplane_set_fchannel(ffi.Pointer<ncplane> n, int channel);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>, ffi.UnsignedInt)>()
-external void ncplane_set_styles(
-  ffi.Pointer<ncplane> n,
-  int stylebits,
-);
+external void ncplane_set_styles(ffi.Pointer<ncplane> n, int stylebits);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>, ffi.UnsignedInt)>()
-external void ncplane_on_styles(
-  ffi.Pointer<ncplane> n,
-  int stylebits,
-);
+external void ncplane_on_styles(ffi.Pointer<ncplane> n, int stylebits);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>, ffi.UnsignedInt)>()
-external void ncplane_off_styles(
-  ffi.Pointer<ncplane> n,
-  int stylebits,
-);
+external void ncplane_off_styles(ffi.Pointer<ncplane> n, int stylebits);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.UnsignedInt, ffi.UnsignedInt,
-        ffi.UnsignedInt)>()
-external int ncplane_set_fg_rgb8(
-  ffi.Pointer<ncplane> n,
-  int r,
-  int g,
-  int b,
-);
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
+external int ncplane_set_fg_rgb8(ffi.Pointer<ncplane> n, int r, int g, int b);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.UnsignedInt, ffi.UnsignedInt,
-        ffi.UnsignedInt)>()
-external int ncplane_set_bg_rgb8(
-  ffi.Pointer<ncplane> n,
-  int r,
-  int g,
-  int b,
-);
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
+external int ncplane_set_bg_rgb8(ffi.Pointer<ncplane> n, int r, int g, int b);
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Int)>()
+  ffi.Void Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Int)
+>()
 external void ncplane_set_bg_rgb8_clipped(
   ffi.Pointer<ncplane> n,
   int r,
@@ -1070,7 +1126,8 @@ external void ncplane_set_bg_rgb8_clipped(
 );
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Int)>()
+  ffi.Void Function(ffi.Pointer<ncplane>, ffi.Int, ffi.Int, ffi.Int)
+>()
 external void ncplane_set_fg_rgb8_clipped(
   ffi.Pointer<ncplane> n,
   int r,
@@ -1079,54 +1136,37 @@ external void ncplane_set_fg_rgb8_clipped(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Uint32)>()
-external int ncplane_set_fg_rgb(
-  ffi.Pointer<ncplane> n,
-  int channel,
-);
+external int ncplane_set_fg_rgb(ffi.Pointer<ncplane> n, int channel);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Uint32)>()
-external int ncplane_set_bg_rgb(
-  ffi.Pointer<ncplane> n,
-  int channel,
-);
+external int ncplane_set_bg_rgb(ffi.Pointer<ncplane> n, int channel);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>)>()
-external void ncplane_set_fg_default(
-  ffi.Pointer<ncplane> n,
-);
+external void ncplane_set_fg_default(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>)>()
-external void ncplane_set_bg_default(
-  ffi.Pointer<ncplane> n,
-);
+external void ncplane_set_bg_default(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.UnsignedInt)>()
-external int ncplane_set_fg_palindex(
-  ffi.Pointer<ncplane> n,
-  int idx,
-);
+external int ncplane_set_fg_palindex(ffi.Pointer<ncplane> n, int idx);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.UnsignedInt)>()
-external int ncplane_set_bg_palindex(
-  ffi.Pointer<ncplane> n,
-  int idx,
-);
+external int ncplane_set_bg_palindex(ffi.Pointer<ncplane> n, int idx);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int)>()
-external int ncplane_set_fg_alpha(
-  ffi.Pointer<ncplane> n,
-  int alpha,
-);
+external int ncplane_set_fg_alpha(ffi.Pointer<ncplane> n, int alpha);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncplane>, ffi.Int)>()
-external int ncplane_set_bg_alpha(
-  ffi.Pointer<ncplane> n,
-  int alpha,
-);
+external int ncplane_set_bg_alpha(ffi.Pointer<ncplane> n, int alpha);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<timespec>, fadecb,
-        ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<timespec>,
+    fadecb,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncplane_fadeout(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<timespec> ts,
@@ -1135,8 +1175,13 @@ external int ncplane_fadeout(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<timespec>, fadecb,
-        ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<timespec>,
+    fadecb,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncplane_fadein(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<timespec> ts,
@@ -1145,18 +1190,20 @@ external int ncplane_fadein(
 );
 
 @ffi.Native<ffi.Pointer<ncfadectx> Function(ffi.Pointer<ncplane>)>()
-external ffi.Pointer<ncfadectx> ncfadectx_setup(
-  ffi.Pointer<ncplane> n,
-);
+external ffi.Pointer<ncfadectx> ncfadectx_setup(ffi.Pointer<ncplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncfadectx>)>()
-external int ncfadectx_iterations(
-  ffi.Pointer<ncfadectx> nctx,
-);
+external int ncfadectx_iterations(ffi.Pointer<ncfadectx> nctx);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ncfadectx>, ffi.Int,
-        fadecb, ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncfadectx>,
+    ffi.Int,
+    fadecb,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncplane_fadeout_iteration(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncfadectx> nctx,
@@ -1166,8 +1213,14 @@ external int ncplane_fadeout_iteration(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ncfadectx>, ffi.Int,
-        fadecb, ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncfadectx>,
+    ffi.Int,
+    fadecb,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncplane_fadein_iteration(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncfadectx> nctx,
@@ -1177,8 +1230,13 @@ external int ncplane_fadein_iteration(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<timespec>, fadecb,
-        ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<timespec>,
+    fadecb,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncplane_pulse(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<timespec> ts,
@@ -1187,18 +1245,19 @@ external int ncplane_pulse(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncfadectx>)>()
-external void ncfadectx_free(
-  ffi.Pointer<ncfadectx> nctx,
-);
+external void ncfadectx_free(ffi.Pointer<ncfadectx> nctx);
 
 @ffi.Native<ffi.Pointer<ncvisual> Function(ffi.Pointer<ffi.Char>)>()
-external ffi.Pointer<ncvisual> ncvisual_from_file(
-  ffi.Pointer<ffi.Char> file,
-);
+external ffi.Pointer<ncvisual> ncvisual_from_file(ffi.Pointer<ffi.Char> file);
 
 @ffi.Native<
-    ffi.Pointer<ncvisual> Function(
-        ffi.Pointer<ffi.Void>, ffi.Int, ffi.Int, ffi.Int)>()
+  ffi.Pointer<ncvisual> Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+  )
+>()
 external ffi.Pointer<ncvisual> ncvisual_from_rgba(
   ffi.Pointer<ffi.Void> rgba,
   int rows,
@@ -1207,8 +1266,14 @@ external ffi.Pointer<ncvisual> ncvisual_from_rgba(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncvisual> Function(
-        ffi.Pointer<ffi.Void>, ffi.Int, ffi.Int, ffi.Int, ffi.Int)>()
+  ffi.Pointer<ncvisual> Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+  )
+>()
 external ffi.Pointer<ncvisual> ncvisual_from_rgb_packed(
   ffi.Pointer<ffi.Void> rgba,
   int rows,
@@ -1218,8 +1283,14 @@ external ffi.Pointer<ncvisual> ncvisual_from_rgb_packed(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncvisual> Function(
-        ffi.Pointer<ffi.Void>, ffi.Int, ffi.Int, ffi.Int, ffi.Int)>()
+  ffi.Pointer<ncvisual> Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+  )
+>()
 external ffi.Pointer<ncvisual> ncvisual_from_rgb_loose(
   ffi.Pointer<ffi.Void> rgba,
   int rows,
@@ -1229,8 +1300,13 @@ external ffi.Pointer<ncvisual> ncvisual_from_rgb_loose(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncvisual> Function(
-        ffi.Pointer<ffi.Void>, ffi.Int, ffi.Int, ffi.Int)>()
+  ffi.Pointer<ncvisual> Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+  )
+>()
 external ffi.Pointer<ncvisual> ncvisual_from_bgra(
   ffi.Pointer<ffi.Void> bgra,
   int rows,
@@ -1239,8 +1315,16 @@ external ffi.Pointer<ncvisual> ncvisual_from_bgra(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncvisual> Function(ffi.Pointer<ffi.Void>, ffi.Int, ffi.Int,
-        ffi.Int, ffi.Int, ffi.Int, ffi.Pointer<ffi.Uint32>)>()
+  ffi.Pointer<ncvisual> Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+    ffi.Int,
+    ffi.Pointer<ffi.Uint32>,
+  )
+>()
 external ffi.Pointer<ncvisual> ncvisual_from_palidx(
   ffi.Pointer<ffi.Void> data,
   int rows,
@@ -1252,8 +1336,15 @@ external ffi.Pointer<ncvisual> ncvisual_from_palidx(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncvisual> Function(ffi.Pointer<ncplane>, ffi.UnsignedInt,
-        ffi.Int, ffi.Int, ffi.UnsignedInt, ffi.UnsignedInt)>()
+  ffi.Pointer<ncvisual> Function(
+    ffi.Pointer<ncplane>,
+    ffi.UnsignedInt,
+    ffi.Int,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external ffi.Pointer<ncvisual> ncvisual_from_plane(
   ffi.Pointer<ncplane> n,
   int blit,
@@ -1264,8 +1355,12 @@ external ffi.Pointer<ncvisual> ncvisual_from_plane(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncvisual> Function(
-        ffi.Pointer<ffi.Char>, ffi.UnsignedInt, ffi.UnsignedInt)>()
+  ffi.Pointer<ncvisual> Function(
+    ffi.Pointer<ffi.Char>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external ffi.Pointer<ncvisual> ncvisual_from_sixel(
   ffi.Pointer<ffi.Char> s,
   int leny,
@@ -1273,8 +1368,13 @@ external ffi.Pointer<ncvisual> ncvisual_from_sixel(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<notcurses>, ffi.Pointer<ncvisual>,
-        ffi.Pointer<ncvisual_options>, ffi.Pointer<ncvgeom>)>()
+  ffi.Int Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<ncvisual>,
+    ffi.Pointer<ncvisual_options>,
+    ffi.Pointer<ncvgeom>,
+  )
+>()
 external int ncvisual_geom(
   ffi.Pointer<notcurses> nc,
   ffi.Pointer<ncvisual> n,
@@ -1283,32 +1383,19 @@ external int ncvisual_geom(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncvisual>)>()
-external void ncvisual_destroy(
-  ffi.Pointer<ncvisual> ncv,
-);
+external void ncvisual_destroy(ffi.Pointer<ncvisual> ncv);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncvisual>)>()
-external int ncvisual_decode(
-  ffi.Pointer<ncvisual> nc,
-);
+external int ncvisual_decode(ffi.Pointer<ncvisual> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncvisual>)>()
-external int ncvisual_decode_loop(
-  ffi.Pointer<ncvisual> nc,
-);
+external int ncvisual_decode_loop(ffi.Pointer<ncvisual> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncvisual>, ffi.Double)>()
-external int ncvisual_rotate(
-  ffi.Pointer<ncvisual> n,
-  double rads,
-);
+external int ncvisual_rotate(ffi.Pointer<ncvisual> n, double rads);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncvisual>, ffi.Int, ffi.Int)>()
-external int ncvisual_resize(
-  ffi.Pointer<ncvisual> n,
-  int rows,
-  int cols,
-);
+external int ncvisual_resize(ffi.Pointer<ncvisual> n, int rows, int cols);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncvisual>, ffi.Int, ffi.Int)>()
 external int ncvisual_resize_noninterpolative(
@@ -1318,8 +1405,13 @@ external int ncvisual_resize_noninterpolative(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncvisual>, ffi.UnsignedInt, ffi.UnsignedInt, ffi.Uint32)>()
+  ffi.Int Function(
+    ffi.Pointer<ncvisual>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Uint32,
+  )
+>()
 external int ncvisual_polyfill_yx(
   ffi.Pointer<ncvisual> n,
   int y,
@@ -1328,8 +1420,13 @@ external int ncvisual_polyfill_yx(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncvisual>, ffi.UnsignedInt, ffi.UnsignedInt,
-        ffi.Pointer<ffi.Uint32>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncvisual>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Pointer<ffi.Uint32>,
+  )
+>()
 external int ncvisual_at_yx(
   ffi.Pointer<ncvisual> n,
   int y,
@@ -1338,18 +1435,22 @@ external int ncvisual_at_yx(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncvisual>, ffi.UnsignedInt, ffi.UnsignedInt, ffi.Uint32)>()
-external int ncvisual_set_yx(
-  ffi.Pointer<ncvisual> n,
-  int y,
-  int x,
-  int pixel,
-);
+  ffi.Int Function(
+    ffi.Pointer<ncvisual>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Uint32,
+  )
+>()
+external int ncvisual_set_yx(ffi.Pointer<ncvisual> n, int y, int x, int pixel);
 
 @ffi.Native<
-    ffi.Pointer<ncplane> Function(ffi.Pointer<notcurses>, ffi.Pointer<ncvisual>,
-        ffi.Pointer<ncvisual_options>)>()
+  ffi.Pointer<ncplane> Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<ncvisual>,
+    ffi.Pointer<ncvisual_options>,
+  )
+>()
 external ffi.Pointer<ncplane> ncvisual_blit(
   ffi.Pointer<notcurses> nc,
   ffi.Pointer<ncvisual> ncv,
@@ -1357,22 +1458,24 @@ external ffi.Pointer<ncplane> ncvisual_blit(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncplane> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncvisual>)>()
+  ffi.Pointer<ncplane> Function(ffi.Pointer<ncplane>, ffi.Pointer<ncvisual>)
+>()
 external ffi.Pointer<ncplane> ncvisual_subtitle_plane(
   ffi.Pointer<ncplane> parent,
   ffi.Pointer<ncvisual> ncv,
 );
 
 @ffi.Native<ffi.UnsignedInt Function(ffi.Pointer<notcurses>, ffi.UnsignedInt)>()
-external int ncvisual_media_defblitter(
-  ffi.Pointer<notcurses> nc,
-  int scale,
-);
+external int ncvisual_media_defblitter(ffi.Pointer<notcurses> nc, int scale);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncvisual>, ffi.Pointer<ncvisual_options>,
-        ffi.Pointer<timespec>, ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncvisual>,
+    ffi.Pointer<ncvisual_options>,
+    ffi.Pointer<timespec>,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncvisual_simple_streamer(
   ffi.Pointer<ncvisual> ncv,
   ffi.Pointer<ncvisual_options> vopts,
@@ -1381,8 +1484,15 @@ external int ncvisual_simple_streamer(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<notcurses>, ffi.Pointer<ncvisual>, ffi.Float,
-        ncstreamcb, ffi.Pointer<ncvisual_options>, ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<ncvisual>,
+    ffi.Float,
+    ncstreamcb,
+    ffi.Pointer<ncvisual_options>,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncvisual_stream(
   ffi.Pointer<notcurses> nc,
   ffi.Pointer<ncvisual> ncv,
@@ -1393,21 +1503,28 @@ external int ncvisual_stream(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncreel> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncreel_options>)>()
+  ffi.Pointer<ncreel> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncreel_options>,
+  )
+>()
 external ffi.Pointer<ncreel> ncreel_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncreel_options> popts,
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncreel>)>()
-external ffi.Pointer<ncplane> ncreel_plane(
-  ffi.Pointer<ncreel> nr,
-);
+external ffi.Pointer<ncplane> ncreel_plane(ffi.Pointer<ncreel> nr);
 
 @ffi.Native<
-    ffi.Pointer<nctablet> Function(ffi.Pointer<ncreel>, ffi.Pointer<nctablet>,
-        ffi.Pointer<nctablet>, tabletcb, ffi.Pointer<ffi.Void>)>()
+  ffi.Pointer<nctablet> Function(
+    ffi.Pointer<ncreel>,
+    ffi.Pointer<nctablet>,
+    ffi.Pointer<nctablet>,
+    tabletcb,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external ffi.Pointer<nctablet> ncreel_add(
   ffi.Pointer<ncreel> nr,
   ffi.Pointer<nctablet> after,
@@ -1417,20 +1534,13 @@ external ffi.Pointer<nctablet> ncreel_add(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreel>)>()
-external int ncreel_tabletcount(
-  ffi.Pointer<ncreel> nr,
-);
+external int ncreel_tabletcount(ffi.Pointer<ncreel> nr);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreel>, ffi.Pointer<nctablet>)>()
-external int ncreel_del(
-  ffi.Pointer<ncreel> nr,
-  ffi.Pointer<nctablet> t,
-);
+external int ncreel_del(ffi.Pointer<ncreel> nr, ffi.Pointer<nctablet> t);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreel>)>()
-external int ncreel_redraw(
-  ffi.Pointer<ncreel> nr,
-);
+external int ncreel_redraw(ffi.Pointer<ncreel> nr);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncreel>, ffi.Pointer<ncinput>)>()
 external bool ncreel_offer_input(
@@ -1439,34 +1549,22 @@ external bool ncreel_offer_input(
 );
 
 @ffi.Native<ffi.Pointer<nctablet> Function(ffi.Pointer<ncreel>)>()
-external ffi.Pointer<nctablet> ncreel_focused(
-  ffi.Pointer<ncreel> nr,
-);
+external ffi.Pointer<nctablet> ncreel_focused(ffi.Pointer<ncreel> nr);
 
 @ffi.Native<ffi.Pointer<nctablet> Function(ffi.Pointer<ncreel>)>()
-external ffi.Pointer<nctablet> ncreel_next(
-  ffi.Pointer<ncreel> nr,
-);
+external ffi.Pointer<nctablet> ncreel_next(ffi.Pointer<ncreel> nr);
 
 @ffi.Native<ffi.Pointer<nctablet> Function(ffi.Pointer<ncreel>)>()
-external ffi.Pointer<nctablet> ncreel_prev(
-  ffi.Pointer<ncreel> nr,
-);
+external ffi.Pointer<nctablet> ncreel_prev(ffi.Pointer<ncreel> nr);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncreel>)>()
-external void ncreel_destroy(
-  ffi.Pointer<ncreel> nr,
-);
+external void ncreel_destroy(ffi.Pointer<ncreel> nr);
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctablet>)>()
-external ffi.Pointer<ffi.Void> nctablet_userptr(
-  ffi.Pointer<nctablet> t,
-);
+external ffi.Pointer<ffi.Void> nctablet_userptr(ffi.Pointer<nctablet> t);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<nctablet>)>()
-external ffi.Pointer<ncplane> nctablet_plane(
-  ffi.Pointer<nctablet> t,
-);
+external ffi.Pointer<ncplane> nctablet_plane(ffi.Pointer<nctablet> t);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>, ffi.Pointer<ffi.Uint32>)>()
 external int notcurses_default_foreground(
@@ -1481,20 +1579,18 @@ external int notcurses_default_background(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>, ffi.Int, ffi.Int)>()
-external int notcurses_cursor_enable(
-  ffi.Pointer<notcurses> nc,
-  int y,
-  int x,
-);
+external int notcurses_cursor_enable(ffi.Pointer<notcurses> nc, int y, int x);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<notcurses>)>()
-external int notcurses_cursor_disable(
-  ffi.Pointer<notcurses> nc,
-);
+external int notcurses_cursor_disable(ffi.Pointer<notcurses> nc);
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<notcurses>, ffi.Pointer<ffi.Int>, ffi.Pointer<ffi.Int>)>()
+  ffi.Int Function(
+    ffi.Pointer<notcurses>,
+    ffi.Pointer<ffi.Int>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external int notcurses_cursor_yx(
   ffi.Pointer<notcurses> nc,
   ffi.Pointer<ffi.Int> y,
@@ -1502,20 +1598,22 @@ external int notcurses_cursor_yx(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncplane>)>()
-external void ncplane_greyscale(
-  ffi.Pointer<ncplane> n,
-);
+external void ncplane_greyscale(ffi.Pointer<ncplane> n);
 
 @ffi.Native<
-    ffi.Pointer<ncselector> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncselector_options>)>()
+  ffi.Pointer<ncselector> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncselector_options>,
+  )
+>()
 external ffi.Pointer<ncselector> ncselector_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncselector_options> opts,
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncselector>, ffi.Pointer<ncselector_item>)>()
+  ffi.Int Function(ffi.Pointer<ncselector>, ffi.Pointer<ncselector_item>)
+>()
 external int ncselector_additem(
   ffi.Pointer<ncselector> n,
   ffi.Pointer<ncselector_item> item,
@@ -1528,24 +1626,16 @@ external int ncselector_delitem(
 );
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncselector>)>()
-external ffi.Pointer<ffi.Char> ncselector_selected(
-  ffi.Pointer<ncselector> n,
-);
+external ffi.Pointer<ffi.Char> ncselector_selected(ffi.Pointer<ncselector> n);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncselector>)>()
-external ffi.Pointer<ncplane> ncselector_plane(
-  ffi.Pointer<ncselector> n,
-);
+external ffi.Pointer<ncplane> ncselector_plane(ffi.Pointer<ncselector> n);
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncselector>)>()
-external ffi.Pointer<ffi.Char> ncselector_previtem(
-  ffi.Pointer<ncselector> n,
-);
+external ffi.Pointer<ffi.Char> ncselector_previtem(ffi.Pointer<ncselector> n);
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncselector>)>()
-external ffi.Pointer<ffi.Char> ncselector_nextitem(
-  ffi.Pointer<ncselector> n,
-);
+external ffi.Pointer<ffi.Char> ncselector_nextitem(ffi.Pointer<ncselector> n);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncselector>, ffi.Pointer<ncinput>)>()
 external bool ncselector_offer_input(
@@ -1554,24 +1644,31 @@ external bool ncselector_offer_input(
 );
 
 @ffi.Native<
-    ffi.Void Function(
-        ffi.Pointer<ncselector>, ffi.Pointer<ffi.Pointer<ffi.Char>>)>()
+  ffi.Void Function(ffi.Pointer<ncselector>, ffi.Pointer<ffi.Pointer<ffi.Char>>)
+>()
 external void ncselector_destroy(
   ffi.Pointer<ncselector> n,
   ffi.Pointer<ffi.Pointer<ffi.Char>> item,
 );
 
 @ffi.Native<
-    ffi.Pointer<ncmultiselector> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncmultiselector_options>)>()
+  ffi.Pointer<ncmultiselector> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncmultiselector_options>,
+  )
+>()
 external ffi.Pointer<ncmultiselector> ncmultiselector_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncmultiselector_options> opts,
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncmultiselector>, ffi.Pointer<ffi.Bool>, ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncmultiselector>,
+    ffi.Pointer<ffi.Bool>,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncmultiselector_selected(
   ffi.Pointer<ncmultiselector> n,
   ffi.Pointer<ffi.Bool> selected,
@@ -1584,34 +1681,32 @@ external ffi.Pointer<ncplane> ncmultiselector_plane(
 );
 
 @ffi.Native<
-    ffi.Bool Function(ffi.Pointer<ncmultiselector>, ffi.Pointer<ncinput>)>()
+  ffi.Bool Function(ffi.Pointer<ncmultiselector>, ffi.Pointer<ncinput>)
+>()
 external bool ncmultiselector_offer_input(
   ffi.Pointer<ncmultiselector> n,
   ffi.Pointer<ncinput> nc,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncmultiselector>)>()
-external void ncmultiselector_destroy(
-  ffi.Pointer<ncmultiselector> n,
-);
+external void ncmultiselector_destroy(ffi.Pointer<ncmultiselector> n);
 
 @ffi.Native<
-    ffi.Pointer<nctree> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<nctree_options>)>()
+  ffi.Pointer<nctree> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<nctree_options>,
+  )
+>()
 external ffi.Pointer<nctree> nctree_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nctree_options> opts,
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<nctree>)>()
-external ffi.Pointer<ncplane> nctree_plane(
-  ffi.Pointer<nctree> n,
-);
+external ffi.Pointer<ncplane> nctree_plane(ffi.Pointer<nctree> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<nctree>)>()
-external int nctree_redraw(
-  ffi.Pointer<nctree> n,
-);
+external int nctree_redraw(ffi.Pointer<nctree> n);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<nctree>, ffi.Pointer<ncinput>)>()
 external bool nctree_offer_input(
@@ -1620,23 +1715,21 @@ external bool nctree_offer_input(
 );
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctree>)>()
-external ffi.Pointer<ffi.Void> nctree_focused(
-  ffi.Pointer<nctree> n,
-);
+external ffi.Pointer<ffi.Void> nctree_focused(ffi.Pointer<nctree> n);
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctree>)>()
-external ffi.Pointer<ffi.Void> nctree_next(
-  ffi.Pointer<nctree> n,
-);
+external ffi.Pointer<ffi.Void> nctree_next(ffi.Pointer<nctree> n);
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctree>)>()
-external ffi.Pointer<ffi.Void> nctree_prev(
-  ffi.Pointer<nctree> n,
-);
+external ffi.Pointer<ffi.Void> nctree_prev(ffi.Pointer<nctree> n);
 
 @ffi.Native<
-    ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctree>,
-        ffi.Pointer<ffi.UnsignedInt>, ffi.Pointer<ffi.Int>)>()
+  ffi.Pointer<ffi.Void> Function(
+    ffi.Pointer<nctree>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external ffi.Pointer<ffi.Void> nctree_goto(
   ffi.Pointer<nctree> n,
   ffi.Pointer<ffi.UnsignedInt> spec,
@@ -1644,8 +1737,12 @@ external ffi.Pointer<ffi.Void> nctree_goto(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<nctree>, ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<nctree_item>)>()
+  ffi.Int Function(
+    ffi.Pointer<nctree>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<nctree_item>,
+  )
+>()
 external int nctree_add(
   ffi.Pointer<nctree> n,
   ffi.Pointer<ffi.UnsignedInt> spec,
@@ -1653,59 +1750,53 @@ external int nctree_add(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<nctree>, ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Int Function(ffi.Pointer<nctree>, ffi.Pointer<ffi.UnsignedInt>)
+>()
 external int nctree_del(
   ffi.Pointer<nctree> n,
   ffi.Pointer<ffi.UnsignedInt> spec,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctree>)>()
-external void nctree_destroy(
-  ffi.Pointer<nctree> n,
-);
+external void nctree_destroy(ffi.Pointer<nctree> n);
 
 @ffi.Native<
-    ffi.Pointer<ncmenu> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncmenu_options>)>()
+  ffi.Pointer<ncmenu> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncmenu_options>,
+  )
+>()
 external ffi.Pointer<ncmenu> ncmenu_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncmenu_options> opts,
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncmenu>, ffi.Int)>()
-external int ncmenu_unroll(
-  ffi.Pointer<ncmenu> n,
-  int sectionidx,
-);
+external int ncmenu_unroll(ffi.Pointer<ncmenu> n, int sectionidx);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncmenu>)>()
-external int ncmenu_rollup(
-  ffi.Pointer<ncmenu> n,
-);
+external int ncmenu_rollup(ffi.Pointer<ncmenu> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncmenu>)>()
-external int ncmenu_nextsection(
-  ffi.Pointer<ncmenu> n,
-);
+external int ncmenu_nextsection(ffi.Pointer<ncmenu> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncmenu>)>()
-external int ncmenu_prevsection(
-  ffi.Pointer<ncmenu> n,
-);
+external int ncmenu_prevsection(ffi.Pointer<ncmenu> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncmenu>)>()
-external int ncmenu_nextitem(
-  ffi.Pointer<ncmenu> n,
-);
+external int ncmenu_nextitem(ffi.Pointer<ncmenu> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncmenu>)>()
-external int ncmenu_previtem(
-  ffi.Pointer<ncmenu> n,
-);
+external int ncmenu_previtem(ffi.Pointer<ncmenu> n);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncmenu>, ffi.Pointer<ffi.Char>,
-        ffi.Pointer<ffi.Char>, ffi.Bool)>()
+  ffi.Int Function(
+    ffi.Pointer<ncmenu>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Bool,
+  )
+>()
 external int ncmenu_item_set_status(
   ffi.Pointer<ncmenu> n,
   ffi.Pointer<ffi.Char> section,
@@ -1714,15 +1805,20 @@ external int ncmenu_item_set_status(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncmenu>, ffi.Pointer<ncinput>)>()
+  ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncmenu>, ffi.Pointer<ncinput>)
+>()
 external ffi.Pointer<ffi.Char> ncmenu_selected(
   ffi.Pointer<ncmenu> n,
   ffi.Pointer<ncinput> ni,
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(
-        ffi.Pointer<ncmenu>, ffi.Pointer<ncinput>, ffi.Pointer<ncinput>)>()
+  ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ncmenu>,
+    ffi.Pointer<ncinput>,
+    ffi.Pointer<ncinput>,
+  )
+>()
 external ffi.Pointer<ffi.Char> ncmenu_mouse_selected(
   ffi.Pointer<ncmenu> n,
   ffi.Pointer<ncinput> click,
@@ -1730,9 +1826,7 @@ external ffi.Pointer<ffi.Char> ncmenu_mouse_selected(
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncmenu>)>()
-external ffi.Pointer<ncplane> ncmenu_plane(
-  ffi.Pointer<ncmenu> n,
-);
+external ffi.Pointer<ncplane> ncmenu_plane(ffi.Pointer<ncmenu> n);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncmenu>, ffi.Pointer<ncinput>)>()
 external bool ncmenu_offer_input(
@@ -1741,125 +1835,94 @@ external bool ncmenu_offer_input(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncmenu>)>()
-external void ncmenu_destroy(
-  ffi.Pointer<ncmenu> n,
-);
+external void ncmenu_destroy(ffi.Pointer<ncmenu> n);
 
 @ffi.Native<
-    ffi.Pointer<ncprogbar> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncprogbar_options>)>()
+  ffi.Pointer<ncprogbar> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncprogbar_options>,
+  )
+>()
 external ffi.Pointer<ncprogbar> ncprogbar_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncprogbar_options> opts,
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncprogbar>)>()
-external ffi.Pointer<ncplane> ncprogbar_plane(
-  ffi.Pointer<ncprogbar> n,
-);
+external ffi.Pointer<ncplane> ncprogbar_plane(ffi.Pointer<ncprogbar> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncprogbar>, ffi.Double)>()
-external int ncprogbar_set_progress(
-  ffi.Pointer<ncprogbar> n,
-  double p,
-);
+external int ncprogbar_set_progress(ffi.Pointer<ncprogbar> n, double p);
 
 @ffi.Native<ffi.Double Function(ffi.Pointer<ncprogbar>)>()
-external double ncprogbar_progress(
-  ffi.Pointer<ncprogbar> n,
-);
+external double ncprogbar_progress(ffi.Pointer<ncprogbar> n);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncprogbar>)>()
-external void ncprogbar_destroy(
-  ffi.Pointer<ncprogbar> n,
-);
+external void ncprogbar_destroy(ffi.Pointer<ncprogbar> n);
 
 @ffi.Native<
-    ffi.Pointer<nctabbed> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<nctabbed_options>)>()
+  ffi.Pointer<nctabbed> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<nctabbed_options>,
+  )
+>()
 external ffi.Pointer<nctabbed> nctabbed_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<nctabbed_options> opts,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>)>()
-external void nctabbed_destroy(
-  ffi.Pointer<nctabbed> nt,
-);
+external void nctabbed_destroy(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>)>()
-external void nctabbed_redraw(
-  ffi.Pointer<nctabbed> nt,
-);
+external void nctabbed_redraw(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>)>()
-external void nctabbed_ensure_selected_header_visible(
-  ffi.Pointer<nctabbed> nt,
-);
+external void nctabbed_ensure_selected_header_visible(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Pointer<nctab> Function(ffi.Pointer<nctabbed>)>()
-external ffi.Pointer<nctab> nctabbed_selected(
-  ffi.Pointer<nctabbed> nt,
-);
+external ffi.Pointer<nctab> nctabbed_selected(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Pointer<nctab> Function(ffi.Pointer<nctabbed>)>()
-external ffi.Pointer<nctab> nctabbed_leftmost(
-  ffi.Pointer<nctabbed> nt,
-);
+external ffi.Pointer<nctab> nctabbed_leftmost(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<nctabbed>)>()
-external int nctabbed_tabcount(
-  ffi.Pointer<nctabbed> nt,
-);
+external int nctabbed_tabcount(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<nctabbed>)>()
-external ffi.Pointer<ncplane> nctabbed_plane(
-  ffi.Pointer<nctabbed> nt,
-);
+external ffi.Pointer<ncplane> nctabbed_plane(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<nctabbed>)>()
-external ffi.Pointer<ncplane> nctabbed_content_plane(
-  ffi.Pointer<nctabbed> nt,
-);
+external ffi.Pointer<ncplane> nctabbed_content_plane(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<tabcb Function(ffi.Pointer<nctab>)>()
-external tabcb nctab_cb(
-  ffi.Pointer<nctab> t,
-);
+external tabcb nctab_cb(ffi.Pointer<nctab> t);
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<nctab>)>()
-external ffi.Pointer<ffi.Char> nctab_name(
-  ffi.Pointer<nctab> t,
-);
+external ffi.Pointer<ffi.Char> nctab_name(ffi.Pointer<nctab> t);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<nctab>)>()
-external int nctab_name_width(
-  ffi.Pointer<nctab> t,
-);
+external int nctab_name_width(ffi.Pointer<nctab> t);
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctab>)>()
-external ffi.Pointer<ffi.Void> nctab_userptr(
-  ffi.Pointer<nctab> t,
-);
+external ffi.Pointer<ffi.Void> nctab_userptr(ffi.Pointer<nctab> t);
 
 @ffi.Native<ffi.Pointer<nctab> Function(ffi.Pointer<nctab>)>()
-external ffi.Pointer<nctab> nctab_next(
-  ffi.Pointer<nctab> t,
-);
+external ffi.Pointer<nctab> nctab_next(ffi.Pointer<nctab> t);
 
 @ffi.Native<ffi.Pointer<nctab> Function(ffi.Pointer<nctab>)>()
-external ffi.Pointer<nctab> nctab_prev(
-  ffi.Pointer<nctab> t,
-);
+external ffi.Pointer<nctab> nctab_prev(ffi.Pointer<nctab> t);
 
 @ffi.Native<
-    ffi.Pointer<nctab> Function(
-        ffi.Pointer<nctabbed>,
-        ffi.Pointer<nctab>,
-        ffi.Pointer<nctab>,
-        tabcb,
-        ffi.Pointer<ffi.Char>,
-        ffi.Pointer<ffi.Void>)>()
+  ffi.Pointer<nctab> Function(
+    ffi.Pointer<nctabbed>,
+    ffi.Pointer<nctab>,
+    ffi.Pointer<nctab>,
+    tabcb,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external ffi.Pointer<nctab> nctabbed_add(
   ffi.Pointer<nctabbed> nt,
   ffi.Pointer<nctab> after,
@@ -1870,14 +1933,16 @@ external ffi.Pointer<nctab> nctabbed_add(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<nctabbed>, ffi.Pointer<nctab>)>()
-external int nctabbed_del(
-  ffi.Pointer<nctabbed> nt,
-  ffi.Pointer<nctab> t,
-);
+external int nctabbed_del(ffi.Pointer<nctabbed> nt, ffi.Pointer<nctab> t);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<nctabbed>, ffi.Pointer<nctab>,
-        ffi.Pointer<nctab>, ffi.Pointer<nctab>)>()
+  ffi.Int Function(
+    ffi.Pointer<nctabbed>,
+    ffi.Pointer<nctab>,
+    ffi.Pointer<nctab>,
+    ffi.Pointer<nctab>,
+  )
+>()
 external int nctab_move(
   ffi.Pointer<nctabbed> nt,
   ffi.Pointer<nctab> t,
@@ -1886,43 +1951,36 @@ external int nctab_move(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>, ffi.Pointer<nctab>)>()
-external void nctab_move_right(
-  ffi.Pointer<nctabbed> nt,
-  ffi.Pointer<nctab> t,
-);
+external void nctab_move_right(ffi.Pointer<nctabbed> nt, ffi.Pointer<nctab> t);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>, ffi.Pointer<nctab>)>()
-external void nctab_move_left(
-  ffi.Pointer<nctabbed> nt,
-  ffi.Pointer<nctab> t,
-);
+external void nctab_move_left(ffi.Pointer<nctabbed> nt, ffi.Pointer<nctab> t);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>, ffi.Int)>()
-external void nctabbed_rotate(
-  ffi.Pointer<nctabbed> nt,
-  int amt,
-);
+external void nctabbed_rotate(ffi.Pointer<nctabbed> nt, int amt);
 
 @ffi.Native<ffi.Pointer<nctab> Function(ffi.Pointer<nctabbed>)>()
-external ffi.Pointer<nctab> nctabbed_next(
-  ffi.Pointer<nctabbed> nt,
-);
+external ffi.Pointer<nctab> nctabbed_next(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Pointer<nctab> Function(ffi.Pointer<nctabbed>)>()
-external ffi.Pointer<nctab> nctabbed_prev(
-  ffi.Pointer<nctabbed> nt,
-);
+external ffi.Pointer<nctab> nctabbed_prev(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<
-    ffi.Pointer<nctab> Function(ffi.Pointer<nctabbed>, ffi.Pointer<nctab>)>()
+  ffi.Pointer<nctab> Function(ffi.Pointer<nctabbed>, ffi.Pointer<nctab>)
+>()
 external ffi.Pointer<nctab> nctabbed_select(
   ffi.Pointer<nctabbed> nt,
   ffi.Pointer<nctab> t,
 );
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<nctabbed>, ffi.Pointer<ffi.Uint64>,
-        ffi.Pointer<ffi.Uint64>, ffi.Pointer<ffi.Uint64>)>()
+  ffi.Void Function(
+    ffi.Pointer<nctabbed>,
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Uint64>,
+  )
+>()
 external void nctabbed_channels(
   ffi.Pointer<nctabbed> nt,
   ffi.Pointer<ffi.Uint64> hdrchan,
@@ -1931,38 +1989,22 @@ external void nctabbed_channels(
 );
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<nctabbed>)>()
-external ffi.Pointer<ffi.Char> nctabbed_separator(
-  ffi.Pointer<nctabbed> nt,
-);
+external ffi.Pointer<ffi.Char> nctabbed_separator(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<nctabbed>)>()
-external int nctabbed_separator_width(
-  ffi.Pointer<nctabbed> nt,
-);
+external int nctabbed_separator_width(ffi.Pointer<nctabbed> nt);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>, ffi.Uint64)>()
-external void nctabbed_set_hdrchan(
-  ffi.Pointer<nctabbed> nt,
-  int chan,
-);
+external void nctabbed_set_hdrchan(ffi.Pointer<nctabbed> nt, int chan);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>, ffi.Uint64)>()
-external void nctabbed_set_selchan(
-  ffi.Pointer<nctabbed> nt,
-  int chan,
-);
+external void nctabbed_set_selchan(ffi.Pointer<nctabbed> nt, int chan);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<nctabbed>, ffi.Uint64)>()
-external void nctabbed_set_sepchan(
-  ffi.Pointer<nctabbed> nt,
-  int chan,
-);
+external void nctabbed_set_sepchan(ffi.Pointer<nctabbed> nt, int chan);
 
 @ffi.Native<tabcb Function(ffi.Pointer<nctab>, tabcb)>()
-external tabcb nctab_set_cb(
-  ffi.Pointer<nctab> t,
-  tabcb newcb,
-);
+external tabcb nctab_set_cb(ffi.Pointer<nctab> t, tabcb newcb);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<nctab>, ffi.Pointer<ffi.Char>)>()
 external int nctab_set_name(
@@ -1971,7 +2013,8 @@ external int nctab_set_name(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctab>, ffi.Pointer<ffi.Void>)>()
+  ffi.Pointer<ffi.Void> Function(ffi.Pointer<nctab>, ffi.Pointer<ffi.Void>)
+>()
 external ffi.Pointer<ffi.Void> nctab_set_userptr(
   ffi.Pointer<nctab> t,
   ffi.Pointer<ffi.Void> newopaque,
@@ -1984,8 +2027,13 @@ external int nctabbed_set_separator(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncuplot> Function(ffi.Pointer<ncplane>,
-        ffi.Pointer<ncplot_options>, ffi.Uint64, ffi.Uint64)>()
+  ffi.Pointer<ncuplot> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncplot_options>,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
 external ffi.Pointer<ncuplot> ncuplot_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncplot_options> opts,
@@ -1994,27 +2042,17 @@ external ffi.Pointer<ncuplot> ncuplot_create(
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncuplot>)>()
-external ffi.Pointer<ncplane> ncuplot_plane(
-  ffi.Pointer<ncuplot> n,
-);
+external ffi.Pointer<ncplane> ncuplot_plane(ffi.Pointer<ncuplot> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncuplot>, ffi.Uint64, ffi.Uint64)>()
-external int ncuplot_add_sample(
-  ffi.Pointer<ncuplot> n,
-  int x,
-  int y,
-);
+external int ncuplot_add_sample(ffi.Pointer<ncuplot> n, int x, int y);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncuplot>, ffi.Uint64, ffi.Uint64)>()
-external int ncuplot_set_sample(
-  ffi.Pointer<ncuplot> n,
-  int x,
-  int y,
-);
+external int ncuplot_set_sample(ffi.Pointer<ncuplot> n, int x, int y);
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncuplot>, ffi.Uint64, ffi.Pointer<ffi.Uint64>)>()
+  ffi.Int Function(ffi.Pointer<ncuplot>, ffi.Uint64, ffi.Pointer<ffi.Uint64>)
+>()
 external int ncuplot_sample(
   ffi.Pointer<ncuplot> n,
   int x,
@@ -2022,17 +2060,17 @@ external int ncuplot_sample(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncuplot>)>()
-external void ncuplot_destroy(
-  ffi.Pointer<ncuplot> n,
-);
+external void ncuplot_destroy(ffi.Pointer<ncuplot> n);
 
 @ffi.Native<
-    ffi.Pointer<ncfdplane> Function(
-        ffi.Pointer<ncplane>,
-        ffi.Pointer<ncfdplane_options>,
-        ffi.Int,
-        ncfdplane_callback,
-        ncfdplane_done_cb)>()
+  ffi.Pointer<ncfdplane> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncfdplane_options>,
+    ffi.Int,
+    ncfdplane_callback,
+    ncfdplane_done_cb,
+  )
+>()
 external ffi.Pointer<ncfdplane> ncfdplane_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncfdplane_options> opts,
@@ -2042,23 +2080,21 @@ external ffi.Pointer<ncfdplane> ncfdplane_create(
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncfdplane>)>()
-external ffi.Pointer<ncplane> ncfdplane_plane(
-  ffi.Pointer<ncfdplane> n,
-);
+external ffi.Pointer<ncplane> ncfdplane_plane(ffi.Pointer<ncfdplane> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncfdplane>)>()
-external int ncfdplane_destroy(
-  ffi.Pointer<ncfdplane> n,
-);
+external int ncfdplane_destroy(ffi.Pointer<ncfdplane> n);
 
 @ffi.Native<
-    ffi.Pointer<ncsubproc> Function(
-        ffi.Pointer<ncplane>,
-        ffi.Pointer<ncsubproc_options>,
-        ffi.Pointer<ffi.Char>,
-        ffi.Pointer<ffi.Pointer<ffi.Char>>,
-        ncfdplane_callback,
-        ncfdplane_done_cb)>()
+  ffi.Pointer<ncsubproc> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncsubproc_options>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ncfdplane_callback,
+    ncfdplane_done_cb,
+  )
+>()
 external ffi.Pointer<ncsubproc> ncsubproc_createv(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncsubproc_options> opts,
@@ -2069,13 +2105,15 @@ external ffi.Pointer<ncsubproc> ncsubproc_createv(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncsubproc> Function(
-        ffi.Pointer<ncplane>,
-        ffi.Pointer<ncsubproc_options>,
-        ffi.Pointer<ffi.Char>,
-        ffi.Pointer<ffi.Pointer<ffi.Char>>,
-        ncfdplane_callback,
-        ncfdplane_done_cb)>()
+  ffi.Pointer<ncsubproc> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncsubproc_options>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ncfdplane_callback,
+    ncfdplane_done_cb,
+  )
+>()
 external ffi.Pointer<ncsubproc> ncsubproc_createvp(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncsubproc_options> opts,
@@ -2086,14 +2124,16 @@ external ffi.Pointer<ncsubproc> ncsubproc_createvp(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncsubproc> Function(
-        ffi.Pointer<ncplane>,
-        ffi.Pointer<ncsubproc_options>,
-        ffi.Pointer<ffi.Char>,
-        ffi.Pointer<ffi.Pointer<ffi.Char>>,
-        ffi.Pointer<ffi.Pointer<ffi.Char>>,
-        ncfdplane_callback,
-        ncfdplane_done_cb)>()
+  ffi.Pointer<ncsubproc> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncsubproc_options>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ncfdplane_callback,
+    ncfdplane_done_cb,
+  )
+>()
 external ffi.Pointer<ncsubproc> ncsubproc_createvpe(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncsubproc_options> opts,
@@ -2105,18 +2145,20 @@ external ffi.Pointer<ncsubproc> ncsubproc_createvpe(
 );
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncsubproc>)>()
-external ffi.Pointer<ncplane> ncsubproc_plane(
-  ffi.Pointer<ncsubproc> n,
-);
+external ffi.Pointer<ncplane> ncsubproc_plane(ffi.Pointer<ncsubproc> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncsubproc>)>()
-external int ncsubproc_destroy(
-  ffi.Pointer<ncsubproc> n,
-);
+external int ncsubproc_destroy(ffi.Pointer<ncsubproc> n);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>, ffi.Pointer<ffi.Void>, ffi.Size)>()
+  ffi.Int Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.Void>,
+    ffi.Size,
+  )
+>()
 external int ncplane_qrcode(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ffi.UnsignedInt> ymax,
@@ -2126,22 +2168,21 @@ external int ncplane_qrcode(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncreader> Function(
-        ffi.Pointer<ncplane>, ffi.Pointer<ncreader_options>)>()
+  ffi.Pointer<ncreader> Function(
+    ffi.Pointer<ncplane>,
+    ffi.Pointer<ncreader_options>,
+  )
+>()
 external ffi.Pointer<ncreader> ncreader_create(
   ffi.Pointer<ncplane> n,
   ffi.Pointer<ncreader_options> opts,
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreader>)>()
-external int ncreader_clear(
-  ffi.Pointer<ncreader> n,
-);
+external int ncreader_clear(ffi.Pointer<ncreader> n);
 
 @ffi.Native<ffi.Pointer<ncplane> Function(ffi.Pointer<ncreader>)>()
-external ffi.Pointer<ncplane> ncreader_plane(
-  ffi.Pointer<ncreader> n,
-);
+external ffi.Pointer<ncplane> ncreader_plane(ffi.Pointer<ncreader> n);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncreader>, ffi.Pointer<ncinput>)>()
 external bool ncreader_offer_input(
@@ -2150,24 +2191,16 @@ external bool ncreader_offer_input(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreader>)>()
-external int ncreader_move_left(
-  ffi.Pointer<ncreader> n,
-);
+external int ncreader_move_left(ffi.Pointer<ncreader> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreader>)>()
-external int ncreader_move_right(
-  ffi.Pointer<ncreader> n,
-);
+external int ncreader_move_right(ffi.Pointer<ncreader> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreader>)>()
-external int ncreader_move_up(
-  ffi.Pointer<ncreader> n,
-);
+external int ncreader_move_up(ffi.Pointer<ncreader> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreader>)>()
-external int ncreader_move_down(
-  ffi.Pointer<ncreader> n,
-);
+external int ncreader_move_down(ffi.Pointer<ncreader> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncreader>, ffi.Pointer<ffi.Char>)>()
 external int ncreader_write_egc(
@@ -2176,13 +2209,11 @@ external int ncreader_write_egc(
 );
 
 @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncreader>)>()
-external ffi.Pointer<ffi.Char> ncreader_contents(
-  ffi.Pointer<ncreader> n,
-);
+external ffi.Pointer<ffi.Char> ncreader_contents(ffi.Pointer<ncreader> n);
 
 @ffi.Native<
-    ffi.Void Function(
-        ffi.Pointer<ncreader>, ffi.Pointer<ffi.Pointer<ffi.Char>>)>()
+  ffi.Void Function(ffi.Pointer<ncreader>, ffi.Pointer<ffi.Pointer<ffi.Char>>)
+>()
 external void ncreader_destroy(
   ffi.Pointer<ncreader> n,
   ffi.Pointer<ffi.Pointer<ffi.Char>> contents,
@@ -2204,8 +2235,12 @@ external void notcurses_debug(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncdirect> Function(
-        ffi.Pointer<ffi.Char>, ffi.Pointer<FILE>, ffi.Uint64)>()
+  ffi.Pointer<ncdirect> Function(
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<FILE>,
+    ffi.Uint64,
+  )
+>()
 external ffi.Pointer<ncdirect> ncdirect_init(
   ffi.Pointer<ffi.Char> termtype,
   ffi.Pointer<FILE> fp,
@@ -2213,8 +2248,12 @@ external ffi.Pointer<ncdirect> ncdirect_init(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncdirect> Function(
-        ffi.Pointer<ffi.Char>, ffi.Pointer<FILE>, ffi.Uint64)>()
+  ffi.Pointer<ncdirect> Function(
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<FILE>,
+    ffi.Uint64,
+  )
+>()
 external ffi.Pointer<ncdirect> ncdirect_core_init(
   ffi.Pointer<ffi.Char> termtype,
   ffi.Pointer<FILE> fp,
@@ -2222,45 +2261,31 @@ external ffi.Pointer<ncdirect> ncdirect_core_init(
 );
 
 @ffi.Native<
-    ffi.Pointer<ffi.Char> Function(
-        ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>)>()
+  ffi.Pointer<ffi.Char> Function(ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>)
+>()
 external ffi.Pointer<ffi.Char> ncdirect_readline(
   ffi.Pointer<ncdirect> nc,
   ffi.Pointer<ffi.Char> prompt,
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.UnsignedInt)>()
-external int ncdirect_set_fg_rgb(
-  ffi.Pointer<ncdirect> nc,
-  int rgb,
-);
+external int ncdirect_set_fg_rgb(ffi.Pointer<ncdirect> nc, int rgb);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.UnsignedInt)>()
-external int ncdirect_set_bg_rgb(
-  ffi.Pointer<ncdirect> nc,
-  int rgb,
-);
+external int ncdirect_set_bg_rgb(ffi.Pointer<ncdirect> nc, int rgb);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int)>()
-external int ncdirect_set_fg_palindex(
-  ffi.Pointer<ncdirect> nc,
-  int pidx,
-);
+external int ncdirect_set_fg_palindex(ffi.Pointer<ncdirect> nc, int pidx);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int)>()
-external int ncdirect_set_bg_palindex(
-  ffi.Pointer<ncdirect> nc,
-  int pidx,
-);
+external int ncdirect_set_bg_palindex(ffi.Pointer<ncdirect> nc, int pidx);
 
 @ffi.Native<ffi.UnsignedInt Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_palette_size(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_palette_size(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncdirect>, ffi.Uint64, ffi.Pointer<ffi.Char>)>()
+  ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Uint64, ffi.Pointer<ffi.Char>)
+>()
 external int ncdirect_putstr(
   ffi.Pointer<ncdirect> nc,
   int channels,
@@ -2268,8 +2293,13 @@ external int ncdirect_putstr(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Uint64, ffi.Pointer<ffi.Char>,
-        ffi.Pointer<ffi.Int>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Uint64,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Int>,
+  )
+>()
 external int ncdirect_putegc(
   ffi.Pointer<ncdirect> nc,
   int channels,
@@ -2278,8 +2308,13 @@ external int ncdirect_putegc(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int, ffi.UnsignedInt,
-        ffi.Pointer<ffi.Char>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Int,
+    ffi.UnsignedInt,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
 external int ncdirect_printf_aligned(
   ffi.Pointer<ncdirect> n,
   int y,
@@ -2288,102 +2323,63 @@ external int ncdirect_printf_aligned(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_flush(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_flush(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_set_fg_default(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_set_fg_default(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_set_bg_default(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_set_bg_default(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.UnsignedInt Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_dim_x(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_dim_x(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.UnsignedInt Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_dim_y(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_dim_y(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.Uint16 Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_supported_styles(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_supported_styles(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.UnsignedInt)>()
-external int ncdirect_set_styles(
-  ffi.Pointer<ncdirect> n,
-  int stylebits,
-);
+external int ncdirect_set_styles(ffi.Pointer<ncdirect> n, int stylebits);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.UnsignedInt)>()
-external int ncdirect_on_styles(
-  ffi.Pointer<ncdirect> n,
-  int stylebits,
-);
+external int ncdirect_on_styles(ffi.Pointer<ncdirect> n, int stylebits);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.UnsignedInt)>()
-external int ncdirect_off_styles(
-  ffi.Pointer<ncdirect> n,
-  int stylebits,
-);
+external int ncdirect_off_styles(ffi.Pointer<ncdirect> n, int stylebits);
 
 @ffi.Native<ffi.Uint16 Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_styles(
-  ffi.Pointer<ncdirect> n,
-);
+external int ncdirect_styles(ffi.Pointer<ncdirect> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int, ffi.Int)>()
-external int ncdirect_cursor_move_yx(
-  ffi.Pointer<ncdirect> n,
-  int y,
-  int x,
-);
+external int ncdirect_cursor_move_yx(ffi.Pointer<ncdirect> n, int y, int x);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_cursor_enable(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_cursor_enable(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_cursor_disable(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_cursor_disable(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int)>()
-external int ncdirect_cursor_up(
-  ffi.Pointer<ncdirect> nc,
-  int num,
-);
+external int ncdirect_cursor_up(ffi.Pointer<ncdirect> nc, int num);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int)>()
-external int ncdirect_cursor_left(
-  ffi.Pointer<ncdirect> nc,
-  int num,
-);
+external int ncdirect_cursor_left(ffi.Pointer<ncdirect> nc, int num);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int)>()
-external int ncdirect_cursor_right(
-  ffi.Pointer<ncdirect> nc,
-  int num,
-);
+external int ncdirect_cursor_right(ffi.Pointer<ncdirect> nc, int num);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Int)>()
-external int ncdirect_cursor_down(
-  ffi.Pointer<ncdirect> nc,
-  int num,
-);
+external int ncdirect_cursor_down(ffi.Pointer<ncdirect> nc, int num);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Pointer<ffi.UnsignedInt>,
-        ffi.Pointer<ffi.UnsignedInt>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ffi.UnsignedInt>,
+    ffi.Pointer<ffi.UnsignedInt>,
+  )
+>()
 external int ncdirect_cursor_yx(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ffi.UnsignedInt> y,
@@ -2391,19 +2387,13 @@ external int ncdirect_cursor_yx(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_cursor_push(
-  ffi.Pointer<ncdirect> n,
-);
+external int ncdirect_cursor_push(ffi.Pointer<ncdirect> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_cursor_pop(
-  ffi.Pointer<ncdirect> n,
-);
+external int ncdirect_cursor_pop(ffi.Pointer<ncdirect> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_clear(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_clear(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<ffi.Pointer<nccapabilities> Function(ffi.Pointer<ncdirect>)>()
 external ffi.Pointer<nccapabilities> ncdirect_capabilities(
@@ -2411,8 +2401,14 @@ external ffi.Pointer<nccapabilities> ncdirect_capabilities(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>,
-        ffi.UnsignedInt, ffi.Uint64, ffi.Uint64)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ffi.Char>,
+    ffi.UnsignedInt,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
 external int ncdirect_hline_interp(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ffi.Char> egc,
@@ -2422,8 +2418,14 @@ external int ncdirect_hline_interp(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>,
-        ffi.UnsignedInt, ffi.Uint64, ffi.Uint64)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ffi.Char>,
+    ffi.UnsignedInt,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
 external int ncdirect_vline_interp(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ffi.Char> egc,
@@ -2433,16 +2435,18 @@ external int ncdirect_vline_interp(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncdirect>,
-        ffi.Uint64,
-        ffi.Uint64,
-        ffi.Uint64,
-        ffi.Uint64,
-        ffi.Pointer<ffi.WChar>,
-        ffi.UnsignedInt,
-        ffi.UnsignedInt,
-        ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Pointer<ffi.WChar>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncdirect_box(
   ffi.Pointer<ncdirect> n,
   int ul,
@@ -2456,8 +2460,17 @@ external int ncdirect_box(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Uint64, ffi.Uint64, ffi.Uint64,
-        ffi.Uint64, ffi.UnsignedInt, ffi.UnsignedInt, ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncdirect_rounded_box(
   ffi.Pointer<ncdirect> n,
   int ul,
@@ -2470,8 +2483,17 @@ external int ncdirect_rounded_box(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Uint64, ffi.Uint64, ffi.Uint64,
-        ffi.Uint64, ffi.UnsignedInt, ffi.UnsignedInt, ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.Uint64,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncdirect_double_box(
   ffi.Pointer<ncdirect> n,
   int ul,
@@ -2484,8 +2506,12 @@ external int ncdirect_double_box(
 );
 
 @ffi.Native<
-    ffi.Uint32 Function(
-        ffi.Pointer<ncdirect>, ffi.Pointer<timespec>, ffi.Pointer<ncinput>)>()
+  ffi.Uint32 Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<timespec>,
+    ffi.Pointer<ncinput>,
+  )
+>()
 external int ncdirect_get(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<timespec> absdl,
@@ -2493,18 +2519,20 @@ external int ncdirect_get(
 );
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_inputready_fd(
-  ffi.Pointer<ncdirect> n,
-);
+external int ncdirect_inputready_fd(ffi.Pointer<ncdirect> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_stop(
-  ffi.Pointer<ncdirect> nc,
-);
+external int ncdirect_stop(ffi.Pointer<ncdirect> nc);
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>,
-        ffi.UnsignedInt, ffi.UnsignedInt, ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ffi.Char>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncdirect_render_image(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ffi.Char> filename,
@@ -2514,13 +2542,15 @@ external int ncdirect_render_image(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncdirectv> Function(
-        ffi.Pointer<ncdirect>,
-        ffi.Pointer<ffi.Char>,
-        ffi.UnsignedInt,
-        ffi.UnsignedInt,
-        ffi.Int,
-        ffi.Int)>()
+  ffi.Pointer<ncdirectv> Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ffi.Char>,
+    ffi.UnsignedInt,
+    ffi.UnsignedInt,
+    ffi.Int,
+    ffi.Int,
+  )
+>()
 external ffi.Pointer<ncdirectv> ncdirect_render_frame(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ffi.Char> filename,
@@ -2531,8 +2561,12 @@ external ffi.Pointer<ncdirectv> ncdirect_render_frame(
 );
 
 @ffi.Native<
-    ffi.Int Function(
-        ffi.Pointer<ncdirect>, ffi.Pointer<ncdirectv>, ffi.UnsignedInt)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ncdirectv>,
+    ffi.UnsignedInt,
+  )
+>()
 external int ncdirect_raster_frame(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ncdirectv> ncdv,
@@ -2540,21 +2574,23 @@ external int ncdirect_raster_frame(
 );
 
 @ffi.Native<
-    ffi.Pointer<ncdirectf> Function(
-        ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>)>()
+  ffi.Pointer<ncdirectf> Function(ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>)
+>()
 external ffi.Pointer<ncdirectf> ncdirectf_from_file(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ffi.Char> filename,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ncdirectf>)>()
-external void ncdirectf_free(
-  ffi.Pointer<ncdirectf> frame,
-);
+external void ncdirectf_free(ffi.Pointer<ncdirectf> frame);
 
 @ffi.Native<
-    ffi.Pointer<ncdirectv> Function(ffi.Pointer<ncdirect>,
-        ffi.Pointer<ncdirectf>, ffi.Pointer<ncvisual_options>)>()
+  ffi.Pointer<ncdirectv> Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ncdirectf>,
+    ffi.Pointer<ncvisual_options>,
+  )
+>()
 external ffi.Pointer<ncdirectv> ncdirectf_render(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ncdirectf> frame,
@@ -2562,8 +2598,13 @@ external ffi.Pointer<ncdirectv> ncdirectf_render(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Pointer<ncdirectf>,
-        ffi.Pointer<ncvisual_options>, ffi.Pointer<ncvgeom>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ncdirectf>,
+    ffi.Pointer<ncvisual_options>,
+    ffi.Pointer<ncvgeom>,
+  )
+>()
 external int ncdirectf_geom(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ncdirectf> frame,
@@ -2572,8 +2613,14 @@ external int ncdirectf_geom(
 );
 
 @ffi.Native<
-    ffi.Int Function(ffi.Pointer<ncdirect>, ffi.Pointer<ffi.Char>, ncstreamcb,
-        ffi.Pointer<ncvisual_options>, ffi.Pointer<ffi.Void>)>()
+  ffi.Int Function(
+    ffi.Pointer<ncdirect>,
+    ffi.Pointer<ffi.Char>,
+    ncstreamcb,
+    ffi.Pointer<ncvisual_options>,
+    ffi.Pointer<ffi.Void>,
+  )
+>()
 external int ncdirect_stream(
   ffi.Pointer<ncdirect> n,
   ffi.Pointer<ffi.Char> filename,
@@ -2588,19 +2635,13 @@ external ffi.Pointer<ffi.Char> ncdirect_detected_terminal(
 );
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncdirect>)>()
-external bool ncdirect_canutf8(
-  ffi.Pointer<ncdirect> n,
-);
+external bool ncdirect_canutf8(ffi.Pointer<ncdirect> n);
 
 @ffi.Native<ffi.Int Function(ffi.Pointer<ncdirect>)>()
-external int ncdirect_check_pixel_support(
-  ffi.Pointer<ncdirect> n,
-);
+external int ncdirect_check_pixel_support(ffi.Pointer<ncdirect> n);
 
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ncdirect>)>()
-external bool ncdirect_canget_cursor(
-  ffi.Pointer<ncdirect> nc,
-);
+external bool ncdirect_canget_cursor(ffi.Pointer<ncdirect> nc);
 
 final class notcurses extends ffi.Opaque {}
 
@@ -2748,23 +2789,29 @@ final class __sFILE extends ffi.Struct {
 
   external ffi.Pointer<ffi.Void> _cookie;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>>
-      _close;
+  external ffi.Pointer<
+    ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Void>)>
+  >
+  _close;
 
   external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Int Function(
-              ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Int)>> _read;
+    ffi.NativeFunction<
+      ffi.Int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Int)
+    >
+  >
+  _read;
 
   external ffi.Pointer<
-      ffi.NativeFunction<
-          fpos_t Function(ffi.Pointer<ffi.Void>, fpos_t, ffi.Int)>> _seek;
+    ffi.NativeFunction<fpos_t Function(ffi.Pointer<ffi.Void>, fpos_t, ffi.Int)>
+  >
+  _seek;
 
   external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Int Function(
-              ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Int)>> _write;
+    ffi.NativeFunction<
+      ffi.Int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Int)
+    >
+  >
+  _write;
 
   external __sbuf _ub;
 
@@ -2860,9 +2907,10 @@ final class ncplane_options extends ffi.Struct {
 
   external ffi.Pointer<ffi.Char> name;
 
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>>
-      resizecb;
+  external ffi.Pointer<
+    ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ncplane>)>
+  >
+  resizecb;
 
   @ffi.Uint64()
   external int flags;
@@ -3028,10 +3076,20 @@ final class ncstats extends ffi.Struct {
   external int planes;
 }
 
-typedef fadecbFunction = ffi.Int Function(ffi.Pointer<notcurses>,
-    ffi.Pointer<ncplane>, ffi.Pointer<timespec>, ffi.Pointer<ffi.Void>);
-typedef DartfadecbFunction = int Function(ffi.Pointer<notcurses>,
-    ffi.Pointer<ncplane>, ffi.Pointer<timespec>, ffi.Pointer<ffi.Void>);
+typedef fadecbFunction =
+    ffi.Int Function(
+      ffi.Pointer<notcurses>,
+      ffi.Pointer<ncplane>,
+      ffi.Pointer<timespec>,
+      ffi.Pointer<ffi.Void>,
+    );
+typedef DartfadecbFunction =
+    int Function(
+      ffi.Pointer<notcurses>,
+      ffi.Pointer<ncplane>,
+      ffi.Pointer<timespec>,
+      ffi.Pointer<ffi.Void>,
+    );
 typedef fadecb = ffi.Pointer<ffi.NativeFunction<fadecbFunction>>;
 
 final class ncvisual_options extends ffi.Struct {
@@ -3127,16 +3185,20 @@ final class ncvgeom extends ffi.Struct {
   external int blitter;
 }
 
-typedef ncstreamcbFunction = ffi.Int Function(
-    ffi.Pointer<ncvisual>,
-    ffi.Pointer<ncvisual_options>,
-    ffi.Pointer<timespec>,
-    ffi.Pointer<ffi.Void>);
-typedef DartncstreamcbFunction = int Function(
-    ffi.Pointer<ncvisual>,
-    ffi.Pointer<ncvisual_options>,
-    ffi.Pointer<timespec>,
-    ffi.Pointer<ffi.Void>);
+typedef ncstreamcbFunction =
+    ffi.Int Function(
+      ffi.Pointer<ncvisual>,
+      ffi.Pointer<ncvisual_options>,
+      ffi.Pointer<timespec>,
+      ffi.Pointer<ffi.Void>,
+    );
+typedef DartncstreamcbFunction =
+    int Function(
+      ffi.Pointer<ncvisual>,
+      ffi.Pointer<ncvisual_options>,
+      ffi.Pointer<timespec>,
+      ffi.Pointer<ffi.Void>,
+    );
 typedef ncstreamcb = ffi.Pointer<ffi.NativeFunction<ncstreamcbFunction>>;
 
 final class ncreel_options extends ffi.Struct {
@@ -3159,10 +3221,10 @@ final class ncreel_options extends ffi.Struct {
   external int flags;
 }
 
-typedef tabletcbFunction = ffi.Int Function(
-    ffi.Pointer<nctablet> t, ffi.Bool drawfromtop);
-typedef DarttabletcbFunction = int Function(
-    ffi.Pointer<nctablet> t, bool drawfromtop);
+typedef tabletcbFunction =
+    ffi.Int Function(ffi.Pointer<nctablet> t, ffi.Bool drawfromtop);
+typedef DarttabletcbFunction =
+    int Function(ffi.Pointer<nctablet> t, bool drawfromtop);
 typedef tabletcb = ffi.Pointer<ffi.NativeFunction<tabletcbFunction>>;
 
 final class ncselector_item extends ffi.Struct {
@@ -3261,9 +3323,11 @@ final class nctree_options extends ffi.Struct {
   external int count;
 
   external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Int Function(
-              ffi.Pointer<ncplane>, ffi.Pointer<ffi.Void>, ffi.Int)>> nctreecb;
+    ffi.NativeFunction<
+      ffi.Int Function(ffi.Pointer<ncplane>, ffi.Pointer<ffi.Void>, ffi.Int)
+    >
+  >
+  nctreecb;
 
   @ffi.Int()
   external int indentcols;
@@ -3342,10 +3406,18 @@ final class nctabbed_options extends ffi.Struct {
   external int flags;
 }
 
-typedef tabcbFunction = ffi.Void Function(ffi.Pointer<nctab> t,
-    ffi.Pointer<ncplane> ncp, ffi.Pointer<ffi.Void> curry);
-typedef DarttabcbFunction = void Function(ffi.Pointer<nctab> t,
-    ffi.Pointer<ncplane> ncp, ffi.Pointer<ffi.Void> curry);
+typedef tabcbFunction =
+    ffi.Void Function(
+      ffi.Pointer<nctab> t,
+      ffi.Pointer<ncplane> ncp,
+      ffi.Pointer<ffi.Void> curry,
+    );
+typedef DarttabcbFunction =
+    void Function(
+      ffi.Pointer<nctab> t,
+      ffi.Pointer<ncplane> ncp,
+      ffi.Pointer<ffi.Void> curry,
+    );
 typedef tabcb = ffi.Pointer<ffi.NativeFunction<tabcbFunction>>;
 
 final class ncplot_options extends ffi.Struct {
@@ -3370,18 +3442,36 @@ final class ncplot_options extends ffi.Struct {
   external int flags;
 }
 
-typedef ncfdplane_callbackFunction = ffi.Int Function(ffi.Pointer<ncfdplane> n,
-    ffi.Pointer<ffi.Void> buf, ffi.Size s, ffi.Pointer<ffi.Void> curry);
-typedef Dartncfdplane_callbackFunction = int Function(ffi.Pointer<ncfdplane> n,
-    ffi.Pointer<ffi.Void> buf, int s, ffi.Pointer<ffi.Void> curry);
-typedef ncfdplane_callback
-    = ffi.Pointer<ffi.NativeFunction<ncfdplane_callbackFunction>>;
-typedef ncfdplane_done_cbFunction = ffi.Int Function(
-    ffi.Pointer<ncfdplane> n, ffi.Int fderrno, ffi.Pointer<ffi.Void> curry);
-typedef Dartncfdplane_done_cbFunction = int Function(
-    ffi.Pointer<ncfdplane> n, int fderrno, ffi.Pointer<ffi.Void> curry);
-typedef ncfdplane_done_cb
-    = ffi.Pointer<ffi.NativeFunction<ncfdplane_done_cbFunction>>;
+typedef ncfdplane_callbackFunction =
+    ffi.Int Function(
+      ffi.Pointer<ncfdplane> n,
+      ffi.Pointer<ffi.Void> buf,
+      ffi.Size s,
+      ffi.Pointer<ffi.Void> curry,
+    );
+typedef Dartncfdplane_callbackFunction =
+    int Function(
+      ffi.Pointer<ncfdplane> n,
+      ffi.Pointer<ffi.Void> buf,
+      int s,
+      ffi.Pointer<ffi.Void> curry,
+    );
+typedef ncfdplane_callback =
+    ffi.Pointer<ffi.NativeFunction<ncfdplane_callbackFunction>>;
+typedef ncfdplane_done_cbFunction =
+    ffi.Int Function(
+      ffi.Pointer<ncfdplane> n,
+      ffi.Int fderrno,
+      ffi.Pointer<ffi.Void> curry,
+    );
+typedef Dartncfdplane_done_cbFunction =
+    int Function(
+      ffi.Pointer<ncfdplane> n,
+      int fderrno,
+      ffi.Pointer<ffi.Void> curry,
+    );
+typedef ncfdplane_done_cb =
+    ffi.Pointer<ffi.NativeFunction<ncfdplane_done_cbFunction>>;
 
 final class ncfdplane_options extends ffi.Struct {
   external ffi.Pointer<ffi.Void> curry;

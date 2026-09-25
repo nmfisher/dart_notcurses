@@ -40,10 +40,12 @@ bool _finished = false;
 void main(List<String> args) {
   final pasteModeEnabled = !args.contains('--no-paste-mode');
 
-  final nc = NotCurses(CursesOptions(
-    loglevel: LogLevel.silent,
-    flags: OptionFlags.suppressBanners,
-  ));
+  final nc = NotCurses(
+    CursesOptions(
+      loglevel: LogLevel.silent,
+      flags: OptionFlags.suppressBanners,
+    ),
+  );
   if (nc.notInitialized) {
     stderr.writeln('notcurses init failed');
     exit(1);
@@ -51,7 +53,9 @@ void main(List<String> args) {
 
   final events = <String>[];
   // SIGINT: still dump whatever we captured and restore the terminal.
-  ProcessSignal.sigint.watch().listen((_) => _finish(nc, events, pasteModeEnabled));
+  ProcessSignal.sigint.watch().listen(
+    (_) => _finish(nc, events, pasteModeEnabled),
+  );
 
   final plane = nc.stdplane();
   var armed = false;
@@ -69,8 +73,14 @@ void main(List<String> args) {
     if (pasteModeEnabled) {
       nc.writeRawToTty('\x1b[?2004h');
     }
-    _renderStatus(plane, 'press SPACE to arm',
-        paste: pasteModeEnabled, armed: false, count: 0, last: '(draining startup)');
+    _renderStatus(
+      plane,
+      'press SPACE to arm',
+      paste: pasteModeEnabled,
+      armed: false,
+      count: 0,
+      last: '(draining startup)',
+    );
 
     while (true) {
       final res = nc.getNonBlocking(keyInfo: true);
@@ -91,8 +101,14 @@ void main(List<String> args) {
         if (id == 0x20) {
           armed = true;
           prevEventMicros = clock.elapsedMicroseconds;
-          _renderStatus(plane, 'PASTE a multi-line snippet, then Enter',
-              paste: pasteModeEnabled, armed: true, count: 0, last: '(armed)');
+          _renderStatus(
+            plane,
+            'PASTE a multi-line snippet, then Enter',
+            paste: pasteModeEnabled,
+            armed: true,
+            count: 0,
+            last: '(armed)',
+          );
         }
         continue;
       }
@@ -115,8 +131,14 @@ void main(List<String> args) {
 
       final now = DateTime.now().millisecondsSinceEpoch;
       if (now - lastRender >= 30) {
-        _renderStatus(plane, 'PASTE a multi-line snippet, then Enter',
-            paste: pasteModeEnabled, armed: true, count: events.length, last: lastShort);
+        _renderStatus(
+          plane,
+          'PASTE a multi-line snippet, then Enter',
+          paste: pasteModeEnabled,
+          armed: true,
+          count: events.length,
+          last: lastShort,
+        );
         lastRender = now;
       }
 
@@ -148,7 +170,11 @@ void _renderStatus(
   required String last,
 }) {
   plane.erase();
-  plane.putStrYX(0, 0, 'Bracketed-paste spike  (paste mode: ${paste ? "ON" : "OFF (--no-paste-mode)"})');
+  plane.putStrYX(
+    0,
+    0,
+    'Bracketed-paste spike  (paste mode: ${paste ? "ON" : "OFF (--no-paste-mode)"})',
+  );
   plane.putStrYX(2, 0, status);
   plane.putStrYX(4, 0, 'captured: $count events');
   plane.putStrYX(5, 0, 'last: $last');
@@ -164,8 +190,10 @@ void _finish(NotCurses nc, List<String> events, bool pasteModeEnabled) {
   }
   nc.stop();
   stderr.writeln('');
-  stderr.writeln('=== paste spike: ${events.length} events '
-      '(paste mode ${pasteModeEnabled ? "ON" : "OFF"}) ===');
+  stderr.writeln(
+    '=== paste spike: ${events.length} events '
+    '(paste mode ${pasteModeEnabled ? "ON" : "OFF"}) ===',
+  );
   for (final e in events) {
     stderr.writeln(e);
   }
@@ -189,9 +217,13 @@ void _finish(NotCurses nc, List<String> events, bool pasteModeEnabled) {
     stderr.writeln('--- gap stats (${gaps.length} gaps) ---');
     stderr.writeln('  max gap: ${gaps.last}us');
     stderr.writeln('  median gap: ${gaps[gaps.length ~/ 2]}us');
-    stderr.writeln('  >5ms: $over5   >10ms: $over10   >20ms: $over20   >40ms: $over40');
-    stderr.writeln('  (a good join window sits above the paste cluster '
-        'but below typing gaps)');
+    stderr.writeln(
+      '  >5ms: $over5   >10ms: $over10   >20ms: $over20   >40ms: $over40',
+    );
+    stderr.writeln(
+      '  (a good join window sits above the paste cluster '
+      'but below typing gaps)',
+    );
   }
   stderr.writeln('=== end ===');
 }

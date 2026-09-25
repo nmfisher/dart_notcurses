@@ -4,10 +4,15 @@ void main(List<String> args) {
   NotCurses? nc;
 
   try {
-    nc = NotCurses.core(CursesOptions(
-      flags: OptionFlags.cliMode | OptionFlags.suppressBanners | OptionFlags.drainInput,
-      loglevel: LogLevel.silent,
-    ));
+    nc = NotCurses.core(
+      CursesOptions(
+        flags:
+            OptionFlags.cliMode |
+            OptionFlags.suppressBanners |
+            OptionFlags.drainInput,
+        loglevel: LogLevel.silent,
+      ),
+    );
 
     if (nc.notInitialized) {
       return;

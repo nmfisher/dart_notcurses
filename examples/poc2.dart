@@ -3,13 +3,15 @@ import 'dart:io';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
 void main() {
-  final nc = NotCurses(CursesOptions(
-    marginT: 2,
-    marginL: 2,
-    marginR: 2,
-    marginB: 2,
-    loglevel: LogLevel.error,
-  ));
+  final nc = NotCurses(
+    CursesOptions(
+      marginT: 2,
+      marginL: 2,
+      marginR: 2,
+      marginB: 2,
+      loglevel: LogLevel.error,
+    ),
+  );
 
   if (nc.notInitialized) {
     stderr.writeln('error initializing nocurses');
@@ -73,7 +75,10 @@ void main() {
       vline,
       30,
       30,
-      BoxFlags.gradTop | BoxFlags.gradBottom | BoxFlags.gradRight | BoxFlags.gradLeft,
+      BoxFlags.gradTop |
+          BoxFlags.gradBottom |
+          BoxFlags.gradRight |
+          BoxFlags.gradLeft,
     );
     p.perimeter(
       ul,
@@ -82,7 +87,10 @@ void main() {
       lr,
       hline,
       vline,
-      BoxFlags.gradTop | BoxFlags.gradBottom | BoxFlags.gradRight | BoxFlags.gradLeft,
+      BoxFlags.gradTop |
+          BoxFlags.gradBottom |
+          BoxFlags.gradRight |
+          BoxFlags.gradLeft,
     );
 
     ul.destroy(p);
@@ -161,7 +169,10 @@ void shine(NotCurses nc, Plane p) {
           vline,
           10,
           20,
-          BoxFlags.gradTop | BoxFlags.gradBottom | BoxFlags.gradRight | BoxFlags.gradLeft,
+          BoxFlags.gradTop |
+              BoxFlags.gradBottom |
+              BoxFlags.gradRight |
+              BoxFlags.gradLeft,
         );
 
         nc.render();

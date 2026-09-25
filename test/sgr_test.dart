@@ -22,14 +22,19 @@ void main() {
           std.putStrYX(0, 0, '\x1b[31mR\x1b[0m');
           final c = std.atYX(0, 0);
           expect(c, isNotNull);
-          expect(c!.egc, isEmpty,
-              reason:
-                  'notcurses swallows the whole write — neither the ESC bytes '
-                  'nor the "R" reach the cell. If this ever changes, revisit '
-                  'NotcursesBackend._applySgr in cocoon_console.');
+          expect(
+            c!.egc,
+            isEmpty,
+            reason:
+                'notcurses swallows the whole write — neither the ESC bytes '
+                'nor the "R" reach the cell. If this ever changes, revisit '
+                'NotcursesBackend._applySgr in cocoon_console.',
+          );
         });
       });
     },
-    skip: !notcursesSupported ? 'needs a controlling TTY (notcurses opens /dev/tty)' : false,
+    skip: !notcursesSupported
+        ? 'needs a controlling TTY (notcurses opens /dev/tty)'
+        : false,
   );
 }

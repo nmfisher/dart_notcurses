@@ -38,11 +38,7 @@ class RGB {
   const RGB(this.r, this.g, this.b);
 
   RGB copyWith({int? r, int? g, int? b}) {
-    return RGB(
-      r ?? this.r,
-      g ?? this.g,
-      b ?? this.b,
-    );
+    return RGB(r ?? this.r, g ?? this.g, b ?? this.b);
   }
 
   @override
@@ -60,7 +56,10 @@ class Channels {
 
   /// initialize a 64-bit channel pair with specified RGB fg/bg
   factory Channels.initializer(int fr, int fg, int fb, int br, int bg, int bb) {
-    return Channels._((Channel.initializer(fr, fg, fb).value << 32) + (Channel.initializer(br, bg, bb).value));
+    return Channels._(
+      (Channel.initializer(fr, fg, fb).value << 32) +
+          (Channel.initializer(br, bg, bb).value),
+    );
   }
 
   /// Initialize a 64-bit channel pair but only the BG
@@ -120,7 +119,8 @@ class Channels {
   /// 'channels' variable, and mark it as not using the default color.
   bool setFgRGB8(int r, int g, int b) {
     if (r >= 256 || g >= 256 || b >= 256) return false;
-    final fg = ((_value >> 32) & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+    final fg =
+        ((_value >> 32) & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
         _CH_DEFAULT |
         ((r << 16) | (g << 8) | b);
     _value = (fg << 32) | (_value & 0xffffffff);
@@ -131,7 +131,8 @@ class Channels {
   /// 'channels' variable, and mark it as not using the default color.
   bool setBgRGB8(int r, int g, int b) {
     if (r >= 256 || g >= 256 || b >= 256) return false;
-    final bg = (_value & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+    final bg =
+        (_value & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
         _CH_DEFAULT |
         ((r << 16) | (g << 8) | b);
     _value = (_value & ~0xffffffff) | bg;
@@ -141,7 +142,8 @@ class Channels {
   /// Set an assembled 24 bit channel at once.
   bool setFgRGB(int rgb) {
     if (rgb > 0xffffff) return false;
-    final fg = ((_value >> 32) & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+    final fg =
+        ((_value >> 32) & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
         _CH_DEFAULT |
         (rgb & 0xffffff);
     _value = (fg << 32) | (_value & 0xffffffff);
@@ -152,7 +154,8 @@ class Channels {
   /// will be rejected, with a non-zero return value.
   bool setBgRGB(int rgb) {
     if (rgb > 0xffffff) return false;
-    final bg = (_value & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
+    final bg =
+        (_value & 0xffffffff) & ~(_CH_RGB | _CH_PALETTE) |
         _CH_DEFAULT |
         (rgb & 0xffffff);
     _value = (_value & ~0xffffffff) | bg;
@@ -197,7 +200,8 @@ class Channels {
     if (ndx >= _NCPALETTESIZE) return false;
     // Mirror C ncchannel_set_palindex: alpha is forced opaque (cleared) before
     // the palette/default/idx bits are applied — otherwise stale alpha survives.
-    final fg = ((_value >> 32) & 0xffffffff) & 0xff000000 & ~_CH_ALPHA |
+    final fg =
+        ((_value >> 32) & 0xffffffff) & 0xff000000 & ~_CH_ALPHA |
         _CH_DEFAULT |
         _CH_PALETTE |
         (ndx & 0xff);
@@ -209,7 +213,8 @@ class Channels {
   /// bit, set it background-opaque, and clear the background default color bit.
   bool setBgPalindex(int ndx) {
     if (ndx >= _NCPALETTESIZE) return false;
-    final bg = (_value & 0xffffffff) & 0xff000000 & ~_CH_ALPHA |
+    final bg =
+        (_value & 0xffffffff) & 0xff000000 & ~_CH_ALPHA |
         _CH_DEFAULT |
         _CH_PALETTE |
         (ndx & 0xff);
@@ -229,7 +234,8 @@ class Channels {
 
   /// Set the 2-bit alpha component of the background channel.
   bool setBgAlpha(int alpha) {
-    if (alpha == _NCALPHA_HIGHCONTRAST) return false; // forbidden for background
+    if (alpha == _NCALPHA_HIGHCONTRAST)
+      return false; // forbidden for background
     if (alpha & ~_CH_ALPHA != 0) return false;
     var bg = (_value & 0xffffffff);
     bg = (alpha & 0xffffffff) | (bg & ~_CH_ALPHA);
@@ -327,7 +333,8 @@ class Channel {
   /// 255 will result in a return of -1 and no change to the channel.
   bool setRGB8(int r, int g, int b) {
     if (r >= 256 || g >= 256 || b >= 256) return false;
-    _value = (_value & ~(_CH_RGB | _CH_PALETTE)) |
+    _value =
+        (_value & ~(_CH_RGB | _CH_PALETTE)) |
         _CH_DEFAULT |
         ((r << 16) | (g << 8) | b);
     return true;
@@ -338,7 +345,8 @@ class Channel {
   /// 0xffffff will result in a return of -1 and no change to the channel.
   bool setRGB32(int rgb) {
     if (rgb > 0xffffff) return false;
-    _value = (_value & ~(_CH_RGB | _CH_PALETTE)) | _CH_DEFAULT | (rgb & 0xffffff);
+    _value =
+        (_value & ~(_CH_RGB | _CH_PALETTE)) | _CH_DEFAULT | (rgb & 0xffffff);
     return true;
   }
 
@@ -352,7 +360,8 @@ class Channel {
     if (r <= -1) r = 0;
     if (g <= -1) g = 0;
     if (b <= -1) b = 0;
-    _value = (_value & ~(_CH_RGB | _CH_PALETTE)) |
+    _value =
+        (_value & ~(_CH_RGB | _CH_PALETTE)) |
         _CH_DEFAULT |
         ((r << 16) | (g << 8) | b);
   }
@@ -389,7 +398,8 @@ class Channel {
   bool setPalindex(int idx) {
     if (idx >= _NCPALETTESIZE) return false;
     // Mirror C ncchannel_set_palindex: alpha forced opaque (cleared) first.
-    _value = (_value & 0xff000000 & ~_CH_ALPHA) |
+    _value =
+        (_value & 0xff000000 & ~_CH_ALPHA) |
         _CH_DEFAULT |
         _CH_PALETTE |
         (idx & 0xff);

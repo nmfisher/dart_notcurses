@@ -9,7 +9,9 @@ void main() {
   final libSkip = hasNotcursesLib ? null : 'notcurses code asset not built';
   // The get/getVec C calls need an initialized context (a controlling tty);
   // the deadline math does not.
-  final ttySkip = notcursesSupported ? null : 'requires built lib + controlling TTY';
+  final ttySkip = notcursesSupported
+      ? null
+      : 'requires built lib + controlling TTY';
 
   group('monotonicDeadline', () {
     test('null timeout -> a zero-address pointer (block forever)', () {
@@ -24,7 +26,10 @@ void main() {
       expect(dl.tv_sec, greaterThanOrEqualTo(before));
       expect(dl.tv_sec, lessThanOrEqualTo(after + 1));
       expect(dl.tv_sec - before, lessThanOrEqualTo(1));
-      expect(ffi.nullptr.address, isZero); // keep the dart:ffi import meaningful
+      expect(
+        ffi.nullptr.address,
+        isZero,
+      ); // keep the dart:ffi import meaningful
     });
   }, skip: libSkip);
 

@@ -41,6 +41,8 @@ void main() {
         });
       });
     },
-    skip: !notcursesSupported ? 'needs a controlling TTY (notcurses opens /dev/tty)' : false,
+    skip: !notcursesSupported
+        ? 'needs a controlling TTY (notcurses opens /dev/tty)'
+        : false,
   );
 }

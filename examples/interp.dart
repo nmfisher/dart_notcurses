@@ -41,7 +41,13 @@ bool interp(NotCurses nc, PixelGeomData geom) {
     randrgb[r] = rnd.nextInt(255);
   }
 
-  var ncv = Visual.fromRgbPacked(randrgb, geom.celldimy, geom.celldimx * 3, geom.celldimx, 0xff);
+  var ncv = Visual.fromRgbPacked(
+    randrgb,
+    geom.celldimy,
+    geom.celldimx * 3,
+    geom.celldimx,
+    0xff,
+  );
   if (ncv.notInitialized) {
     stderr.writeln('can not initialize visual from rgb');
     return false;
@@ -64,7 +70,9 @@ bool interp(NotCurses nc, PixelGeomData geom) {
   toDestroy.add(ncvp);
 
   var leftMargin = 1;
-  final scalep = std.create(PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols));
+  final scalep = std.create(
+    PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols),
+  );
   toDestroy.add(scalep);
   vopts.y = 0;
   vopts.plane = scalep;
@@ -80,7 +88,9 @@ bool interp(NotCurses nc, PixelGeomData geom) {
 
   std.putStrYX(2, 4, 'scale');
   leftMargin += scalep!.dimx() + 1;
-  final scalepni = std.create(PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols));
+  final scalepni = std.create(
+    PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols),
+  );
   vopts.plane = scalepni;
   vopts.flags = VisualOptionFlags.nointerpolate;
   toDestroy.add(scalepni);
@@ -95,7 +105,9 @@ bool interp(NotCurses nc, PixelGeomData geom) {
 
   std.putStrYX(2, 15, 'scale(no)');
   leftMargin += scalepni!.dimx() + 1;
-  final resizep = std.create(PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols));
+  final resizep = std.create(
+    PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols),
+  );
   if (resizep == null) {
     stderr.writeln('can not create resized plane');
     freeResources();
@@ -121,17 +133,28 @@ bool interp(NotCurses nc, PixelGeomData geom) {
   std.putStrYX(2, 30, 'resize');
 
   ncv.destroy();
-  ncv = Visual.fromRgbPacked(randrgb, geom.celldimy, geom.celldimx * 3, geom.celldimx, 0xff);
+  ncv = Visual.fromRgbPacked(
+    randrgb,
+    geom.celldimy,
+    geom.celldimx * 3,
+    geom.celldimx,
+    0xff,
+  );
   leftMargin += scalepni.dimx() + 1;
 
-  final inflatep = std.create(PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols));
+  final inflatep = std.create(
+    PlaneOptions(y: 3, x: leftMargin, rows: rows, cols: cols),
+  );
   if (inflatep == null) {
     stderr.writeln('can not create resized plane 2');
     freeResources();
     return false;
   }
   vopts.plane = inflatep;
-  if (!ncv.reisizeNonInterpolative(rows * geom.celldimy, cols * geom.celldimx)) {
+  if (!ncv.reisizeNonInterpolative(
+    rows * geom.celldimy,
+    cols * geom.celldimx,
+  )) {
     stderr.writeln('can not resize non interpolative');
     freeResources();
     return false;

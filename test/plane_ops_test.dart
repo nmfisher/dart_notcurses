@@ -5,7 +5,9 @@ import 'harness.dart';
 
 // Plane operations that need a real notcurses context (controlling TTY).
 void main() {
-  final skip = notcursesSupported ? null : 'requires built lib + controlling TTY';
+  final skip = notcursesSupported
+      ? null
+      : 'requires built lib + controlling TTY';
 
   group('plane ops (real terminal)', () {
     // Regression: putWstr* used to hand UTF-8 bytes to a wchar_t* API,
@@ -28,20 +30,23 @@ void main() {
       });
     });
 
-    test('putWcUtf32 writes a single codepoint and rejects a lone surrogate', () async {
-      await withNotcurses((nc, std) {
-        std.cursorHome();
-        final ok = std.putWcUtf32(0x41, 0); // 'A'
-        expect(ok.result, greaterThanOrEqualTo(0));
-        expect(std.atYX(0, 0)?.egc, equals('A'));
+    test(
+      'putWcUtf32 writes a single codepoint and rejects a lone surrogate',
+      () async {
+        await withNotcurses((nc, std) {
+          std.cursorHome();
+          final ok = std.putWcUtf32(0x41, 0); // 'A'
+          expect(ok.result, greaterThanOrEqualTo(0));
+          expect(std.atYX(0, 0)?.egc, equals('A'));
 
-        // Regression: a lone high surrogate made C read past a 1-element
-        // buffer; now the second slot is present and zeroed → clean error.
-        std.cursorHome();
-        final bad = std.putWcUtf32(0xD800, 0);
-        expect(bad.result, equals(-1));
-      });
-    });
+          // Regression: a lone high surrogate made C read past a 1-element
+          // buffer; now the second slot is present and zeroed → clean error.
+          std.cursorHome();
+          final bad = std.putWcUtf32(0xD800, 0);
+          expect(bad.result, equals(-1));
+        });
+      },
+    );
 
     // Regression: asRGBA computed its size from the out-params before the
     // call filled them, so it always returned an empty list.
@@ -55,14 +60,17 @@ void main() {
       });
     });
 
-    test('contents round-trips written text and is null out of bounds', () async {
-      await withNotcurses((nc, std) {
-        std.putStrYX(0, 0, 'hello');
-        final text = std.contents(0, 0, 1, 5);
-        expect(text, equals('hello'));
-        expect(std.contents(999999, 0, 1, 1), isNull);
-      });
-    });
+    test(
+      'contents round-trips written text and is null out of bounds',
+      () async {
+        await withNotcurses((nc, std) {
+          std.putStrYX(0, 0, 'hello');
+          final text = std.contents(0, 0, 1, 5);
+          expect(text, equals('hello'));
+          expect(std.contents(999999, 0, 1, 1), isNull);
+        });
+      },
+    );
 
     // Regression: cursorMoveRel used to call the absolute-move C function.
     test('cursorMoveRel moves relative to the current position', () async {
@@ -137,16 +145,19 @@ void main() {
       });
     });
 
-    test('loaded cells release against their loading plane automatically', () async {
-      await withNotcurses((nc, std) {
-        for (var i = 0; i < 100; i++) {
-          final res = std.loadCell('x');
-          expect(res.result, greaterThan(0));
-          res.value!.destroy(); // no plane argument: auto-release on loader
-        }
-        expect(std.putStrYX(0, 0, 'ok'), greaterThan(0));
-      });
-    });
+    test(
+      'loaded cells release against their loading plane automatically',
+      () async {
+        await withNotcurses((nc, std) {
+          for (var i = 0; i < 100; i++) {
+            final res = std.loadCell('x');
+            expect(res.result, greaterThan(0));
+            res.value!.destroy(); // no plane argument: auto-release on loader
+          }
+          expect(std.putStrYX(0, 0, 'ok'), greaterThan(0));
+        });
+      },
+    );
 
     test('releasing a cell against the wrong plane throws', () async {
       await withNotcurses((nc, std) {
@@ -158,14 +169,17 @@ void main() {
       });
     });
 
-    test('cell destroy after its plane is gone skips the pool release', () async {
-      await withNotcurses((nc, std) {
-        final plane = std.create(PlaneOptions(y: 0, x: 0, rows: 2, cols: 2));
-        final cell = plane!.loadCell('x').value!;
-        plane.destroy();
-        expect(cell.destroy, returnsNormally);
-      });
-    });
+    test(
+      'cell destroy after its plane is gone skips the pool release',
+      () async {
+        await withNotcurses((nc, std) {
+          final plane = std.create(PlaneOptions(y: 0, x: 0, rows: 2, cols: 2));
+          final cell = plane!.loadCell('x').value!;
+          plane.destroy();
+          expect(cell.destroy, returnsNormally);
+        });
+      },
+    );
 
     // The resize callback is bridged via NativeCallable.isolateLocal; this
     // covers registration + the lifetime path (the callable is closed on

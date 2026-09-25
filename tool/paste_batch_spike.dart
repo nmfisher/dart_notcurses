@@ -28,10 +28,12 @@ import 'dart:io';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
 Future<void> main() async {
-  final nc = NotCurses(CursesOptions(
-    loglevel: LogLevel.silent,
-    flags: OptionFlags.suppressBanners,
-  ));
+  final nc = NotCurses(
+    CursesOptions(
+      loglevel: LogLevel.silent,
+      flags: OptionFlags.suppressBanners,
+    ),
+  );
   if (nc.notInitialized) {
     stderr.writeln('notcurses init failed');
     exit(1);
@@ -61,7 +63,12 @@ Future<void> main() async {
   try {
     // Enable bracketed paste exactly as production does (notcurses has no API).
     nc.writeRawToTty('\x1b[?2004h');
-    _renderStatus(plane, 'press SPACE to arm', count: 0, last: '(draining startup)');
+    _renderStatus(
+      plane,
+      'press SPACE to arm',
+      count: 0,
+      last: '(draining startup)',
+    );
 
     pump = nc.startInputPump();
     pump.onBatchStart = (int n) {
@@ -75,8 +82,12 @@ Future<void> main() async {
         if (id == 0x20) {
           armed = true;
           prevMicros = clock.elapsedMicroseconds;
-          _renderStatus(plane, 'PASTE a multi-line snippet, then Enter',
-              count: 0, last: '(armed)');
+          _renderStatus(
+            plane,
+            'PASTE a multi-line snippet, then Enter',
+            count: 0,
+            last: '(armed)',
+          );
         }
         return;
       }
@@ -86,12 +97,12 @@ Future<void> main() async {
       final note = (id == 0x0a)
           ? '  <-- LF'
           : (id == NcKey.pasteBegin)
-              ? '  <-- PASTE_BEGIN'
-              : (id == NcKey.pasteEnd)
-                  ? '  <-- PASTE_END'
-                  : (id == NcKey.enter)
-                      ? '  <-- NCKEY_ENTER'
-                      : '';
+          ? '  <-- PASTE_BEGIN'
+          : (id == NcKey.pasteEnd)
+          ? '  <-- PASTE_END'
+          : (id == NcKey.enter)
+          ? '  <-- NCKEY_ENTER'
+          : '';
       events.add(
         'gap=${gap}us id=$id ${_printable(id)} mod=${p.modifiers}$note',
       );
@@ -99,8 +110,12 @@ Future<void> main() async {
       lastShort = 'gap=${gap}us ${_printable(id)} ($captured)';
       final ms = DateTime.now().millisecondsSinceEpoch;
       if (ms - lastRender >= 30) {
-        _renderStatus(plane, 'PASTE a multi-line snippet, then Enter',
-            count: captured, last: lastShort);
+        _renderStatus(
+          plane,
+          'PASTE a multi-line snippet, then Enter',
+          count: captured,
+          last: lastShort,
+        );
         lastRender = ms;
       }
       if (id == NcKey.enter || id == 0x0a) {
@@ -111,9 +126,12 @@ Future<void> main() async {
 
     // Wait (with a timeout) for the user to finish, keeping the process alive
     // so the pump's async listener can fire.
-    await done.future.timeout(const Duration(minutes: 5), onTimeout: () {
-      events.add('-- TIMEOUT (5 min) --');
-    });
+    await done.future.timeout(
+      const Duration(minutes: 5),
+      onTimeout: () {
+        events.add('-- TIMEOUT (5 min) --');
+      },
+    );
   } finally {
     // Order matters: stop the PUMP first (joins its thread so it's no longer
     // touching the notcurses context), THEN stop notcurses, THEN restore the
@@ -155,8 +173,12 @@ String _printable(int id) {
   return '0x${id.toRadixString(16)}';
 }
 
-void _renderStatus(Plane plane, String status,
-    {required int count, required String last}) {
+void _renderStatus(
+  Plane plane,
+  String status, {
+  required int count,
+  required String last,
+}) {
   plane.erase();
   plane.putStrYX(0, 0, 'Batched-paste spike (Phase 6 pump path)');
   plane.putStrYX(2, 0, status);

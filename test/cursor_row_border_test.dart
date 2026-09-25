@@ -31,49 +31,54 @@ void main() {
   group(
     'cursor-row border retention',
     () {
-      test('input-row border cells survive cursor-park + damage-tracked renders',
-          () async {
-        await withNotcurses((nc, std) async {
-          final dim = std.dimyx();
-          final row = dim.y ~/ 2;
-          final lastCol = dim.x - 1;
-          final interiorW = lastCol - 1; // cols 1..lastCol-1
-          const inputCol = 3; // cursor sits after '> '
+      test(
+        'input-row border cells survive cursor-park + damage-tracked renders',
+        () async {
+          await withNotcurses((nc, std) async {
+            final dim = std.dimyx();
+            final row = dim.y ~/ 2;
+            final lastCol = dim.x - 1;
+            final interiorW = lastCol - 1; // cols 1..lastCol-1
+            const inputCol = 3; // cursor sits after '> '
 
-          String glyph(int x) => std.atYX(row, x)?.egc ?? '<null>';
+            String glyph(int x) => std.atYX(row, x)?.egc ?? '<null>';
 
-          // Cocoon flushes after every putAtAbsolute as render()+cursorEnable().
-          void flush() {
-            nc.render();
-            nc.cursorEnable(y: row, x: inputCol);
-          }
+            // Cocoon flushes after every putAtAbsolute as render()+cursorEnable().
+            void flush() {
+              nc.render();
+              nc.cursorEnable(y: row, x: inputCol);
+            }
 
-          // -- panel.render() side loop (focused → cyan accent) --------------
-          std.setFgRGB(_cyan);
-          std.putStrYX(row, 0, '│'); // left border
-          flush();
-          std.putStrYX(row, lastCol, '│'); // right border
-          flush();
-          std.setFgDefault();
-          std.setBgDefault();
+            // -- panel.render() side loop (focused → cyan accent) --------------
+            std.setFgRGB(_cyan);
+            std.putStrYX(row, 0, '│'); // left border
+            flush();
+            std.putStrYX(row, lastCol, '│'); // right border
+            flush();
+            std.setFgDefault();
+            std.setBgDefault();
 
-          // -- panel._renderInputRow + InputRegion.render (interior + prompt) -
-          std.putStrYX(row, 1, ' ' * interiorW); // erase interior
-          std.putStrYX(row, 1, '> '); // prompt
-          flush();
-          // A second input re-render (mimics one keystroke / cursor blink).
-          std.putStrYX(row, 1, ' ' * interiorW);
-          std.putStrYX(row, 1, '> hello');
-          flush();
-          nc.cursorEnable(y: row, x: 8); // cursor advances with the typed text
+            // -- panel._renderInputRow + InputRegion.render (interior + prompt) -
+            std.putStrYX(row, 1, ' ' * interiorW); // erase interior
+            std.putStrYX(row, 1, '> '); // prompt
+            flush();
+            // A second input re-render (mimics one keystroke / cursor blink).
+            std.putStrYX(row, 1, ' ' * interiorW);
+            std.putStrYX(row, 1, '> hello');
+            flush();
+            nc.cursorEnable(
+              y: row,
+              x: 8,
+            ); // cursor advances with the typed text
 
-          // -- assertions: the border cells must still be '│' ----------------
-          expect(glyph(0), '│', reason: 'left border survives');
-          expect(glyph(lastCol), '│', reason: 'right border survives');
-          // And the interior was actually written.
-          expect(glyph(1), '>', reason: 'prompt present');
-        });
-      });
+            // -- assertions: the border cells must still be '│' ----------------
+            expect(glyph(0), '│', reason: 'left border survives');
+            expect(glyph(lastCol), '│', reason: 'right border survives');
+            // And the interior was actually written.
+            expect(glyph(1), '>', reason: 'prompt present');
+          });
+        },
+      );
     },
     skip: !notcursesSupported
         ? 'needs a controlling TTY (notcurses opens /dev/tty)'

@@ -26,10 +26,7 @@ class Dimensions {
   }
 
   Dimensions copyWith({int? y, int? x}) {
-    return Dimensions(
-      y ?? this.y,
-      x ?? this.x,
-    );
+    return Dimensions(y ?? this.y, x ?? this.x);
   }
 }
 
@@ -101,8 +98,9 @@ class Plane {
   // Closes [_resizeCallable] if the Plane is GC'd without an explicit destroy
   // (planes otherwise require manual destroy). Without this, the C side would
   // keep a pointer to a trampoline whose Dart closure context is gone.
-  static final Finalizer<ffi.NativeCallable> _callableFinalizer =
-      Finalizer((ffi.NativeCallable cb) => cb.close());
+  static final Finalizer<ffi.NativeCallable> _callableFinalizer = Finalizer(
+    (ffi.NativeCallable cb) => cb.close(),
+  );
 
   Plane._(this._ptr);
 
@@ -200,19 +198,19 @@ class Plane {
     }
     final callable =
         ffi.NativeCallable<ffi.Int Function(ffi.Pointer<ncplane>)>.isolateLocal(
-      (ffi.Pointer<ncplane> n) {
-        // Resolve the raw ncplane back to its canonical wrapper; if Dart has
-        // no wrapper for it, defer to notcurses' default resize.
-        final plane = _canonical[n.address]?.target;
-        if (plane == null || plane._ptr != n) return 1;
-        return cb(plane) ? 0 : 1; // C: 0 = handled, non-zero = default
-      },
-      // If the Dart callback throws or the isolate is gone, let notcurses
-      // apply its default resize rather than read garbage. (exceptionalReturn
-      // must be named — the analyzer's FFI verifier mishandles the positional
-      // form.)
-      exceptionalReturn: 1,
-    );
+          (ffi.Pointer<ncplane> n) {
+            // Resolve the raw ncplane back to its canonical wrapper; if Dart has
+            // no wrapper for it, defer to notcurses' default resize.
+            final plane = _canonical[n.address]?.target;
+            if (plane == null || plane._ptr != n) return 1;
+            return cb(plane) ? 0 : 1; // C: 0 = handled, non-zero = default
+          },
+          // If the Dart callback throws or the isolate is gone, let notcurses
+          // apply its default resize rather than read garbage. (exceptionalReturn
+          // must be named — the analyzer's FFI verifier mishandles the positional
+          // form.)
+          exceptionalReturn: 1,
+        );
     nc.ncplane_set_resizecb(_ptr, callable.nativeFunction);
     _resizeCallable = callable;
     _callableFinalizer.attach(this, callable, detach: this);
@@ -930,8 +928,28 @@ class Plane {
   ///
   /// Essentially, the kept material does not move. It serves to anchor the
   /// resized plane. If there is no kept material, the plane can move freely.
-  bool resize(int keepy, int keepx, int keepleny, int keeplenx, int yoff, int xoff, int ylen, int xlen) {
-    return nc.ncplane_resize(_ptr, keepy, keepx, keepleny, keeplenx, yoff, xoff, ylen, xlen) == 0;
+  bool resize(
+    int keepy,
+    int keepx,
+    int keepleny,
+    int keeplenx,
+    int yoff,
+    int xoff,
+    int ylen,
+    int xlen,
+  ) {
+    return nc.ncplane_resize(
+          _ptr,
+          keepy,
+          keepx,
+          keepleny,
+          keeplenx,
+          yoff,
+          xoff,
+          ylen,
+          xlen,
+        ) ==
+        0;
   }
 
   /// realign the plane 'n' against its parent, using the alignments specified
@@ -993,7 +1011,11 @@ class Plane {
       final pchannel = alloc<ffi.Uint64>();
       final pi8 = nc.ncplane_at_cursor(_ptr, pstyle, pchannel);
       if (pi8 == ffi.nullptr) return null;
-      final rc = CellData(pi8.cast<Utf8>().toDartString(), pstyle.value, pchannel.value);
+      final rc = CellData(
+        pi8.cast<Utf8>().toDartString(),
+        pstyle.value,
+        pchannel.value,
+      );
       malloc.free(pi8);
       return rc;
     });
@@ -1027,7 +1049,11 @@ class Plane {
       final pchannel = alloc<ffi.Uint64>();
       final pi8 = nc.ncplane_at_yx(_ptr, y, x, pstyle, pchannel);
       if (pi8 == ffi.nullptr) return null;
-      final rc = CellData(pi8.cast<Utf8>().toDartString(), pstyle.value, pchannel.value);
+      final rc = CellData(
+        pi8.cast<Utf8>().toDartString(),
+        pstyle.value,
+        pchannel.value,
+      );
       calloc.free(pi8);
       return rc;
     });
@@ -1043,7 +1069,16 @@ class Plane {
     return using<Uint32List?>((Arena alloc) {
       final pxdimy = alloc<ffi.UnsignedInt>();
       final pxdimx = alloc<ffi.UnsignedInt>();
-      final u32 = nc.ncplane_as_rgba(_ptr, blit, begy, begx, leny, lenx, pxdimy, pxdimx);
+      final u32 = nc.ncplane_as_rgba(
+        _ptr,
+        blit,
+        begy,
+        begx,
+        leny,
+        lenx,
+        pxdimy,
+        pxdimx,
+      );
       if (u32 == ffi.nullptr) return null;
 
       // The buffer holds pxdimy*pxdimx 32-bit pixels (out-params are only
@@ -1138,8 +1173,26 @@ class Plane {
   /// contained within 'dst'.  Behavior is undefined if 'src' and 'dst' are
   /// equivalent. 'dst' is modified, but 'src' remains unchanged. Neither 'src'
   /// nor 'dst' may have sprixels. Lengths of 0 mean "everything left".
-  bool mergeDown(Plane dst, int begsrcy, int begsrcx, int leny, int lenx, int dsty, int dstx) {
-    return nc.ncplane_mergedown(_ptr, dst.ptr, begsrcy, begsrcx, leny, lenx, dsty, dstx) == 0;
+  bool mergeDown(
+    Plane dst,
+    int begsrcy,
+    int begsrcx,
+    int leny,
+    int lenx,
+    int dsty,
+    int dstx,
+  ) {
+    return nc.ncplane_mergedown(
+          _ptr,
+          dst.ptr,
+          begsrcy,
+          begsrcx,
+          leny,
+          lenx,
+          dsty,
+          dstx,
+        ) ==
+        0;
   }
 
   /// Merge the entirety of 'src' down onto the ncplane 'dst'. If 'src' does not
@@ -1364,7 +1417,8 @@ class Plane {
     Channels? channels,
   ]) {
     final u8 = gclusters.toNativeUtf8().cast<ffi.Char>();
-    final rc = ncInline.nccells_load_box(
+    final rc =
+        ncInline.nccells_load_box(
           _ptr,
           styles,
           channels == null ? 0 : channels.value,
@@ -1379,7 +1433,14 @@ class Plane {
         0;
     allocator.free(u8);
     if (rc) {
-      for (final c in [upperLeft, upperRight, lowerLeft, lowerRight, horizontalLine, verticalLine]) {
+      for (final c in [
+        upperLeft,
+        upperRight,
+        lowerLeft,
+        lowerRight,
+        horizontalLine,
+        verticalLine,
+      ]) {
         c.markLoadedOn(this);
       }
     }
@@ -1397,7 +1458,8 @@ class Plane {
     int styles = 0,
     Channels? channels,
   ]) {
-    final ok = ncInline.nccells_rounded_box(
+    final ok =
+        ncInline.nccells_rounded_box(
           _ptr,
           styles,
           channels == null ? 0 : channels.value,
@@ -1410,7 +1472,14 @@ class Plane {
         ) ==
         0;
     if (ok) {
-      for (final c in [upperLeft, upperRight, lowerLeft, lowerRight, horizontalLine, verticalLine]) {
+      for (final c in [
+        upperLeft,
+        upperRight,
+        lowerLeft,
+        lowerRight,
+        horizontalLine,
+        verticalLine,
+      ]) {
         c.markLoadedOn(this);
       }
     }
@@ -1461,7 +1530,8 @@ class Plane {
     int styles = 0,
     Channels? channels,
   ]) {
-    final ok = ncInline.nccells_double_box(
+    final ok =
+        ncInline.nccells_double_box(
           _ptr,
           styles,
           channels == null ? 0 : channels.value,
@@ -1474,7 +1544,14 @@ class Plane {
         ) ==
         0;
     if (ok) {
-      for (final c in [upperLeft, upperRight, lowerLeft, lowerRight, horizontalLine, verticalLine]) {
+      for (final c in [
+        upperLeft,
+        upperRight,
+        lowerLeft,
+        lowerRight,
+        horizontalLine,
+        verticalLine,
+      ]) {
         c.markLoadedOn(this);
       }
     }
@@ -1516,13 +1593,23 @@ class Plane {
   }
 
   int perimeterRounded([int styles = 0, Channels? channels, int ctlword = 0]) {
-    return ncInline.ncplane_perimeter_rounded(_ptr, styles, channels == null ? 0 : channels.value, ctlword);
+    return ncInline.ncplane_perimeter_rounded(
+      _ptr,
+      styles,
+      channels == null ? 0 : channels.value,
+      ctlword,
+    );
   }
 
   /// Draw a with a double line around the Plane borders
   /// with ctlword can disable some borders
   int perimeterDouble([int styles = 0, Channels? channels, int ctlword = 0]) {
-    return ncInline.ncplane_perimeter_double(_ptr, styles, channels == null ? 0 : channels.value, ctlword);
+    return ncInline.ncplane_perimeter_double(
+      _ptr,
+      styles,
+      channels == null ? 0 : channels.value,
+      ctlword,
+    );
   }
 
   int asciiBox(
@@ -1572,9 +1659,31 @@ class Plane {
   ///  1xN: both top and both bottom colors must be the same (vertical gradient)
   ///  Nx1: both left and both right colors must be the same (horizontal gradient)
   int gradient(
-      int y, int x, int ylen, int xlen, String egc, int styles, Channels ul, Channels ur, Channels ll, Channels lr) {
+    int y,
+    int x,
+    int ylen,
+    int xlen,
+    String egc,
+    int styles,
+    Channels ul,
+    Channels ur,
+    Channels ll,
+    Channels lr,
+  ) {
     final u8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Char>();
-    final rc = nc.ncplane_gradient(_ptr, y, x, ylen, xlen, u8, styles, ul.value, ur.value, ll.value, lr.value);
+    final rc = nc.ncplane_gradient(
+      _ptr,
+      y,
+      x,
+      ylen,
+      xlen,
+      u8,
+      styles,
+      ul.value,
+      ur.value,
+      ll.value,
+      lr.value,
+    );
     allocator.free(u8);
     return rc;
   }
@@ -1583,8 +1692,27 @@ class Plane {
   /// This doubles the number of vertical gradations, but restricts you to
   /// half blocks (appearing to be full blocks). Returns the number of cells
   /// filled on success, or -1 on error.
-  int gradient2x1(int y, int x, int ylen, int xlen, Channel ul, Channel ur, Channel ll, Channel lr) {
-    return nc.ncplane_gradient2x1(_ptr, y, x, ylen, xlen, ul.value, ur.value, ll.value, lr.value);
+  int gradient2x1(
+    int y,
+    int x,
+    int ylen,
+    int xlen,
+    Channel ul,
+    Channel ur,
+    Channel ll,
+    Channel lr,
+  ) {
+    return nc.ncplane_gradient2x1(
+      _ptr,
+      y,
+      x,
+      ylen,
+      xlen,
+      ul.value,
+      ur.value,
+      ll.value,
+      lr.value,
+    );
   }
 
   /// Set the given style throughout the specified region, keeping content and
@@ -1605,8 +1733,27 @@ class Plane {
   /// remaining to the right and below, respectively. It is an error for any
   /// coordinate to be outside the plane. Returns the number of cells set,
   /// or -1 on failure.
-  int stain(int y, int x, int ylen, int xlen, Channels ul, Channels ur, Channels ll, Channels lr) {
-    return nc.ncplane_stain(_ptr, y, x, ylen, xlen, ul.value, ur.value, ll.value, lr.value);
+  int stain(
+    int y,
+    int x,
+    int ylen,
+    int xlen,
+    Channels ul,
+    Channels ur,
+    Channels ll,
+    Channels lr,
+  ) {
+    return nc.ncplane_stain(
+      _ptr,
+      y,
+      x,
+      ylen,
+      xlen,
+      ul.value,
+      ur.value,
+      ll.value,
+      lr.value,
+    );
   }
 
   //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1634,10 +1781,20 @@ class Plane {
   }
 
   /// nccell_load(), plus blast the styling with 'attr' and 'channels'.
-  NcResult<int, Cell?> primeCell(String value, [int stylemask = 0, Channels? channels]) {
+  NcResult<int, Cell?> primeCell(
+    String value, [
+    int stylemask = 0,
+    Channels? channels,
+  ]) {
     final c = Cell.init();
     final u8 = value.toNativeUtf8().cast<ffi.Char>();
-    final rc = ncInline.nccell_prime(_ptr, c.ptr, u8, stylemask, channels == null ? 0 : channels.value);
+    final rc = ncInline.nccell_prime(
+      _ptr,
+      c.ptr,
+      u8,
+      stylemask,
+      channels == null ? 0 : channels.value,
+    );
     allocator.free(u8);
     if (rc < 0) {
       c.destroy(this);
@@ -1697,7 +1854,11 @@ class Plane {
   /// Load a UTF-8 encoded EGC of up to 4 bytes into the nccell 'c'. Returns the
   /// number of bytes used, or -1 on error.
   int loadEgc32(Cell c, String value) {
-    final rc = ncInline.nccell_load_egc32(_ptr, c.ptr, value.runes.elementAt(0));
+    final rc = ncInline.nccell_load_egc32(
+      _ptr,
+      c.ptr,
+      value.runes.elementAt(0),
+    );
     if (rc >= 0) c.markLoadedOn(this);
     return rc;
   }
@@ -1705,7 +1866,11 @@ class Plane {
   /// Load a UCS-32 codepoint into the nccell 'c'. Returns the number of bytes
   /// used, or -1 on error.
   int loadUcs32(Cell c, String value) {
-    final rc = ncInline.nccell_load_ucs32(_ptr, c.ptr, value.runes.elementAt(0));
+    final rc = ncInline.nccell_load_ucs32(
+      _ptr,
+      c.ptr,
+      value.runes.elementAt(0),
+    );
     if (rc >= 0) c.markLoadedOn(this);
     return rc;
   }
@@ -1726,5 +1891,4 @@ class Plane {
     allocator.free(u64);
     /// ???
   } */
-
 }

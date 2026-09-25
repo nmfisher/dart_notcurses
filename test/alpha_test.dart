@@ -12,15 +12,18 @@ void main() {
   group(
     'background alpha',
     () {
-      test('setBgAlpha(transparent) yields a transparent cell background', () async {
-        await withNotcurses((nc, std) {
-          std.setBgAlpha(Alpha.transparent);
-          std.putStrYX(0, 0, 't');
-          final c = std.atYX(0, 0);
-          expect(c, isNotNull);
-          expect(c!.channels & 0x30000000, Alpha.transparent);
-        });
-      });
+      test(
+        'setBgAlpha(transparent) yields a transparent cell background',
+        () async {
+          await withNotcurses((nc, std) {
+            std.setBgAlpha(Alpha.transparent);
+            std.putStrYX(0, 0, 't');
+            final c = std.atYX(0, 0);
+            expect(c, isNotNull);
+            expect(c!.channels & 0x30000000, Alpha.transparent);
+          });
+        },
+      );
 
       test('setBgDefault yields an opaque cell background', () async {
         await withNotcurses((nc, std) {
@@ -32,6 +35,8 @@ void main() {
         });
       });
     },
-    skip: !notcursesSupported ? 'needs a controlling TTY (notcurses opens /dev/tty)' : false,
+    skip: !notcursesSupported
+        ? 'needs a controlling TTY (notcurses opens /dev/tty)'
+        : false,
   );
 }

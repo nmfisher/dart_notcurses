@@ -38,7 +38,10 @@ void main() {
     // Regression: a bad output fd used to store a NULL FILE* and fclose(NULL)
     // on stop; now init fails cleanly and stop() is a safe no-op.
     test('withOutputFd on an invalid fd fails cleanly', () {
-      final n = NotCurses.withOutputFd(987654321, CursesOptions(loglevel: LogLevel.silent));
+      final n = NotCurses.withOutputFd(
+        987654321,
+        CursesOptions(loglevel: LogLevel.silent),
+      );
       expect(n.notInitialized, isTrue);
       expect(n.stop(), isTrue);
       expect(n.stop(), isTrue);

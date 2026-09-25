@@ -4,13 +4,16 @@ import 'package:dart_notcurses/dart_notcurses.dart';
 import 'image_loader.dart';
 
 int main() {
-  final nc = NotCurses(CursesOptions(
-    flags: OptionFlags.noAlternateScreen |
-        OptionFlags.preserveCursor |
-        OptionFlags.noClearBitmaps |
-        OptionFlags.drainInput |
-        OptionFlags.suppressBanners,
-  ));
+  final nc = NotCurses(
+    CursesOptions(
+      flags:
+          OptionFlags.noAlternateScreen |
+          OptionFlags.preserveCursor |
+          OptionFlags.noClearBitmaps |
+          OptionFlags.drainInput |
+          OptionFlags.suppressBanners,
+    ),
+  );
   if (nc.notInitialized) return -1;
 
   nc.miceEnable(MiceEvents.allEvents);
@@ -146,63 +149,102 @@ void unicodeDumper(NotCurses nc, Plane plane, List<String> indent) {
   plane.putStr('$idt${Sequences.quadblocks}⎧');
   // 🯰🯱🯲🯳🯴🯵🯶🯷🯸🯹 (on Windows, these will be encoded as UTF-16 surrogate
   // pairs due to a 16-bit wchar_t.
-  sexViz(plane, Sequences.sexblocks, '⎫', '♠♥${Sequences.segdigits}\u2157\u2158\u2159\u215a\u215b');
-  vertViz(plane, '⎧', Sequences.eighthsr.characters.elementAt(0), Sequences.eighthsl[0], '⎫', '┌╥─╥─╥┐🭩⎛⎞');
+  sexViz(
+    plane,
+    Sequences.sexblocks,
+    '⎫',
+    '♠♥${Sequences.segdigits}\u2157\u2158\u2159\u215a\u215b',
+  );
+  vertViz(
+    plane,
+    '⎧',
+    Sequences.eighthsr.characters.elementAt(0),
+    Sequences.eighthsl[0],
+    '⎫',
+    '┌╥─╥─╥┐🭩⎛⎞',
+  );
   plane.putStr('$idt╲╿╱ ◨◧ ◪◩ ◖◗ ⫷⫸ ⎩');
-  sexViz(plane, Sequences.sexblocks.substring(31), '⎭',
-      '♦♣\u00bc\u00bd\u00be\u2150\u2151\u2152\u2153\u2154\u2155\u2156\u215c\u215d\u215e\u215f\u2189');
-  vertViz(plane, '⎪', Sequences.eighthsr.characters.elementAt(1), Sequences.eighthsl[1], '⎪', '├╜╓╫╖╙┤🭫⎜⎟');
+  sexViz(
+    plane,
+    Sequences.sexblocks.substring(31),
+    '⎭',
+    '♦♣\u00bc\u00bd\u00be\u2150\u2151\u2152\u2153\u2154\u2155\u2156\u215c\u215d\u215e\u215f\u2189',
+  );
+  vertViz(
+    plane,
+    '⎪',
+    Sequences.eighthsr.characters.elementAt(1),
+    Sequences.eighthsl[1],
+    '⎪',
+    '├╜╓╫╖╙┤🭫⎜⎟',
+  );
   plane.putStr('$idt╾╳╼ ');
   triviz(
-      plane,
-      Sequences.whitesquaresw,
-      Sequences.whitecirclesw,
-      Sequences.diagonalsw,
-      Sequences.diagonalsw.characters.skip(4).toString(),
-      Sequences.circulararcsw,
-      Sequences.whitetrianglesw,
-      Sequences.shadetrianglesw,
-      Sequences.blacktrianglesw,
-      Sequences.boxlightw,
-      Sequences.boxlightw.characters.skip(4).toString(),
-      Sequences.boxheavyw,
-      Sequences.boxheavyw.characters.skip(4).toString(),
-      Sequences.boxroundw,
-      Sequences.boxroundw.characters.skip(4).toString(),
-      Sequences.boxdoublew,
-      Sequences.boxdoublew.characters.skip(4).toString(),
-      Sequences.boxouterw,
-      Sequences.boxouterw.characters.skip(4).toString(),
-      Sequences.chessblack,
-      '⩘▵△▹▷▿▽◃◁',
-      Sequences.arroww);
-  vertViz(plane, '⎪', Sequences.eighthsr.characters.elementAt(2), Sequences.eighthsl[2], '⎪', '├─╨╫╨─┤┇⎜⎟');
+    plane,
+    Sequences.whitesquaresw,
+    Sequences.whitecirclesw,
+    Sequences.diagonalsw,
+    Sequences.diagonalsw.characters.skip(4).toString(),
+    Sequences.circulararcsw,
+    Sequences.whitetrianglesw,
+    Sequences.shadetrianglesw,
+    Sequences.blacktrianglesw,
+    Sequences.boxlightw,
+    Sequences.boxlightw.characters.skip(4).toString(),
+    Sequences.boxheavyw,
+    Sequences.boxheavyw.characters.skip(4).toString(),
+    Sequences.boxroundw,
+    Sequences.boxroundw.characters.skip(4).toString(),
+    Sequences.boxdoublew,
+    Sequences.boxdoublew.characters.skip(4).toString(),
+    Sequences.boxouterw,
+    Sequences.boxouterw.characters.skip(4).toString(),
+    Sequences.chessblack,
+    '⩘▵△▹▷▿▽◃◁',
+    Sequences.arroww,
+  );
+  vertViz(
+    plane,
+    '⎪',
+    Sequences.eighthsr.characters.elementAt(2),
+    Sequences.eighthsl[2],
+    '⎪',
+    '├─╨╫╨─┤┇⎜⎟',
+  );
   plane.putStr('$idt╱╽╲ ');
 
   triviz(
-      plane,
-      Sequences.whitesquaresw.characters.skip(2).toString(),
-      Sequences.whitecirclesw.characters.skip(2).toString(),
-      Sequences.diagonalsw.characters.skip(2).toString(),
-      Sequences.diagonalsw.characters.skip(6).toString(),
-      Sequences.circulararcsw.characters.skip(2).toString(),
-      Sequences.whitetrianglesw.characters.skip(2).toString(),
-      Sequences.shadetrianglesw.characters.skip(2).toString(),
-      Sequences.blacktrianglesw.characters.skip(2).toString(),
-      Sequences.boxlightw.characters.skip(2).toString(),
-      Sequences.boxlightw.characters.skip(5).toString(),
-      Sequences.boxheavyw.characters.skip(2).toString(),
-      Sequences.boxheavyw.characters.skip(5).toString(),
-      Sequences.boxroundw.characters.skip(2).toString(),
-      Sequences.boxroundw.characters.skip(5).toString(),
-      Sequences.boxdoublew.characters.skip(2).toString(),
-      Sequences.boxdoublew.characters.skip(5).toString(),
-      Sequences.boxouterw.characters.skip(2).toString(),
-      Sequences.boxouterw.characters.skip(5).toString(),
-      Sequences.chessblack.characters.skip(3).toString(),
-      '⩗▴⏶⯅▲▸⏵⯈▶',
-      '▾⏷⯆▼◂⏴⯇◀');
-  vertViz(plane, '⎪', Sequences.eighthsr.characters.elementAt(3), Sequences.eighthsl[3], '⎪', '╞═╤╬╤═╡┋⎜⎟');
+    plane,
+    Sequences.whitesquaresw.characters.skip(2).toString(),
+    Sequences.whitecirclesw.characters.skip(2).toString(),
+    Sequences.diagonalsw.characters.skip(2).toString(),
+    Sequences.diagonalsw.characters.skip(6).toString(),
+    Sequences.circulararcsw.characters.skip(2).toString(),
+    Sequences.whitetrianglesw.characters.skip(2).toString(),
+    Sequences.shadetrianglesw.characters.skip(2).toString(),
+    Sequences.blacktrianglesw.characters.skip(2).toString(),
+    Sequences.boxlightw.characters.skip(2).toString(),
+    Sequences.boxlightw.characters.skip(5).toString(),
+    Sequences.boxheavyw.characters.skip(2).toString(),
+    Sequences.boxheavyw.characters.skip(5).toString(),
+    Sequences.boxroundw.characters.skip(2).toString(),
+    Sequences.boxroundw.characters.skip(5).toString(),
+    Sequences.boxdoublew.characters.skip(2).toString(),
+    Sequences.boxdoublew.characters.skip(5).toString(),
+    Sequences.boxouterw.characters.skip(2).toString(),
+    Sequences.boxouterw.characters.skip(5).toString(),
+    Sequences.chessblack.characters.skip(3).toString(),
+    '⩗▴⏶⯅▲▸⏵⯈▶',
+    '▾⏷⯆▼◂⏴⯇◀',
+  );
+  vertViz(
+    plane,
+    '⎪',
+    Sequences.eighthsr.characters.elementAt(3),
+    Sequences.eighthsl[3],
+    '⎪',
+    '╞═╤╬╤═╡┋⎜⎟',
+  );
   brailleViz(
     plane,
     '⎡',
@@ -247,7 +289,13 @@ void unicodeDumper(NotCurses nc, Plane plane, List<String> indent) {
     Sequences.eighthsl[7],
     '│╭╮│╔═╝║⊆⊇',
   );
-  legacyViz(plane, indent.join(), '▔🭶🭷🭸🭹🭺🭻▁', Sequences.anglesbr, Sequences.anglesbl);
+  legacyViz(
+    plane,
+    indent.join(),
+    '▔🭶🭷🭸🭹🭺🭻▁',
+    Sequences.anglesbr,
+    Sequences.anglesbl,
+  );
   wviz(plane, Sequences.digitssubw);
   wviz(plane, ' ⎛');
   wviz(plane, Sequences.eighthsb);
@@ -258,7 +306,13 @@ void unicodeDumper(NotCurses nc, Plane plane, List<String> indent) {
     plane.putChar('\n');
   }
 
-  legacyViz(plane, indent.join(), '▏🭰🭱🭲🭳🭴🭵▕', Sequences.anglestr, Sequences.anglestl);
+  legacyViz(
+    plane,
+    indent.join(),
+    '▏🭰🭱🭲🭳🭴🭵▕',
+    Sequences.anglestr,
+    Sequences.anglestl,
+  );
   wviz(plane, Sequences.digitssuperw);
   wviz(plane, ' ⎝');
   wviz(plane, Sequences.eighthst);
@@ -305,7 +359,14 @@ int sexViz(Plane plane, String sex, String r, String post) {
   return 0;
 }
 
-void vertViz(Plane plane, String l, String li, String ri, String r, String trail) {
+void vertViz(
+  Plane plane,
+  String l,
+  String li,
+  String ri,
+  String r,
+  String trail,
+) {
   if (plane.putWc(l) <= 0) {
     plane.putChar(' ');
   }
@@ -347,28 +408,29 @@ void wvizn(Plane plane, String wp, int nnn) {
 }
 
 void triviz(
-    Plane plane,
-    String w1,
-    String w2,
-    String w3,
-    String w4,
-    String w5,
-    String w6,
-    String w7,
-    String w8,
-    String w9,
-    String wa,
-    String wb,
-    String wc,
-    String wd,
-    String we,
-    String wf,
-    String w10,
-    String w11,
-    String w12,
-    String w13,
-    String w14,
-    String w15) {
+  Plane plane,
+  String w1,
+  String w2,
+  String w3,
+  String w4,
+  String w5,
+  String w6,
+  String w7,
+  String w8,
+  String w9,
+  String wa,
+  String wb,
+  String wc,
+  String wd,
+  String we,
+  String wf,
+  String w10,
+  String w11,
+  String w12,
+  String w13,
+  String w14,
+  String w15,
+) {
   wvizn(plane, w1, 2);
   plane.putStr(' ');
   wvizn(plane, w2, 2);
@@ -404,7 +466,16 @@ void triviz(
 }
 
 int brailleViz(
-    Plane plane, String l, String egcs, String r, String indent, String bounds, String r8, String l8, String trailer) {
+  Plane plane,
+  String l,
+  String egcs,
+  String r,
+  String indent,
+  String bounds,
+  String r8,
+  String l8,
+  String trailer,
+) {
   plane.putStr('$indent$l');
   final egsChar = egcs.characters;
   for (int i = 0; i < 64; ++i) {
@@ -431,7 +502,13 @@ int brailleViz(
 }
 
 // symbols for legacy computing
-int legacyViz(Plane plane, String indent, String eighths, String anglesr, String anglesl) {
+int legacyViz(
+  Plane plane,
+  String indent,
+  String eighths,
+  String anglesr,
+  String anglesl,
+) {
   plane.putStr('$indent ');
 
   wviz(plane, eighths);

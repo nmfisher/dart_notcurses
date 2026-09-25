@@ -30,8 +30,11 @@ void main() {
             final c = child.atYX(0, 0);
             expect(c, isNotNull);
             expect(c!.egc, 'X');
-            expect((c.channels >> 32) & 0xFFFFFF, 0xcd0000,
-                reason: 'plane fg should land on the written cell');
+            expect(
+              (c.channels >> 32) & 0xFFFFFF,
+              0xcd0000,
+              reason: 'plane fg should land on the written cell',
+            );
           } finally {
             child?.destroy();
           }
@@ -75,32 +78,38 @@ void main() {
         });
       });
 
-      test('putStrYX with embedded SGR is silently dropped (same as std plane)',
-          () async {
-        // The bug that made panels invisible: NotcursesBackendSurface.putAt
-        // used to pass SGR-embedded text (`\x1b[36m...\x1b[0m`) straight to
-        // the child plane's putStrYX. Same swallow as the standard plane —
-        // both the escape bytes and the surrounding text vanish. If this
-        // ever changes (child planes start honoring embedded SGR, or start
-        // literalizing it), revisit `_emitSgrStyled` / `_PlaneSgrSink` in
-        // cocoon_console — the workaround may be redundant or need updating.
-        await withNotcurses((nc, std) {
-          final child = std.create(
-            PlaneOptions(y: 0, x: 0, rows: 3, cols: 10, name: 'child'),
-          );
-          expect(child, isNotNull);
-          try {
-            child!.putStrYX(0, 0, '\x1b[31mR\x1b[0m');
-            final c = child.atYX(0, 0);
-            expect(c, isNotNull);
-            expect(c!.egc, isEmpty,
-                reason: 'child plane swallows the whole write; the surface '
-                    'code path must strip SGR before hitting putStrYX');
-          } finally {
-            child?.destroy();
-          }
-        });
-      });
+      test(
+        'putStrYX with embedded SGR is silently dropped (same as std plane)',
+        () async {
+          // The bug that made panels invisible: NotcursesBackendSurface.putAt
+          // used to pass SGR-embedded text (`\x1b[36m...\x1b[0m`) straight to
+          // the child plane's putStrYX. Same swallow as the standard plane —
+          // both the escape bytes and the surrounding text vanish. If this
+          // ever changes (child planes start honoring embedded SGR, or start
+          // literalizing it), revisit `_emitSgrStyled` / `_PlaneSgrSink` in
+          // cocoon_console — the workaround may be redundant or need updating.
+          await withNotcurses((nc, std) {
+            final child = std.create(
+              PlaneOptions(y: 0, x: 0, rows: 3, cols: 10, name: 'child'),
+            );
+            expect(child, isNotNull);
+            try {
+              child!.putStrYX(0, 0, '\x1b[31mR\x1b[0m');
+              final c = child.atYX(0, 0);
+              expect(c, isNotNull);
+              expect(
+                c!.egc,
+                isEmpty,
+                reason:
+                    'child plane swallows the whole write; the surface '
+                    'code path must strip SGR before hitting putStrYX',
+              );
+            } finally {
+              child?.destroy();
+            }
+          });
+        },
+      );
     },
     skip: !notcursesSupported
         ? 'needs a controlling TTY (notcurses opens /dev/tty)'

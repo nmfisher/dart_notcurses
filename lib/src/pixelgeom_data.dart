@@ -31,7 +31,15 @@ class PixelGeomData {
       final __maxbmapy = maxbmapy ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
       final __maxbmapx = maxbmapx ? alloc<ffi.UnsignedInt>() : ffi.nullptr;
 
-      nc.ncplane_pixel_geom(plane.ptr, __pxy, __pxx, __celldimy, __celldimx, __maxbmapy, __maxbmapx);
+      nc.ncplane_pixel_geom(
+        plane.ptr,
+        __pxy,
+        __pxx,
+        __celldimy,
+        __celldimx,
+        __maxbmapy,
+        __maxbmapx,
+      );
 
       _pxy = pxy ? __pxy.value : -1;
       _pxx = pxx ? __pxx.value : -1;

@@ -35,14 +35,20 @@ void main() {
       final data = Uint8List(rows * rowstride);
       final palette = Uint32List(2);
       expect(
-        () => Visual.fromPalidx(data, rows, rowstride, cols, 8, pstride, palette),
+        () =>
+            Visual.fromPalidx(data, rows, rowstride, cols, 8, pstride, palette),
         throwsArgumentError,
       );
     });
 
     test('setYX/atYX round-trip a pixel', () {
       const rows = 4, cols = 4, rowstride = cols * 4;
-      final v = Visual.fromRGBA(Uint8List(rows * rowstride), rows, rowstride, cols);
+      final v = Visual.fromRGBA(
+        Uint8List(rows * rowstride),
+        rows,
+        rowstride,
+        cols,
+      );
       expect(v.initialized, isTrue);
       const pixel = 0xffcc8844;
       expect(v.setYX(1, 2, pixel), isTrue);
@@ -60,7 +66,12 @@ void main() {
 
     test('destroy is idempotent', () {
       const rows = 2, cols = 2, rowstride = cols * 4;
-      final v = Visual.fromRGBA(Uint8List(rows * rowstride), rows, rowstride, cols);
+      final v = Visual.fromRGBA(
+        Uint8List(rows * rowstride),
+        rows,
+        rowstride,
+        cols,
+      );
       v.destroy();
       expect(v.destroy, returnsNormally);
       expect(v.notInitialized, isTrue);
@@ -73,7 +84,12 @@ void main() {
       const rows = 8, cols = 8, rowstride = cols * 4;
       for (var i = 0; i < 100; i++) {
         Visual.fromRGBA(Uint8List(rows * rowstride), rows, rowstride, cols);
-        Visual.fromRGBA(Uint8List(rows * rowstride), rows, rowstride, cols).destroy();
+        Visual.fromRGBA(
+          Uint8List(rows * rowstride),
+          rows,
+          rowstride,
+          cols,
+        ).destroy();
       }
       var sink = 0;
       for (var i = 0; i < 50; i++) {

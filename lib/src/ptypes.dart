@@ -363,7 +363,7 @@ abstract class DirectOptionFlags {
 }
 
 abstract class Sequences {
-// unicode box-drawing characters
+  // unicode box-drawing characters
   static const String boxlightw = '┌┐└┘─│';
   static const String boxheavyw = '┏┓┗┛━┃';
   static const String boxroundw = '╭╮╰╯─│';
@@ -397,7 +397,7 @@ abstract class Sequences {
   static const String digitssuperw = '⁰¹²³⁴⁵⁶⁷⁸⁹';
   static const String digitssubw = '₀₁₂₃₄₅₆₇₈₉';
 
-// unicode fucking loves asterisks
+  // unicode fucking loves asterisks
   static const String asterisks5 = '🞯🞰🞱🞲🞳🞴';
   static const String asterisks6 = '🞵🞶🞷🞸🞹🞺';
   static const String asterisks8 = '🞻🞼✳🞽🞾🞿';
@@ -445,17 +445,20 @@ abstract class Sequences {
     0x0001FBF6,
     0x0001FBF7,
     0x0001FBF8,
-    0x0001FBF9
+    0x0001FBF9,
   ];
 
   static const String suitsblack = '\u2660\u2663\u2665\u2666'; // ♠♣♥♦
   static const String suitswhite = '\u2661\u2662\u2664\u2667'; // ♡♢♤♧
-  static const String chessblack = '\u265f\u265c\u265e\u265d\u265b\u265a'; // ♟♜♞♝♛♚
-  static const String chesswhite = '\u265f\u265c\u265e\u265d\u265b\u265a'; // ♙♖♘♗♕♔
+  static const String chessblack =
+      '\u265f\u265c\u265e\u265d\u265b\u265a'; // ♟♜♞♝♛♚
+  static const String chesswhite =
+      '\u265f\u265c\u265e\u265d\u265b\u265a'; // ♙♖♘♗♕♔
   static const String dice = '\u2680\u2681\u2682\u2683\u2684\u2685'; // ⚀⚁⚂⚃⚄⚅
-  static const String musicsym = '\u2669\u266A\u266B\u266C\u266D\u266E\u266F'; // ♩♪♫♬♭♮♯
+  static const String musicsym =
+      '\u2669\u266A\u266B\u266C\u266D\u266E\u266F'; // ♩♪♫♬♭♮♯
 
-// argh
+  // argh
   static const String boxlight = '┌┐└┘─│';
   static const String boxheavy = '┏┓┗┛━┃';
   static const String boxround = '╭╮╰╯─│';

@@ -16,13 +16,19 @@ int main(List<String> args) {
       return -1;
     }
 
-    nc = NotCurses(CursesOptions(
+    nc = NotCurses(
+      CursesOptions(
         marginT: 2,
         marginR: 2,
         marginB: 2,
         marginL: 2,
-        flags: OptionFlags.drainInput | OptionFlags.noAlternateScreen | OptionFlags.suppressBanners,
-        loglevel: LogLevel.silent));
+        flags:
+            OptionFlags.drainInput |
+            OptionFlags.noAlternateScreen |
+            OptionFlags.suppressBanners,
+        loglevel: LogLevel.silent,
+      ),
+    );
 
     if (nc.checkPixelSupport() <= 0) {
       print('pixel graphics not supported');
@@ -79,7 +85,10 @@ bool handle(NotCurses nc, String fname) {
 
   vopts.x = Align.center;
   vopts.y = Align.center;
-  vopts.flags = VisualOptionFlags.horaligned | VisualOptionFlags.veraligned | VisualOptionFlags.childplane;
+  vopts.flags =
+      VisualOptionFlags.horaligned |
+      VisualOptionFlags.veraligned |
+      VisualOptionFlags.childplane;
   vopts.plane = nc.stdplane();
   var failed = false;
   for (double i = 0; i < 256; ++i) {

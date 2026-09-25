@@ -27,7 +27,9 @@ void showUsage() {
   print('\t -h - this help');
   print('\t -i - show ordered by index (default)');
   print('\t -g - show warm index');
-  print('RGB colors extractracted from https://en.wikipedia.org/wiki/ANSI_escape_code');
+  print(
+    'RGB colors extractracted from https://en.wikipedia.org/wiki/ANSI_escape_code',
+  );
 }
 
 void showColor(Direct nc, int idx) {
@@ -137,7 +139,7 @@ final Map<int, int> colorCube = {
   49: 0x00ffaf,
   50: 0x00ffd7,
   51: 0x00ffff,
-//
+  //
   52: 0x5f0000,
   53: 0x5f005f,
   54: 0x5f0087,
@@ -174,7 +176,7 @@ final Map<int, int> colorCube = {
   85: 0x5fffaf,
   86: 0x5fffd7,
   87: 0x5fffff,
-//
+  //
   88: 0x870000,
   89: 0x87005f,
   90: 0x870087,
@@ -211,7 +213,7 @@ final Map<int, int> colorCube = {
   121: 0x87ffaf,
   122: 0x87ffd7,
   123: 0x87ffff,
-//
+  //
   124: 0xaf0000,
   125: 0xaf005f,
   126: 0xaf0087,
@@ -248,7 +250,7 @@ final Map<int, int> colorCube = {
   157: 0xafffaf,
   158: 0xafffd7,
   159: 0xafffff,
-//
+  //
   160: 0xd70000,
   161: 0xd7005f,
   162: 0xd70087,
@@ -285,7 +287,7 @@ final Map<int, int> colorCube = {
   193: 0xd7ffaf,
   194: 0xd7ffd7,
   195: 0xd7ffff,
-//
+  //
   196: 0xff0000,
   197: 0xff005f,
   198: 0xff0087,
@@ -322,7 +324,7 @@ final Map<int, int> colorCube = {
   229: 0xffffaf,
   230: 0xffffd7,
   231: 0xffffff,
-//
+  //
   232: 0x080808,
   233: 0x121212,
   234: 0x1c1c1c,

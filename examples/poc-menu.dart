@@ -92,34 +92,71 @@ Menu topMenu() {
   final ms = MenuSection(
     'File',
     [
-      MenuItem('new-file', 'New File', shortcutKey: 'N', shortcutModifier: KeyMod.ctrl),
-      MenuItem('open-file', 'Open File', shortcutKey: 'O', shortcutModifier: KeyMod.ctrl),
-      MenuItem('save-file', 'Save File', shortcutKey: 'S', shortcutModifier: KeyMod.ctrl),
-      MenuItem('close-file', 'Close', shortcutKey: 'L', shortcutModifier: KeyMod.ctrl),
+      MenuItem(
+        'new-file',
+        'New File',
+        shortcutKey: 'N',
+        shortcutModifier: KeyMod.ctrl,
+      ),
+      MenuItem(
+        'open-file',
+        'Open File',
+        shortcutKey: 'O',
+        shortcutModifier: KeyMod.ctrl,
+      ),
+      MenuItem(
+        'save-file',
+        'Save File',
+        shortcutKey: 'S',
+        shortcutModifier: KeyMod.ctrl,
+      ),
+      MenuItem(
+        'close-file',
+        'Close',
+        shortcutKey: 'L',
+        shortcutModifier: KeyMod.ctrl,
+      ),
       MenuItem('quit', 'Quit', shortcutKey: 'Q', shortcutModifier: KeyMod.ctrl),
     ],
     shortcutKey: 'F',
     shortcutModifier: KeyMod.ctrl,
   );
   final ms2 = MenuSection(
-      'Edit',
-      [
-        MenuItem('copy', 'Copy', shortcutKey: 'K', shortcutModifier: KeyMod.ctrl),
-        MenuItem('paste', 'Paste', shortcutKey: 'V', shortcutModifier: KeyMod.ctrl),
-        MenuItem('select-all', 'Select All', shortcutKey: 'A', shortcutModifier: KeyMod.ctrl),
-      ],
-      shortcutKey: 'E',
-      shortcutModifier: KeyMod.ctrl);
+    'Edit',
+    [
+      MenuItem('copy', 'Copy', shortcutKey: 'K', shortcutModifier: KeyMod.ctrl),
+      MenuItem(
+        'paste',
+        'Paste',
+        shortcutKey: 'V',
+        shortcutModifier: KeyMod.ctrl,
+      ),
+      MenuItem(
+        'select-all',
+        'Select All',
+        shortcutKey: 'A',
+        shortcutModifier: KeyMod.ctrl,
+      ),
+    ],
+    shortcutKey: 'E',
+    shortcutModifier: KeyMod.ctrl,
+  );
   final ms3 = MenuSection(
-      'Window',
-      [
-        MenuItem('window-move-top', 'Move Window top'),
-        MenuItem('window-move-bottom', 'Move Window Bottom', shortcutKey: 'B', shortcutModifier: KeyMod.ctrl),
-        MenuItem('', ''),
-        MenuItem('window-close-all', 'Close All')
-      ],
-      shortcutKey: 'W',
-      shortcutModifier: KeyMod.ctrl);
+    'Window',
+    [
+      MenuItem('window-move-top', 'Move Window top'),
+      MenuItem(
+        'window-move-bottom',
+        'Move Window Bottom',
+        shortcutKey: 'B',
+        shortcutModifier: KeyMod.ctrl,
+      ),
+      MenuItem('', ''),
+      MenuItem('window-close-all', 'Close All'),
+    ],
+    shortcutKey: 'W',
+    shortcutModifier: KeyMod.ctrl,
+  );
 
   final secChan = Channels.zero()
     ..setFgRGB(0xff0000) // #ffccaa
@@ -131,12 +168,11 @@ Menu topMenu() {
     ..setBgRGB(0x7f347f) // #7f347f
     ..setBgAlpha(Alpha.blend);
 
-  return Menu(
-      [ms, ms2, ms3],
-      MenuOptions(
-        headerChannels: headChan,
-        sectionChannels: secChan,
-      ));
+  return Menu([
+    ms,
+    ms2,
+    ms3,
+  ], MenuOptions(headerChannels: headChan, sectionChannels: secChan));
 }
 
 void showSelection(Plane p, String kind, String menu, Key? key) {
@@ -152,7 +188,8 @@ void showSelection(Plane p, String kind, String menu, Key? key) {
     ..putStr(bgChar.padRight(80, bgChar));
 
   if (key != null) {
-    final str = '${key.id.toStrHex(padding: 4)} ${ncKeyStr(key.id)} ${key.keyStr}';
+    final str =
+        '${key.id.toStrHex(padding: 4)} ${ncKeyStr(key.id)} ${key.keyStr}';
     p
       ..setFgDefault()
       ..putStrYX(y + 1, 5, str)

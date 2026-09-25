@@ -57,7 +57,9 @@ class Direct {
   /// NCDIRECT_OPTION_*.
   /// Returns NULL on error, including any failure initializing terminfo.
   Direct({this.termType = '', this.flags = 0}) {
-    final ffi.Pointer<ffi.Char> i8 = termType.isEmpty ? ffi.nullptr.cast() : termType.toNativeUtf8().cast();
+    final ffi.Pointer<ffi.Char> i8 = termType.isEmpty
+        ? ffi.nullptr.cast()
+        : termType.toNativeUtf8().cast();
     _ptr = nc.ncdirect_init(i8, ffi.nullptr, flags);
     if (termType.isNotEmpty) {
       allocator.free(i8);
@@ -67,7 +69,9 @@ class Direct {
   /// The same as ncdirect_init(), but without any multimedia functionality,
   /// allowing for a svelter binary. Link with notcurses-core if this is used.
   Direct.core({this.termType = '', this.flags = 0}) {
-    final ffi.Pointer<ffi.Char> i8 = termType.isEmpty ? ffi.nullptr.cast() : termType.toNativeUtf8().cast();
+    final ffi.Pointer<ffi.Char> i8 = termType.isEmpty
+        ? ffi.nullptr.cast()
+        : termType.toNativeUtf8().cast();
     _ptr = nc.ncdirect_core_init(i8, ffi.nullptr, flags);
     if (termType.isNotEmpty) {
       allocator.free(i8);
@@ -149,7 +153,11 @@ class Direct {
   /// necessarily be immediately visible. Returns EOF on error.
   int putStr(String value, [Channels? channels]) {
     final i8 = value.toNativeUtf8().cast<ffi.Char>();
-    final rc = nc.ncdirect_putstr(_ptr, channels != null ? channels.value : 0, i8);
+    final rc = nc.ncdirect_putstr(
+      _ptr,
+      channels != null ? channels.value : 0,
+      i8,
+    );
     allocator.free(i8);
     return rc;
   }
@@ -164,7 +172,12 @@ class Direct {
   NcResult<int, int> putEgc(String value, [Channels? channels]) {
     final i8 = value.toNativeUtf8().cast<ffi.Char>();
     final sbytes = allocator<ffi.Int>();
-    final rc = nc.ncdirect_putegc(_ptr, channels != null ? channels.value : 0, i8, sbytes);
+    final rc = nc.ncdirect_putegc(
+      _ptr,
+      channels != null ? channels.value : 0,
+      i8,
+      sbytes,
+    );
     final bytesLen = sbytes.value;
 
     allocator.free(i8);
@@ -294,7 +307,13 @@ class Direct {
   /// offset. All lines start at the current cursor position.
   int hlineInterp(String egc, int len, Channels chan1, Channels chan2) {
     final i8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Char>();
-    final rc = nc.ncdirect_hline_interp(_ptr, i8, len, chan1.value, chan2.value);
+    final rc = nc.ncdirect_hline_interp(
+      _ptr,
+      i8,
+      len,
+      chan1.value,
+      chan2.value,
+    );
     allocator.free(i8);
     return rc;
   }
@@ -305,7 +324,13 @@ class Direct {
   /// will scroll as necessary. All lines start at the current cursor position.
   int vlineInterp(String egc, int len, Channels chan1, Channels chan2) {
     final i8 = egc.characters.elementAt(0).toNativeUtf8().cast<ffi.Char>();
-    final rc = nc.ncdirect_vline_interp(_ptr, i8, len, chan1.value, chan2.value);
+    final rc = nc.ncdirect_vline_interp(
+      _ptr,
+      i8,
+      len,
+      chan1.value,
+      chan2.value,
+    );
     allocator.free(i8);
     return rc;
   }
@@ -314,39 +339,143 @@ class Direct {
   /// dimensions |ylen|x|xlen|. See ncplane_box() for more information. The
   /// minimum box size is 2x2, and it cannot be drawn off-screen. |wchars| is an
   /// array of 6 wide characters: UL, UR, LL, LR, HL, VL.
-  bool box(int ul, int ur, int ll, int lr, String wchars, int ylen, int xlen, int ctlword) {
+  bool box(
+    int ul,
+    int ur,
+    int ll,
+    int lr,
+    String wchars,
+    int ylen,
+    int xlen,
+    int ctlword,
+  ) {
     // The C API reads a wchar_t[6] (UL, UR, LL, LR, HL, VL), not UTF-8 bytes.
     final runes = wchars.runes.toList();
     if (runes.length < 6) {
-      throw ArgumentError.value(wchars, 'wchars', 'requires 6 characters: UL, UR, LL, LR, HL, VL');
+      throw ArgumentError.value(
+        wchars,
+        'wchars',
+        'requires 6 characters: UL, UR, LL, LR, HL, VL',
+      );
     }
     final wbuf = allocator<ffi.WChar>(6);
     for (var i = 0; i < 6; i++) {
       wbuf[i] = runes[i];
     }
-    final rc = nc.ncdirect_box(_ptr, ul, ur, ll, lr, wbuf, ylen, xlen, ctlword) == 0;
+    final rc =
+        nc.ncdirect_box(_ptr, ul, ur, ll, lr, wbuf, ylen, xlen, ctlword) == 0;
     allocator.free(wbuf);
     return rc;
   }
 
-  bool lightBox(int ul, int ur, int ll, int lr, int ylen, int xlen, int ctlword) {
-    return ncInline.ncdirect_light_box(_ptr, ul, ur, ll, lr, ylen, xlen, ctlword) == 0;
+  bool lightBox(
+    int ul,
+    int ur,
+    int ll,
+    int lr,
+    int ylen,
+    int xlen,
+    int ctlword,
+  ) {
+    return ncInline.ncdirect_light_box(
+          _ptr,
+          ul,
+          ur,
+          ll,
+          lr,
+          ylen,
+          xlen,
+          ctlword,
+        ) ==
+        0;
   }
 
-  bool heavyBox(int ul, int ur, int ll, int lr, int ylen, int xlen, int ctlword) {
-    return ncInline.ncdirect_heavy_box(_ptr, ul, ur, ll, lr, ylen, xlen, ctlword) == 0;
+  bool heavyBox(
+    int ul,
+    int ur,
+    int ll,
+    int lr,
+    int ylen,
+    int xlen,
+    int ctlword,
+  ) {
+    return ncInline.ncdirect_heavy_box(
+          _ptr,
+          ul,
+          ur,
+          ll,
+          lr,
+          ylen,
+          xlen,
+          ctlword,
+        ) ==
+        0;
   }
 
-  bool asciiBox(int ul, int ur, int ll, int lr, int ylen, int xlen, int ctlword) {
-    return ncInline.ncdirect_ascii_box(_ptr, ul, ur, ll, lr, ylen, xlen, ctlword) == 0;
+  bool asciiBox(
+    int ul,
+    int ur,
+    int ll,
+    int lr,
+    int ylen,
+    int xlen,
+    int ctlword,
+  ) {
+    return ncInline.ncdirect_ascii_box(
+          _ptr,
+          ul,
+          ur,
+          ll,
+          lr,
+          ylen,
+          xlen,
+          ctlword,
+        ) ==
+        0;
   }
 
-  bool roundedBox(Channels ul, Channels ur, Channels ll, Channels lr, {int ylen = 1, int xlen = 1, int ctlword = 0}) {
-    return nc.ncdirect_rounded_box(_ptr, ul.value, ur.value, ll.value, lr.value, ylen, xlen, ctlword) == 0;
+  bool roundedBox(
+    Channels ul,
+    Channels ur,
+    Channels ll,
+    Channels lr, {
+    int ylen = 1,
+    int xlen = 1,
+    int ctlword = 0,
+  }) {
+    return nc.ncdirect_rounded_box(
+          _ptr,
+          ul.value,
+          ur.value,
+          ll.value,
+          lr.value,
+          ylen,
+          xlen,
+          ctlword,
+        ) ==
+        0;
   }
 
-  bool doubleBox(Channels ul, Channels ur, Channels ll, Channels lr, {int ylen = 1, int xlen = 1, int ctlword = 0}) {
-    return nc.ncdirect_double_box(_ptr, ul.value, ur.value, ll.value, lr.value, ylen, xlen, ctlword) == 0;
+  bool doubleBox(
+    Channels ul,
+    Channels ur,
+    Channels ll,
+    Channels lr, {
+    int ylen = 1,
+    int xlen = 1,
+    int ctlword = 0,
+  }) {
+    return nc.ncdirect_double_box(
+          _ptr,
+          ul.value,
+          ur.value,
+          ll.value,
+          lr.value,
+          ylen,
+          xlen,
+          ctlword,
+        ) ==
+        0;
   }
 
   /// Provide a NULL 'ts' to block at length, a 'ts' of 0 for non-blocking
@@ -418,7 +547,8 @@ class Direct {
   /// can be split by using ncdirect_render_frame() and ncdirect_raster_frame().
   bool renderImage(String filename, int align, int blitter, int scale) {
     final fname = filename.toNativeUtf8().cast<ffi.Char>();
-    final rc = nc.ncdirect_render_image(_ptr, fname, align, blitter, scale) == 0;
+    final rc =
+        nc.ncdirect_render_image(_ptr, fname, align, blitter, scale) == 0;
     allocator.free(fname);
     return rc;
   }
@@ -430,9 +560,22 @@ class Direct {
   /// and 'maxy' (cell geometry, *not* pixel), if greater than 0, are used for
   /// scaling; the terminal's geometry is otherwise used.
   // TODO: review this, Plane is an alias, check ncdirectv
-  Plane? renderFrame(String filename, int blitter, int scale, int maxy, int maxx) {
+  Plane? renderFrame(
+    String filename,
+    int blitter,
+    int scale,
+    int maxy,
+    int maxx,
+  ) {
     final fname = filename.toNativeUtf8().cast<ffi.Char>();
-    final rc = nc.ncdirect_render_frame(_ptr, fname, blitter, scale, maxy, maxx);
+    final rc = nc.ncdirect_render_frame(
+      _ptr,
+      fname,
+      blitter,
+      scale,
+      maxy,
+      maxx,
+    );
     allocator.free(fname);
     if (rc == ffi.nullptr) return null;
     return Plane.fromPtr(rc);

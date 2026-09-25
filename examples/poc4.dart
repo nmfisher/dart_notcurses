@@ -3,13 +3,15 @@ import 'dart:io';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
 void main() {
-  final nc = NotCurses(CursesOptions(
-    marginT: 2,
-    marginL: 2,
-    marginR: 2,
-    marginB: 2,
-    loglevel: LogLevel.error,
-  ));
+  final nc = NotCurses(
+    CursesOptions(
+      marginT: 2,
+      marginL: 2,
+      marginR: 2,
+      marginB: 2,
+      loglevel: LogLevel.error,
+    ),
+  );
 
   if (nc.notInitialized) {
     stderr.writeln('error initializing nocurses');
@@ -19,19 +21,25 @@ void main() {
   final p = nc.stdplane();
 
   try {
-    final pInput = p.create(PlaneOptions(
-      y: 10,
-      x: 10,
-      rows: 1,
-      cols: 30,
-      name: 'input1',
-      flags: PlaneOptionFlags.fixed,
-    ));
+    final pInput = p.create(
+      PlaneOptions(
+        y: 10,
+        x: 10,
+        rows: 1,
+        cols: 30,
+        name: 'input1',
+        flags: PlaneOptionFlags.fixed,
+      ),
+    );
     if (pInput == null) {
       stderr.writeln('error creating input plane');
     }
     /* pInput!.perimeterDouble(0, 0, 16 | 64 | 32 | 128); */
-    pInput!.setBase('░', 0, Channels.initializerBg(0xaa, 0x44, 0x44)); // #aa4444
+    pInput!.setBase(
+      '░',
+      0,
+      Channels.initializerBg(0xaa, 0x44, 0x44),
+    ); // #aa4444
 
     final opts = ReaderOptions(
       Channels.initializerFg(0xcc, 0xaa, 0xff), // #ccaaff
@@ -89,6 +97,9 @@ void showCursorPos(Reader reader, Plane p) {
   final tplaneDim = tplane!.dimyx();
   final cursor = rPlane.cursorYX();
 
-  p.putStrYX(0, 0,
-      'Cursor ${cursor.y}/${cursor.x} ViewGeom ${rplaneDim.y}/${rplaneDim.x} TextGeom ${tplaneDim.y}/${tplaneDim.x}');
+  p.putStrYX(
+    0,
+    0,
+    'Cursor ${cursor.y}/${cursor.x} ViewGeom ${rplaneDim.y}/${rplaneDim.x} TextGeom ${tplaneDim.y}/${tplaneDim.x}',
+  );
 }

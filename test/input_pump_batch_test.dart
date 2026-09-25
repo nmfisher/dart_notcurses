@@ -42,8 +42,7 @@ void main() {
         // Give the pump a moment to arm, then tear down. No input is injected,
         // so no batches should fire.
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        expect(batchCount, 0,
-            reason: 'no input → no batches fire while idle');
+        expect(batchCount, 0, reason: 'no input → no batches fire while idle');
         await sub.cancel();
         pump.stop();
         expect(recordCount, 0);

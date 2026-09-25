@@ -3,13 +3,15 @@ import 'dart:io';
 import 'package:dart_notcurses/dart_notcurses.dart';
 
 void main() {
-  final nc = NotCurses(CursesOptions(
-    marginT: 2,
-    marginL: 2,
-    marginR: 2,
-    marginB: 2,
-    loglevel: LogLevel.error,
-  ));
+  final nc = NotCurses(
+    CursesOptions(
+      marginT: 2,
+      marginL: 2,
+      marginR: 2,
+      marginB: 2,
+      loglevel: LogLevel.error,
+    ),
+  );
 
   if (nc.notInitialized) {
     stderr.writeln('error initializing nocurses');

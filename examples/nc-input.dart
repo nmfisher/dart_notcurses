@@ -11,14 +11,16 @@ var mux = false;
 var y = 0;
 
 Future<void> main() async {
-  final nc = NotCurses(CursesOptions(
-    marginT: 2,
-    marginL: 2,
-    marginR: 2,
-    marginB: 2,
-    loglevel: LogLevel.error,
-    flags: OptionFlags.inhibitSetlocale,
-  ));
+  final nc = NotCurses(
+    CursesOptions(
+      marginT: 2,
+      marginL: 2,
+      marginR: 2,
+      marginB: 2,
+      loglevel: LogLevel.error,
+      flags: OptionFlags.inhibitSetlocale,
+    ),
+  );
 
   if (nc.notInitialized) {
     stderr.writeln('error initializing nocurses');
@@ -41,7 +43,8 @@ Future<void> main() async {
       t.cancel();
     } else {
       if (!mux) {
-        final sec = ((DateTime.now().millisecondsSinceEpoch - start) / 1000).floor();
+        final sec = ((DateTime.now().millisecondsSinceEpoch - start) / 1000)
+            .floor();
         mux = true;
         plot.addSample(sec, 0);
         nc.render();
@@ -80,7 +83,8 @@ Future<void> main() async {
       if (!dimRows(stdPlane, dim)) return false;
 
       // add sample to Plot
-      final sec = ((DateTime.now().millisecondsSinceEpoch - start) / 1000).floor();
+      final sec = ((DateTime.now().millisecondsSinceEpoch - start) / 1000)
+          .floor();
       if (!mux) {
         mux = true;
         plot.addSample(sec, 1);
@@ -123,7 +127,11 @@ Plane? setupPlane(NotCurses n) {
     ..setBgRGB8(0xbb, 0x64, 0xbb) // #bb64bb
     ..stylesOn(Style.underline);
 
-  if (stdPlane.putStrAligned(dim.y - 1, Align.center, 'mash keys, yo. give that mouse some waggle! ctrl+d exits.') <
+  if (stdPlane.putStrAligned(
+        dim.y - 1,
+        Align.center,
+        'mash keys, yo. give that mouse some waggle! ctrl+d exits.',
+      ) <
       0) {
     stderr.writeln('error writting to screen');
     return null;
@@ -145,16 +153,18 @@ Plot? setupPlotPlane(Plane stdPlane) {
   const plotWidth = 56;
   final dim = stdPlane.dimyx();
 
-  final pplane = stdPlane.create(PlaneOptions(
-    y: dim.y - plotHeight - 1,
-    x: Align.center,
-    rows: plotHeight,
-    cols: plotWidth,
-    name: 'plot',
-    flags: PlaneOptionFlags.horaligned,
-    marginB: 0,
-    marginR: 0,
-  ));
+  final pplane = stdPlane.create(
+    PlaneOptions(
+      y: dim.y - plotHeight - 1,
+      x: Align.center,
+      rows: plotHeight,
+      cols: plotWidth,
+      name: 'plot',
+      flags: PlaneOptionFlags.horaligned,
+      marginB: 0,
+      marginR: 0,
+    ),
+  );
 
   if (pplane == null) {
     stderr.writeln('error creating plane');
@@ -164,13 +174,14 @@ Plot? setupPlotPlane(Plane stdPlane) {
   final minc = Channels.initializerFg(0x40, 0x50, 0xb0); // #4050b0
   final maxc = Channels.initializerFg(0x40, 0xff, 0xd0); // #40ffd0
   final plot = Plot.create(
-      pplane,
-      PlotOptions(
-        minchannels: minc,
-        maxchannels: maxc,
-        gridtype: Blitter.pixel,
-        flags: PlotOptionFlags.labelTickSD | PlotOptionFlags.printSample,
-      ));
+    pplane,
+    PlotOptions(
+      minchannels: minc,
+      maxchannels: maxc,
+      gridtype: Blitter.pixel,
+      flags: PlotOptionFlags.labelTickSD | PlotOptionFlags.printSample,
+    ),
+  );
   if (plot == null) {
     stderr.writeln('error creating plot');
     return null;
@@ -204,18 +215,34 @@ void keyHandler(Plane stdPlane, Key key) {
 
   if (key.id < 0x80) {
     stdPlane.setFgRGB8(0x80, 0xfa, 0x40); // #80fa40
-    if (stdPlane.putStr("ASCII: [${key.id.toStrHex(padding: 4)} (${key.id})] '${key.keyStr}'") < 0) return;
+    if (stdPlane.putStr(
+          "ASCII: [${key.id.toStrHex(padding: 4)} (${key.id})] '${key.keyStr}'",
+        ) <
+        0)
+      return;
   } else {
     if (key.keySynthesizedP()) {
       stdPlane.setFgRGB8(0xfa, 0x40, 0x80); // #fa4080
-      if (stdPlane.putStr("Special: [${key.id.toStrHex(padding: 4)} (${key.id})] '${ncKeyStr(key.id)}'") < 0) return;
+      if (stdPlane.putStr(
+            "Special: [${key.id.toStrHex(padding: 4)} (${key.id})] '${ncKeyStr(key.id)}'",
+          ) <
+          0)
+        return;
 
       if (key.keyMouseP()) {
-        if (stdPlane.putStrAligned(-1, Align.right, ' x: ${key.x} y: ${key.y}') < 0) return;
+        if (stdPlane.putStrAligned(
+              -1,
+              Align.right,
+              ' x: ${key.x} y: ${key.y}',
+            ) <
+            0)
+          return;
       }
     } else {
       stdPlane.setFgRGB8(0x40, 0x80, 0xfa); // #4080fa
-      stdPlane.putStr("Unicode: [${key.id.toStrHex(padding: 3)}] '${key.utf8List}'");
+      stdPlane.putStr(
+        "Unicode: [${key.id.toStrHex(padding: 3)}] '${key.utf8List}'",
+      );
     }
   }
 }
@@ -250,11 +277,7 @@ bool dimRows(Plane n, Dimensions dim) {
       final r = _rgb.r - (_rgb.r / 32).floor();
       final g = _rgb.g - (_rgb.g / 32).floor();
       final b = _rgb.b - (_rgb.b / 32).floor();
-      final rgb = RGB(
-        r > 247 ? 0 : r,
-        g > 247 ? 0 : g,
-        b > 247 ? 0 : b,
-      );
+      final rgb = RGB(r > 247 ? 0 : r, g > 247 ? 0 : g, b > 247 ? 0 : b);
 
       if (!c.setFgRGB8(rgb)) {
         n.releaseCell(c);

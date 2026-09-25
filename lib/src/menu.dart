@@ -12,8 +12,10 @@ import './shared.dart';
 
 abstract class MenuOptionFlags {
   static const int top = 0x0000;
-  static const int bottom = 0x0001; // NCMENU_OPTION_BOTTOM - bottom row (as opposed to top row)
-  static const int hidding = 0x0002; // NCMENU_OPTION_HIDING - hide the menu when not unrolled
+  static const int bottom =
+      0x0001; // NCMENU_OPTION_BOTTOM - bottom row (as opposed to top row)
+  static const int hidding =
+      0x0002; // NCMENU_OPTION_HIDING - hide the menu when not unrolled
 }
 
 class MenuOptions {
@@ -25,8 +27,8 @@ class MenuOptions {
     Channels? headerChannels,
     Channels? sectionChannels,
     this.flags = MenuOptionFlags.top,
-  })  : headerChannels = headerChannels ?? Channels.zero(),
-        sectionChannels = sectionChannels ?? Channels.zero();
+  }) : headerChannels = headerChannels ?? Channels.zero(),
+       sectionChannels = sectionChannels ?? Channels.zero();
 }
 
 class MenuItem {
@@ -37,7 +39,12 @@ class MenuItem {
   /// NcKeyMod
   int? shortcutModifier;
 
-  MenuItem(this.handle, this.description, {this.shortcutKey, this.shortcutModifier});
+  MenuItem(
+    this.handle,
+    this.description, {
+    this.shortcutKey,
+    this.shortcutModifier,
+  });
 }
 
 class MenuSection {
@@ -88,12 +95,20 @@ class Menu {
           if (item.handle.isEmpty) {
             pItems[ri].desc = ffi.nullptr;
           } else {
-            pItems[ri].desc = item.description.toNativeUtf8(allocator: alloc).cast();
+            pItems[ri].desc = item.description
+                .toNativeUtf8(allocator: alloc)
+                .cast();
 
             if (item.shortcutKey != null) {
-              pItems[ri].shortcut = makeShortcut(item.shortcutKey!, item.shortcutModifier);
-              final ik = (item.shortcutKey!.runes.first << 8) |
-                  ((item.shortcutModifier == null) ? 0 : item.shortcutModifier!);
+              pItems[ri].shortcut = makeShortcut(
+                item.shortcutKey!,
+                item.shortcutModifier,
+              );
+              final ik =
+                  (item.shortcutKey!.runes.first << 8) |
+                  ((item.shortcutModifier == null)
+                      ? 0
+                      : item.shortcutModifier!);
               _itemShorcuts[ik] = item.handle;
             }
           }
@@ -105,7 +120,10 @@ class Menu {
           ..items = pItems
           ..itemcount = section.items.length;
         if (section.shortcutKey != null) {
-          pSections[rs].shortcut = makeShortcut(section.shortcutKey!, section.shortcutModifier);
+          pSections[rs].shortcut = makeShortcut(
+            section.shortcutKey!,
+            section.shortcutModifier,
+          );
         }
 
         rs++;
@@ -167,7 +185,8 @@ class Menu {
   bool itemSetStatus(String section, String item, bool enabled) {
     bool rc = false;
     using((Arena alloc) {
-      rc = nc.ncmenu_item_set_status(
+      rc =
+          nc.ncmenu_item_set_status(
             _ptr,
             section.toNativeUtf8(allocator: alloc).cast(),
             item.toNativeUtf8(allocator: alloc).cast(),
@@ -201,7 +220,11 @@ class Menu {
     if (getShortcut) {
       k = Key();
     }
-    rc = nc.ncmenu_mouse_selected(_ptr, click.ptr, getShortcut ? k!.ptr : ffi.nullptr);
+    rc = nc.ncmenu_mouse_selected(
+      _ptr,
+      click.ptr,
+      getShortcut ? k!.ptr : ffi.nullptr,
+    );
     if (rc == ffi.nullptr) {
       if (getShortcut) k!.destroy();
       return NcResult(null, null);

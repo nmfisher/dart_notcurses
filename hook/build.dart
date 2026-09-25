@@ -24,7 +24,7 @@ void main(List<String> args) async {
     if (!Directory(libDir).existsSync()) {
       final hint = targetOS == OS.windows
           ? '\nBuild them with tool/build_notcurses_windows_x64.sh '
-              '(run inside an MSYS2 UCRT64 shell).'
+                '(run inside an MSYS2 UCRT64 shell).'
           : '';
       throw UnsupportedError(
         'No pre-built static libraries for $targetOS/$targetArch. '
@@ -136,9 +136,7 @@ void main(List<String> args) async {
         p.join('native', 'src', 'shim.c'),
         p.join('native', 'src', 'input_pump.c'),
       ],
-      includes: [
-        p.join('native', 'include'),
-      ],
+      includes: [p.join('native', 'include')],
       flags: flags,
       language: Language.c,
     );
@@ -197,21 +195,34 @@ Future<void> _buildWindowsDllWithMingw({
   final ffiObj = p.join(objDir, 'cocoon_ffi.o');
   final shimObj = p.join(objDir, 'cocoon_shim.o');
   final pumpObj = p.join(objDir, 'cocoon_input_pump.o');
-  await _runGcc(gcc, [...compileCommon, '-DNOTCURSES_FFI',
-    p.join(srcDir, 'ffi.c'), '-o', ffiObj]);
-  await _runGcc(gcc, [...compileCommon,
-    p.join(srcDir, 'shim.c'), '-o', shimObj]);
-  await _runGcc(gcc, [...compileCommon,
-    p.join(srcDir, 'input_pump.c'), '-o', pumpObj]);
+  await _runGcc(gcc, [
+    ...compileCommon,
+    '-DNOTCURSES_FFI',
+    p.join(srcDir, 'ffi.c'),
+    '-o',
+    ffiObj,
+  ]);
+  await _runGcc(gcc, [
+    ...compileCommon,
+    p.join(srcDir, 'shim.c'),
+    '-o',
+    shimObj,
+  ]);
+  await _runGcc(gcc, [
+    ...compileCommon,
+    p.join(srcDir, 'input_pump.c'),
+    '-o',
+    pumpObj,
+  ]);
 
   // mingw is in explicit-dllexport mode (notcurses marks its API dllexport), so
   // only dllexport symbols export; clock_gettime is pulled in (via -u below) but
   // lacks dllexport, so we force-export it with a .def file. mingw exports .def
   // symbols in ADDITION to dllexport ones, so the notcurses API stays exported.
   final defPath = p.join(objDir, 'cocoon_exports.def');
-  await File(defPath).writeAsString(
-    'LIBRARY notcurses_merged\nEXPORTS\n  clock_gettime\n',
-  );
+  await File(
+    defPath,
+  ).writeAsString('LIBRARY notcurses_merged\nEXPORTS\n  clock_gettime\n');
 
   final linkArgs = <String>[
     '-shared',
