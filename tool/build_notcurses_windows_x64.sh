@@ -124,6 +124,10 @@ if ! git -C "$SRC_DIR" diff --quiet -- include/notcurses/nckeys.h src/lib/in.c; 
 fi
 apply_patch "$PASTE_PATCH"
 
+# Keep string extraction in sync with the automaton's BEL/ST terminators.
+INPUT_PATCH="$PKG_ROOT/native/patches/notcurses-input-strings.patch"
+apply_patch "$INPUT_PATCH"
+
 # Flip the static targets from -fPIE to -fPIC (see build_notcurses.sh for the
 # rationale). On Windows/PE this is harmless but keeps the patch applying
 # uniformly across platforms.

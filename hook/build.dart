@@ -144,6 +144,13 @@ void main(List<String> args) async {
     );
 
     await cbuilder.run(input: input, output: output);
+    // Archives are linker flags rather than CBuilder sources. Track them
+    // explicitly so rebuilding notcurses invalidates the cached code asset.
+    output.dependencies.addAll({
+      Uri.file(notcursesArchive),
+      if (isMacOS)
+        for (final dep in macosDeps) Uri.file('$libDir/$dep'),
+    });
   });
 }
 
