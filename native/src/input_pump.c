@@ -10,6 +10,7 @@
 // and the @Native cocoon_input_pump_* externs resolve. The Dart side falls back
 // to AnsiInputBackend on Windows in the meantime.
 #include <errno.h>
+#include <dlfcn.h>
 #include <poll.h>
 #include <pthread.h>
 #include <time.h>
@@ -52,6 +53,13 @@ typedef struct {
   uint32_t id;
   uint32_t modifiers;
   int64_t monotonic_ns;
+
+  /// The pump clock's current value at drain time, in the same units as
+  /// monotonic_ns. The Dart drain-side delay for this record is
+  /// timeline_ns - monotonic_ns (tin-pump-backpressure). Always timeline
+  /// clock units for a live pump: the record stamp is taken from the same
+  /// clock when cocoon_input_pump_start installed it.
+  int64_t timeline_ns;
 } cocoon_input_record;
 
 /// Zero-arg "queue is non-empty" notification invoked on the empty→non-empty
@@ -107,12 +115,28 @@ typedef struct cocoon_input_pump {
   size_t count;
   bool notify_armed;
   bool stopping;
+
+  /// The monotonic microsecond clock feeding record timestamps: resolved to
+  /// Dart_TimelineGetMicros in cocoon_input_pump_start (dlsym from the
+  /// running VM), CLOCK_MONOTONIC-micros fallback otherwise, so the Dart
+  /// side can convert a record's ns stamp into the same timeline it measures
+  /// delivery on. Set once before the pump thread starts; never mutated
+  /// afterwards.
+  int64_t (*monotonic_now)(void);
 } cocoon_input_pump;
 
-static int64_t monotonic_ns(void) {
+/// CLOCK_MONOTONIC in microseconds; 0 when the clock is unavailable. Same
+/// units as the timeline clock so stamps need no per-clock conversion.
+static int64_t clock_micros(void) {
   struct timespec ts;
   if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return 0;
-  return (int64_t)ts.tv_sec * 1000000000LL + ts.tv_nsec;
+  return (int64_t)ts.tv_sec * 1000000LL + ts.tv_nsec / 1000;
+}
+
+/// Stamp one key event on the pump's clock: microseconds transported as
+/// nanoseconds, on one fixed clock for the pump's lifetime.
+static int64_t pump_stamp_ns(const cocoon_input_pump* pump) {
+  return pump->monotonic_now() * 1000;
 }
 
 /// Push one record onto the ring under the mutex. Blocks while the queue is
@@ -168,7 +192,14 @@ static void* pump_main(void* opaque) {
       if (id == 0 || id == (uint32_t)-1) break;
       // Preserve effective text before reducing ncinput to pump records.
       // The converter also folds legacy modifier bools and drops releases.
-      if (!cocoon_input_emit(&input, id, monotonic_ns(), pump_push, pump)) {
+      //
+      // Capture-time contract: ns is stamped here, BEFORE pump_push. When the
+      // ring is full the producer blocks inside pump_push, so every timestamp
+      // remains the moment the terminal delivered the key — queue-wait is
+      // transport delay, never an inter-key gap. Dart's paste detector relies
+      // on this: it joins records by capture-time proximity and must not see
+      // delivery backpressure stretched into a pause between keystrokes.
+      if (!cocoon_input_emit(&input, id, pump_stamp_ns(pump), pump_push, pump)) {
         // Stopping: drain remaining kernel events is not safe once the queue
         // is rejecting; bail out of the inner loop so stop can join us.
         goto done;
@@ -179,12 +210,24 @@ done:
   return NULL;
 }
 
+// NULL until cocoon_input_pump_start resolves Dart_TimelineGetMicros from the
+// running VM; until then the fallback clock keeps record stamps well-formed.
+static int64_t (*timeline_now)(void) = NULL;
+
 void* cocoon_input_pump_start(struct notcurses* nc,
                               cocoon_input_notify notify) {
   if (!nc || !notify) return NULL;
   cocoon_input_pump* pump = calloc(1, sizeof(*pump));
   if(!pump) return NULL;
   pump->nc = nc;
+  if (timeline_now == NULL) {
+    void* handle = dlopen(NULL, RTLD_LAZY);
+    if (handle != NULL) {
+      timeline_now = (int64_t(*)(void))dlsym(handle, "Dart_TimelineGetMicros");
+      // Keep the handle open for the process lifetime; the VM outlives us.
+    }
+  }
+  pump->monotonic_now = timeline_now != NULL ? timeline_now : clock_micros;
   pump->notify = notify;
   pump->cap = COCOON_INPUT_QUEUE_CAP;
   pump->queue = calloc(pump->cap, sizeof(cocoon_input_record));
@@ -216,9 +259,14 @@ size_t cocoon_input_pump_drain(void* opaque, cocoon_input_record* out,
   cocoon_input_pump* pump = opaque;
   if(!pump || !out || max == 0) return 0;
   pthread_mutex_lock(&pump->mtx);
+  // One delivery timestamp per drain call, on the same clock the producer
+  // stamps with: subtracting a record's stamp from it yields that record's
+  // capture→delivery delay, including ring-queue wait (tin-pump-backpressure).
+  const int64_t timeline = pump->monotonic_now() * 1000;
   size_t n = pump->count < max ? pump->count : max;
   for(size_t i = 0; i < n; i++) {
     out[i] = pump->queue[pump->tail];
+    out[i].timeline_ns = timeline;
     pump->tail = (pump->tail + 1) % pump->cap;
     pump->count--;
   }
@@ -267,6 +315,10 @@ void cocoon_input_pump_stop(void* opaque) {
 // return "no events ever": notcurses_merged.dll still links, the @Native
 // cocoon_input_pump_* externs (notcurses.dart) resolve, output rendering works,
 // and native input is supplied by AnsiInputBackend on the Dart side.
+
+// The Windows stub produces no events, so its record timestamps are never
+// consumed; monotonic_now stays a no-op 0 clock.
+static int64_t monotonic_now(void) { return 0; }
 
 void* cocoon_input_pump_start(struct notcurses* nc,
                               cocoon_input_notify notify) {

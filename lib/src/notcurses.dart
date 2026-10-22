@@ -31,6 +31,13 @@ final class _CocoonInputRecord extends ffi.Struct {
   external int modifiers;
   @ffi.Int64()
   external int monotonicNs;
+
+  /// The pump clock's value at drain time, same clock/units as [monotonicNs]
+  /// for a live pump. `timelineNs - monotonicNs` is this record's capture→
+  /// delivery delay (tin-pump-backpressure); 0 when the pump clock is the
+  /// no-op stub (Windows).
+  @ffi.Int64()
+  external int timelineNs;
 }
 
 @ffi.Native<
@@ -74,7 +81,18 @@ class PumpedInput {
   final int modifiers;
   final int monotonicNanos;
 
-  const PumpedInput(this.id, this.modifiers, this.monotonicNanos);
+  /// The pump clock's value at drain time, same clock/units as
+  /// [monotonicNanos] for a live pump. Delivery-side delay for this record is
+  /// [timelineNanos] - [monotonicNanos] (tin-pump-backpressure); 0 when the
+  /// pump runs the no-op stub clock (Windows).
+  final int timelineNanos;
+
+  const PumpedInput(
+    this.id,
+    this.modifiers,
+    this.monotonicNanos, [
+    this.timelineNanos = 0,
+  ]);
 }
 
 /// The native ring-buffer capacity (must match COCOON_INPUT_QUEUE_CAP in
@@ -127,7 +145,9 @@ class NotcursesInputPump {
       onBatchStart?.call(n);
       for (var i = 0; i < n; i++) {
         final r = _drainBuf[i];
-        _controller.add(PumpedInput(r.id, r.modifiers, r.monotonicNs));
+        _controller.add(
+          PumpedInput(r.id, r.modifiers, r.monotonicNs, r.timelineNs),
+        );
       }
     }
   }
@@ -145,7 +165,6 @@ class NotcursesInputPump {
     _controller.close();
   }
 }
-
 
 /// Configuration options to be used when create a new NotCurses intance
 class CursesOptions {
