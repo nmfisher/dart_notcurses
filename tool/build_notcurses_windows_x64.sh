@@ -128,6 +128,10 @@ apply_patch "$PASTE_PATCH"
 INPUT_PATCH="$PKG_ROOT/native/patches/notcurses-input-strings.patch"
 apply_patch "$INPUT_PATCH"
 
+# A read ending inside a UTF-8 character must wait for more bytes, not spin.
+PROGRESS_PATCH="$PKG_ROOT/native/patches/notcurses-input-progress.patch"
+apply_patch "$PROGRESS_PATCH"
+
 # Flip the static targets from -fPIE to -fPIC (see build_notcurses.sh for the
 # rationale). On Windows/PE this is harmless but keeps the patch applying
 # uniformly across platforms.

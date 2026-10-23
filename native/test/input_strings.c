@@ -2,6 +2,7 @@
 // a terminal. The response ends at a protected page: an overread fails even
 // when neighboring heap data would otherwise contain a convenient ESC byte.
 #include "lib/in.c"
+#include <locale.h>
 #include <sys/mman.h>
 
 static unsigned char*
@@ -59,6 +60,47 @@ check_default(const char* response, bool background){
 }
 
 static void
+check_split_utf8(const char* text, uint32_t codepoint){
+  const size_t len = strlen(text);
+  for(size_t split = 1; split < len; ++split){
+    inputctx ictx = {0};
+    ictx.termfd = -1; // stdin is the terminal: use the live mixed-input path.
+    ncsharedstats stats = {0};
+    ncinput inputs[256] = {0};
+    ictx.inputs = inputs;
+    ictx.isize = 256;
+    ictx.stats = &stats;
+    assert(pthread_mutex_init(&stats.lock, NULL) == 0);
+    assert(pthread_mutex_init(&ictx.ilock, NULL) == 0);
+    assert(pthread_cond_init(&ictx.icond, NULL) == 0);
+    assert(getpipes(ictx.readypipes) == 0);
+
+    // A terminal read can end inside any multibyte character in a paste.
+    // Keep its prefix for the next read instead of spinning on zero progress.
+    ictx.ibuf[0] = 'a';
+    memcpy(ictx.ibuf + 1, text, split);
+    ictx.ibufvalid = 1 + split;
+    process_ibuf(&ictx);
+    assert(ictx.ibufvalid == (int)split);
+    assert(memcmp(ictx.ibuf, text, split) == 0);
+    assert(ictx.ivalid == 1 && inputs[0].id == 'a');
+
+    memcpy(ictx.ibuf + split, text + split, len - split);
+    ictx.ibuf[len] = 'z';
+    ictx.ibufvalid = len + 1;
+    process_ibuf(&ictx);
+    assert(ictx.ibufvalid == 0);
+    assert(ictx.ivalid == 3);
+    assert(inputs[1].id == codepoint && inputs[2].id == 'z');
+
+    endpipes(ictx.readypipes);
+    assert(pthread_cond_destroy(&ictx.icond) == 0);
+    assert(pthread_mutex_destroy(&ictx.ilock) == 0);
+    assert(pthread_mutex_destroy(&stats.lock) == 0);
+  }
+}
+
+static void
 check_input_after_partial_reply(void){
   inputctx ictx = {0};
   ncsharedstats stats = {0};
@@ -93,6 +135,9 @@ check_input_after_partial_reply(void){
 }
 
 int main(void){
+  assert(setlocale(LC_CTYPE, "C.UTF-8") || setlocale(LC_CTYPE, "en_US.UTF-8"));
+  // Fail promptly if a parser regression loops instead of awaiting more bytes.
+  alarm(5);
   check_palette("\x1b]4;41;rgb:0000/d7d7/5f5f\x07", 41, 0x00d75f);
   check_palette("\x1b]4;41;rgb:0000/d7d7/5f5f\x1b\\", 41, 0x00d75f);
   check_palette("\x1b]4;0;rgb:12/34/56\x07", 0, 0x123456);
@@ -104,6 +149,10 @@ int main(void){
   check_default("\x1b]10;rgb:12/34/56\x1b\\", false);
   check_default("\x1b]11;rgb:12/34/56\x1b\\", true);
   check_input_after_partial_reply();
-  puts("PASS native input: BEL, ST, palette bounds, recovery after partial replies");
+  check_split_utf8("\xc3\xa9", 0xe9);
+  check_split_utf8("\xe2\x80\x99", 0x2019);
+  check_split_utf8("\xf0\x9f\x99\x82", 0x1f642);
+  alarm(0);
+  puts("PASS native input: BEL, ST, palette bounds, partial replies, split UTF-8");
   return 0;
 }

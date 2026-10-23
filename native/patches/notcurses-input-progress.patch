@@ -1,0 +1,13 @@
+--- a/src/lib/in.c
++++ b/src/lib/in.c
+@@ -2447,7 +2447,9 @@
+       ictx->amata.matchstart = NULL;
+       consumed = process_ncinput(ictx, buf + offset, *bufused);
+     }
+-    if(consumed < 0){
++    // An incomplete UTF-8 character consumes zero bytes. Keep its prefix for
++    // the next read instead of spinning forever on the same input.
++    if(consumed <= 0){
+       break;
+     }
+     *bufused -= consumed;

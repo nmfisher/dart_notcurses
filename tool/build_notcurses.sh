@@ -82,6 +82,11 @@ INPUT_PATCH="$PKG_ROOT/native/patches/notcurses-input-strings.patch"
 git -C "$SRC_DIR" apply --check "$INPUT_PATCH"
 git -C "$SRC_DIR" apply "$INPUT_PATCH"
 
+# A read ending inside a UTF-8 character must wait for more bytes, not spin.
+PROGRESS_PATCH="$PKG_ROOT/native/patches/notcurses-input-progress.patch"
+git -C "$SRC_DIR" apply --check "$PROGRESS_PATCH"
+git -C "$SRC_DIR" apply "$PROGRESS_PATCH"
+
 # notcurses compiles its *-static targets with -fPIE (executable-style PIC).
 # That is invalid for a static archive that gets --whole-archive'd into a
 # SHARED library: aarch64's linker rejects it (R_AARCH64_ADR_PREL_PG_HI21
