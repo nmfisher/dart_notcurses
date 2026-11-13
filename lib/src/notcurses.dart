@@ -38,6 +38,12 @@ final class _CocoonInputRecord extends ffi.Struct {
   /// no-op stub (Windows).
   @ffi.Int64()
   external int timelineNs;
+  @ffi.Int32()
+  external int mouseRow;
+  @ffi.Int32()
+  external int mouseCol;
+  @ffi.Int32()
+  external int mouseType;
 }
 
 @ffi.Native<
@@ -86,12 +92,16 @@ class PumpedInput {
   /// [timelineNanos] - [monotonicNanos] (tin-pump-backpressure); 0 when the
   /// pump runs the no-op stub clock (Windows).
   final int timelineNanos;
+  final int mouseRow, mouseCol, mouseType;
 
   const PumpedInput(
     this.id,
     this.modifiers,
     this.monotonicNanos, [
     this.timelineNanos = 0,
+    this.mouseRow = -1,
+    this.mouseCol = -1,
+    this.mouseType = 0,
   ]);
 }
 
@@ -146,7 +156,8 @@ class NotcursesInputPump {
       for (var i = 0; i < n; i++) {
         final r = _drainBuf[i];
         _controller.add(
-          PumpedInput(r.id, r.modifiers, r.monotonicNs, r.timelineNs),
+          PumpedInput(r.id, r.modifiers, r.monotonicNs, r.timelineNs,
+              r.mouseRow, r.mouseCol, r.mouseType),
         );
       }
     }

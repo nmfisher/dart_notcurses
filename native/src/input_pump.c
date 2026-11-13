@@ -60,6 +60,9 @@ typedef struct {
   /// clock units for a live pump: the record stamp is taken from the same
   /// clock when cocoon_input_pump_start installed it.
   int64_t timeline_ns;
+  int32_t mouse_row;
+  int32_t mouse_col;
+  int32_t mouse_type;
 } cocoon_input_record;
 
 /// Zero-arg "queue is non-empty" notification invoked on the empty→non-empty
@@ -115,6 +118,8 @@ typedef struct cocoon_input_pump {
   size_t count;
   bool notify_armed;
   bool stopping;
+  bool is_mouse;
+  int mouse_row, mouse_col, mouse_type;
 
   /// The monotonic microsecond clock feeding record timestamps: resolved to
   /// Dart_TimelineGetMicros in cocoon_input_pump_start (dlsym from the
@@ -157,6 +162,9 @@ static bool pump_push(void* opaque, uint32_t id,
   slot->id = id;
   slot->modifiers = modifiers;
   slot->monotonic_ns = ns;
+  slot->mouse_row = pump->is_mouse ? pump->mouse_row : -1;
+  slot->mouse_col = pump->is_mouse ? pump->mouse_col : -1;
+  slot->mouse_type = pump->is_mouse ? pump->mouse_type : 0;
   pump->head = (pump->head + 1) % pump->cap;
   pump->count++;
   // Edge-triggered notification: only the 0→1 transition arms + fires. Later
@@ -190,8 +198,16 @@ static void* pump_main(void* opaque) {
       ncinput input = {0};
       const uint32_t id = notcurses_get_nblock(pump->nc, &input);
       if (id == 0 || id == (uint32_t)-1) break;
+      pump->is_mouse = nckey_mouse_p(id);
+      if (pump->is_mouse) {
+        pump->mouse_row = input.y;
+        pump->mouse_col = input.x;
+        pump->mouse_type = input.evtype;
+        if (!pump_push(pump, id, input.modifiers, pump_stamp_ns(pump))) goto done;
+        continue;
+      }
       // Preserve effective text before reducing ncinput to pump records.
-      // The converter also folds legacy modifier bools and drops releases.
+      // The converter folds legacy modifiers and drops keyboard releases.
       //
       // Capture-time contract: ns is stamped here, BEFORE pump_push. When the
       // ring is full the producer blocks inside pump_push, so every timestamp
